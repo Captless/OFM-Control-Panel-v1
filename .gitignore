@@ -30,3 +30,6 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Deepwork state (git-local, OpenCode-readable)
+.slim/deepwork/

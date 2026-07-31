@@ -5,6 +5,7 @@ Serves at http://localhost:8000
 Run:  py server.py
 """
 
+import concurrent.futures
 import http.server
 import json
 import os
@@ -50,7 +51,7 @@ def _get_balance(account_label=None):
             settings = json.loads(raw)
             key = settings.get("wavespeed_accounts", {}).get(account_label)
             if not key:
-                return _balance_cache["value"] or 0.0
+                return 0.0
         else:
             key = get_active_wavespeed_key()
         client = WaveSpeedClient(key)
@@ -60,7 +61,7 @@ def _get_balance(account_label=None):
             _balance_cache["value"] = bal
         return bal
     except Exception:
-        return _balance_cache["value"] or 0.0
+        return 0.0
 
 
 def _get_identity_name():
@@ -381,13 +382,22 @@ class Handler(http.server.BaseHTTPRequestHandler):
             raw = SETTINGS_PATH.read_text(encoding="utf-8") if SETTINGS_PATH.exists() else "{}"
             settings = json.loads(raw)
             accounts = settings.get("wavespeed_accounts", {})
-            results = {}
-            for label in accounts:
+            
+            def validate_account(label, key):
                 try:
-                    result = test_wavespeed_account(label)
-                    results[label] = result.get("ok", False)
+                    client = WaveSpeedClient(key)
+                    client.validate()
+                    return label, True
                 except Exception:
-                    results[label] = False
+                    return label, False
+            
+            results = {}
+            with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+                futures = {pool.submit(validate_account, label, key): label for label, key in accounts.items()}
+                for fut in concurrent.futures.as_completed(futures):
+                    label, ok = fut.result()
+                    results[label] = ok
+            
             self._json({"ok": True, "results": results})
 
         else:
@@ -536,7 +546,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._json({"ok": False, "error": "missing label"}, 400)
             elif not key:
                 self._json({"ok": False, "error": "missing key"}, 400)
+            elif not key.startswith("sk-"):
+                self._json({"ok": False, "error": "Invalid WaveSpeed API key"}, 400)
             else:
+                try:
+                    client = WaveSpeedClient(key)
+                    client.validate()
+                except Exception:
+                    self._json({"ok": False, "error": "Invalid WaveSpeed API key"}, 400)
+                    return
                 set_wavespeed_account(label, key)
                 preview = (key[:4] + "****" + key[-4:]) if len(key) > 8 else "****"
                 _log_activity(f"WaveSpeed account saved: {label} {preview}")

@@ -1046,6 +1046,7 @@ function startRename(el, oldLabel) {
             if (data.ok) {
                 loadProviderList();
                 checkApiStatus();
+                _invalidateAccounts();
             } else {
                 alert(data.error || 'Rename failed');
                 cancel();
@@ -1152,6 +1153,8 @@ async function removeProvider(label) {
 
 var _validationCache = null;
 var _validationCacheTime = 0;
+var _accountsCache = null;
+var _accountsCacheTime = 0;
 
 function _invalidateValidation() {
     _validationCache = null;
@@ -1173,40 +1176,79 @@ async function _getValidationResults() {
     return {};
 }
 
-
-
-// ── API Modal toggle ──
-function toggleApiModal() {
-  var modal = document.getElementById('api-modal');
-  if (!modal) return;
-  if (modal.classList.contains('show')) {
-    closeApiModal();
-  } else {
-    modal.classList.add('show');
-    loadApiProviderList();
-  }
+async function _fetchValidationForAccount(label) {
+    try {
+        var r = await fetch('/api/settings/wavespeed/accounts/validate-all');
+        var data = await r.json();
+        if (data.ok && data.results) {
+            // Update validation cache
+            if (!_validationCache) _validationCache = {};
+            _validationCache[label] = data.results[label];
+            _validationCacheTime = Date.now();
+            
+            // Update just this row's status
+            _updateAccountValidationStatus(label, data.results[label]);
+        }
+    } catch(e) {
+        // Silently fail - row stays in "checking..." state
+    }
 }
 
-function closeApiModal() {
-  var modal = document.getElementById('api-modal');
-  if (modal) modal.classList.remove('show');
+function _updateAccountValidationStatus(label, isValid) {
+    var statusEl = document.querySelector('.provider-status[data-label="' + label.replace(/"/g, '\\"') + '"]');
+    var dotEl = document.querySelector('.provider-row .provider-dot');
+    if (!statusEl || !dotEl) return;
+    
+    // Find the correct row's dot
+    var row = statusEl.closest('.provider-row');
+    if (!row) return;
+    var rowDot = row.querySelector('.provider-dot');
+    
+    var statusClass = isValid ? 'valid' : 'invalid';
+    var statusText = isValid ? 'valid' : 'invalid';
+    
+    statusEl.className = 'provider-status ' + statusClass;
+    statusEl.textContent = statusText;
+    if (rowDot) rowDot.className = 'provider-dot ' + statusClass;
 }
 
-async function loadApiProviderList() {
-  var list = document.getElementById('api-provider-list');
-  if (!list) return;
-  list.innerHTML = '<div class="provider-summary"><span class="ps-load">Loading providers\u2026</span></div>';
-  try {
-    var r = await fetch('/api/settings/wavespeed/accounts');
-    var data = await r.json();
-    var validation = await _getValidationResults();
+function _invalidateAccounts() {
+    _accountsCache = null;
+    _accountsCacheTime = 0;
+}
+
+async function preloadAccounts() {
+    try {
+        var r = await fetch('/api/settings/wavespeed/accounts');
+        var data = await r.json();
+        if (data.ok && data.accounts) {
+            _accountsCache = data;
+            _accountsCacheTime = Date.now();
+        }
+    } catch(e) {}
+}
+
+async function preloadValidation() {
+    try {
+        var r = await fetch('/api/settings/wavespeed/accounts/validate-all');
+        var data = await r.json();
+        if (data.ok) {
+            _validationCache = data.results || {};
+            _validationCacheTime = Date.now();
+        }
+    } catch(e) {}
+}
+
+function _renderAccounts(data, validation) {
+    var list = document.getElementById('api-provider-list');
+    if (!list) return;
     
     if (!data.ok || !data.accounts || Object.keys(data.accounts).length === 0) {
-      list.innerHTML = '<div class="provider-summary"><span>No providers configured</span></div>';
-      _selectedAccount = null;
-      _lastApiCount = 0;
-      updateApiLabel();
-      return;
+        list.innerHTML = '<div class="provider-summary"><span>No providers configured</span></div>';
+        _selectedAccount = null;
+        _lastApiCount = 0;
+        updateApiLabel();
+        return;
     }
     
     var active = data.active || '';
@@ -1224,34 +1266,35 @@ async function loadApiProviderList() {
       + '</div>';
     
     Object.keys(data.accounts).forEach(function(label) {
-      var preview = data.accounts[label];
-      var isActive = (label === active);
-      var isValid = validation[label];
-      var statusClass = isValid ? 'valid' : 'invalid';
-      var statusText = isValid ? 'valid' : 'invalid';
-      var maskedKey = '••••••••' + (preview.length > 4 ? preview.slice(-4) : '');
-      
-      html += '<div class="provider-row' + (isActive ? ' selected' : '') + '">';
-      html += '<span class="provider-dot ' + statusClass + '"></span>';
-      html += '<div class="provider-body">';
-      html += '<div class="provider-line">';
-      html += '<span class="provider-name">' + esc(label) + '</span>';
-      html += '<span class="provider-bal" data-account="' + esc(label) + '">$--</span>';
-      html += '</div>';
-      html += '<div class="provider-line">';
-      html += '<span class="provider-key">' + maskedKey + '</span>';
-      html += '<span class="provider-status ' + statusClass + '">' + statusText + '</span>';
-      html += '</div>';
-      html += '</div>';
-      html += '<div class="provider-actions">';
-      if (isActive) {
-        html += '<button class="provider-check active" title="Active provider" disabled>' + _checkSvg + '</button>';
-      } else {
-        html += '<button class="provider-check" onclick="confirmSwitchApi(\'' + esc(label) + '\')" title="Set as default">' + _checkSvg + '</button>';
-      }
-      html += '<button class="provider-remove" onclick="removeApiProvider(\'' + esc(label) + '\')" title="Remove provider">' + _delSvg2 + '</button>';
-      html += '</div>';
-      html += '</div>';
+        var preview = data.accounts[label];
+        var isActive = (label === active);
+        var isValid = validation[label];
+        var hasValidation = validation.hasOwnProperty(label);
+        var statusClass = hasValidation ? (isValid ? 'valid' : 'invalid') : 'checking';
+        var statusText = hasValidation ? (isValid ? 'valid' : 'invalid') : 'checking...';
+        var maskedKey = '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' + (preview.length > 4 ? preview.slice(-4) : '');
+        
+        html += '<div class="provider-row' + (isActive ? ' selected' : '') + '">';
+        html += '<span class="provider-dot ' + statusClass + '"></span>';
+        html += '<div class="provider-body">';
+        html += '<div class="provider-line">';
+        html += '<span class="provider-name">' + esc(label) + '</span>';
+        html += '<span class="provider-bal" data-account="' + esc(label) + '">$--</span>';
+        html += '</div>';
+        html += '<div class="provider-line">';
+        html += '<span class="provider-key">' + maskedKey + '</span>';
+        html += '<span class="provider-status ' + statusClass + '" data-label="' + esc(label) + '">' + statusText + '</span>';
+        html += '</div>';
+        html += '</div>';
+        html += '<div class="provider-actions">';
+        if (isActive) {
+            html += '<button class="provider-check active" title="Active provider" disabled>' + _checkSvg + '</button>';
+        } else {
+            html += '<button class="provider-check" onclick="confirmSwitchApi(\'' + esc(label) + '\')" title="Set as default">' + _checkSvg + '</button>';
+        }
+        html += '<button class="provider-remove" onclick="removeApiProvider(\'' + esc(label) + '\')" title="Remove provider">' + _delSvg2 + '</button>';
+        html += '</div>';
+        html += '</div>';
     });
     
     list.innerHTML = html;
@@ -1260,29 +1303,74 @@ async function loadApiProviderList() {
     var balTotal = 0;
     var balPending = count;
     Object.keys(data.accounts).forEach(function(label) {
-      fetch('/api/balance/account?account=' + encodeURIComponent(label))
-        .then(function(res) { return res.json(); })
-        .then(function(d) {
-          var balSpan = document.querySelector('.provider-bal[data-account="' + esc(label).replace(/"/g, '\\"') + '"]');
-          if (balSpan && d && typeof d.balance === 'number') {
-            balSpan.textContent = '$' + d.balance.toFixed(2);
-            balTotal += d.balance;
-          }
-          balPending -= 1;
-          if (balPending <= 0) {
-            var totalSpan = document.getElementById('provider-sum-bal');
-            if (totalSpan) totalSpan.textContent = '$' + balTotal.toFixed(2);
-          }
-        })
-        .catch(function() {
-          var balSpan = document.querySelector('.provider-bal[data-account="' + esc(label).replace(/"/g, '\\"') + '"]');
-          if (balSpan) balSpan.textContent = '$--';
-          balPending -= 1;
-        });
+        fetch('/api/balance/account?account=' + encodeURIComponent(label))
+            .then(function(res) { return res.json(); })
+            .then(function(d) {
+                var balSpan = document.querySelector('.provider-bal[data-account="' + esc(label).replace(/"/g, '\\"') + '"]');
+                if (balSpan && d && typeof d.balance === 'number') {
+                    balSpan.textContent = '$' + d.balance.toFixed(2);
+                    balTotal += d.balance;
+                }
+                balPending -= 1;
+                if (balPending <= 0) {
+                    var totalSpan = document.getElementById('provider-sum-bal');
+                    if (totalSpan) totalSpan.textContent = '$' + balTotal.toFixed(2);
+                }
+            })
+            .catch(function() {
+                var balSpan = document.querySelector('.provider-bal[data-account="' + esc(label).replace(/"/g, '\\"') + '"]');
+                if (balSpan) balSpan.textContent = '$--';
+                balPending -= 1;
+            });
     });
-  } catch(e) {
-    list.innerHTML = '<div class="provider-summary"><span>Error loading accounts</span></div>';
-  }
+}
+
+// ── API Modal toggle ──
+function toggleApiModal() {
+    var modal = document.getElementById('api-modal');
+    if (!modal) return;
+    if (modal.classList.contains('show')) {
+        closeApiModal();
+    } else {
+        modal.classList.add('show');
+        loadApiProviderList();
+    }
+}
+
+function closeApiModal() {
+    var modal = document.getElementById('api-modal');
+    if (modal) modal.classList.remove('show');
+}
+
+async function loadApiProviderList() {
+    var list = document.getElementById('api-provider-list');
+    if (!list) return;
+    
+    // Render immediately from cache if available (no await on validation)
+    if (_accountsCache) {
+        _renderAccounts(_accountsCache, {});  // empty validation = show "checking..."
+    } else {
+        list.innerHTML = '<div class="provider-summary"><span class="ps-load">Loading providers\u2026</span></div>';
+    }
+    
+    // Background: fetch fresh accounts + validation, then update
+    try {
+        var r = await fetch('/api/settings/wavespeed/accounts');
+        var data = await r.json();
+        if (data.ok && data.accounts) {
+            _accountsCache = data;
+            _accountsCacheTime = Date.now();
+            
+            // Fetch validation in background
+            var validation = await _getValidationResults();
+            _renderAccounts(data, validation);
+        }
+    } catch(e) {
+        // If no cache was available and fetch fails, show error
+        if (!_accountsCache) {
+            list.innerHTML = '<div class="provider-summary"><span>Error loading accounts</span></div>';
+        }
+    }
 }
 
 async function confirmSwitchApi(label) {
@@ -1300,6 +1388,7 @@ async function confirmSwitchApi(label) {
       _lastIdentity = '';
       updateApiLabel();
       _invalidateValidation();
+      _invalidateAccounts();
       loadApiProviderList();
       checkApiStatus();
       fetchBalance();
@@ -1310,6 +1399,7 @@ async function confirmSwitchApi(label) {
       result.className = 'api-modal-result error'; 
       result.textContent = 'Error switching account'; 
       result.style.display = 'block'; 
+      setTimeout(function() { result.style.display = 'none'; }, 3000);
     }
   }
 }
@@ -1336,9 +1426,17 @@ async function addApiProvider() {
     if (data.ok) {
       document.getElementById('api-new-provider-name').value = '';
       document.getElementById('api-new-provider-key').value = '';
-      _invalidateValidation();
-      loadApiProviderList();
-      checkApiStatus();
+      
+      // Optimistically update cache and render immediately (no spinner)
+      if (_accountsCache && _accountsCache.accounts) {
+        _accountsCache.accounts[name] = key;
+        _accountsCache.active = data.active || _accountsCache.active || name;
+        _renderAccounts(_accountsCache, {});  // empty validation = new account shows "checking..."
+      }
+      
+      // Fetch validation in background for the new account
+      _fetchValidationForAccount(name);
+      
       result.className = 'api-modal-result success';
       result.textContent = 'Account saved: ' + name;
       result.style.display = 'block';
@@ -1347,11 +1445,13 @@ async function addApiProvider() {
       result.className = 'api-modal-result error';
       result.textContent = data.error || 'Failed to save';
       result.style.display = 'block';
+      setTimeout(function() { result.style.display = 'none'; }, 3000);
     }
   } catch(e) {
     result.className = 'api-modal-result error';
     result.textContent = 'Error: ' + e.message;
     result.style.display = 'block';
+    setTimeout(function() { result.style.display = 'none'; }, 3000);
   }
 }
 
@@ -1368,8 +1468,19 @@ async function removeApiProvider(label) {
     });
     var data = await r.json();
     if (data.ok) {
+      // Optimistically update cache and render immediately (no spinner)
+      if (_accountsCache && _accountsCache.accounts) {
+        delete _accountsCache.accounts[label];
+        // Update active if we removed the active account
+        if (_accountsCache.active === label) {
+          _accountsCache.active = Object.keys(_accountsCache.accounts)[0] || '';
+        }
+        _renderAccounts(_accountsCache, _validationCache || {});
+      }
+      
+      // Invalidate validation cache since accounts changed
       _invalidateValidation();
-      loadApiProviderList();
+      
       checkApiStatus();
       result.className = 'api-modal-result success';
       result.textContent = 'Removed ' + label;
@@ -1379,11 +1490,13 @@ async function removeApiProvider(label) {
       result.className = 'api-modal-result error';
       result.textContent = data.error || 'Failed to remove';
       result.style.display = 'block';
+      setTimeout(function() { result.style.display = 'none'; }, 3000);
     }
   } catch(e) {
     result.className = 'api-modal-result error';
     result.textContent = 'Error: ' + e.message;
     result.style.display = 'block';
+    setTimeout(function() { result.style.display = 'none'; }, 3000);
   }
 }
 
@@ -1395,6 +1508,8 @@ document.addEventListener('DOMContentLoaded', function() {
         refreshOutputs();
         
         checkApiStatus();
+        preloadAccounts();
+        preloadValidation();
         setInterval(checkApiStatus, 30000);
         setInterval(fetchBalance, 60000);
         
