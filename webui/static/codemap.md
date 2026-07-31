@@ -1,4 +1,4 @@
-# pipeline-tiktok/static/
+# webui/static/
 
 ## Responsibility
 Single-page application frontend — warm monochrome OpenCode-style UI served by the Python HTTP server. Zero build step, zero CDN, pure vanilla HTML/CSS/JS.
@@ -15,9 +15,10 @@ Single-page application frontend — warm monochrome OpenCode-style UI served by
 - **Segmented controls**: Border-grouped radio buttons (`border-radius: 6px`, 1px divider between options)
 - **API dropdown**: Flat dropdown (no glass) toggled by nav trigger — shows all accounts with balances + Use buttons
 - **Settings drawer**: Right-slide flat panel for API key management (add/remove/rename)
-- **Outputs table**: Grouped by date, hover preview, fullscreen, caption edit, download, delete, modal prompt popup
+- **Outputs table**: Grouped by date, hover preview, fullscreen, caption edit, download, delete, inline prompt toggle
 - **Modals**: Flat surfaces with 1px border, no `backdrop-filter` anywhere
 
 ## Integration
-- **Consumed by**: `server.py` (served at `/` and `/static/*`)
+- **Consumed by**: `webui/server.py` (served at `/` and `/static/*`)
 - **Depends on**: None (vanilla JS, no frameworks/CDN)
+</content>

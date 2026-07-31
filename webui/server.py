@@ -1,5 +1,5 @@
 """
-OFM Control Panel — local HTTP server with homepage UI.
+OFM Control Panel â€” local HTTP server with homepage UI.
 Serves at http://localhost:8000
 
 Run:  py server.py
@@ -20,21 +20,21 @@ from http.server import ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
-BASE = Path(__file__).resolve().parent          # OFM root
+BASE = Path(__file__).resolve().parent.parent      # OFM root
 OUTPUTS = BASE / "outputs"
-PHOTOVIDEO = BASE / "pipeline-photovideo"
-TIKTOK_DIR = BASE / "pipeline-tiktok"
-ACTIVITY_LOG = TIKTOK_DIR / "activity.json"
+PIPELINE_DIR = BASE / "pipeline"
+WEBUI_DIR = BASE / "webui"
+ACTIVITY_LOG = WEBUI_DIR / "activity.json"
 PORT = 8000
 
 sys.path.insert(0, str(BASE))
 from core.config import API_KEY, PHOTO_PRICE, get_api_key, set_api_key, remove_api_key, list_api_keys, SETTINGS_PATH, list_wavespeed_accounts, set_wavespeed_account, remove_wavespeed_account, rename_wavespeed_account, get_active_wavespeed_key, set_active_wavespeed_account, test_wavespeed_account
 
-sys.path.insert(0, str(PHOTOVIDEO))
+sys.path.insert(0, str(PIPELINE_DIR))
 from prompt_bank import list_presets, build_jobs, build_jobs_multi
 
-WAVESPEED_BATCH = BASE / "wavespeed-batch-api"
-sys.path.insert(0, str(WAVESPEED_BATCH))
+API_DIR = BASE / "api"
+sys.path.insert(0, str(API_DIR))
 from wavespeed_client import WaveSpeedClient
 
 _balance_cache = {"time": 0, "value": None}
@@ -64,7 +64,7 @@ def _get_balance(account_label=None):
 
 
 def _get_identity_name():
-    identity_path = BASE / "wavespeed_identity_alina.md"
+    identity_path = BASE / "docs" / "wavespeed_identity_alina.md"
     if not identity_path.is_file():
         return ""
     for line in identity_path.read_text(encoding="utf-8").splitlines():
@@ -73,7 +73,7 @@ def _get_identity_name():
     return ""
 
 
-# ── Activity log ──────────────────────────────────────────────
+# â”€â”€ Activity log â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def _load_activity():
     if ACTIVITY_LOG.exists():
@@ -94,7 +94,7 @@ def _log_activity(message):
     ACTIVITY_LOG.write_text(json.dumps(entries[:50], indent=2), encoding="utf-8")
 
 
-# ── Collect outputs grouped by date ───────────────────────────
+# â”€â”€ Collect outputs grouped by date â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 from collections import defaultdict
 
@@ -174,7 +174,7 @@ def _collect():
     return batches
 
 
-# ── Pipeline subprocess ──────────────────────────────────
+# â”€â”€ Pipeline subprocess â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 _pipeline_runs = {}
 _state_lock = threading.Lock()
@@ -216,7 +216,7 @@ def _update_progress(run_id, line):
 def _start_pipeline(mode, prompts, with_text=False):
     """Start pipeline in a daemon thread. Returns run_id for progress polling."""
     run_id = uuid.uuid4().hex[:8]
-    cmd = [sys.executable, str(PHOTOVIDEO / "pipeline.py"), "--prompts", prompts]
+    cmd = [sys.executable, str(PIPELINE_DIR / "pipeline.py"), "--prompts", prompts]
     if with_text:
         cmd.append("--with-text")
 
@@ -266,7 +266,7 @@ def _start_pipeline(mode, prompts, with_text=False):
 
 
 def _run_dashboard():
-    cmd = [sys.executable, str(TIKTOK_DIR / "dashboard.py"), "--all"]
+    cmd = [sys.executable, str(WEBUI_DIR / "dashboard.py"), "--all"]
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         ok = proc.returncode == 0
@@ -275,7 +275,7 @@ def _run_dashboard():
         return {"ok": False, "output": str(e)}
 
 
-# ── HTTP Handler ──────────────────────────────────────────────
+# â”€â”€ HTTP Handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
@@ -400,10 +400,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     @staticmethod
     def _resolve_prompts(path):
-        """Resolve prompts path: bare filename → relative to PHOTOVIDEO."""
+        """Resolve prompts path: bare filename â†’ relative to PIPELINE_DIR."""
         p = Path(path)
         if not p.is_absolute() and p.parent == Path("."):
-            p = PHOTOVIDEO / p
+            p = PIPELINE_DIR / p
         return str(p.resolve())
 
     def do_POST(self):
@@ -414,7 +414,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             prompts_data = body.get("prompts", "prompts_alina_b1.json")
             if isinstance(prompts_data, list):
                 stem = f"edited_prompts_{uuid.uuid4().hex[:8]}"
-                prompts_path = PHOTOVIDEO / f"{stem}.json"
+                prompts_path = PIPELINE_DIR / f"{stem}.json"
                 prompts_path.write_text(json.dumps(prompts_data, indent=2), encoding="utf-8")
                 prompts = str(prompts_path.resolve())
             else:
@@ -442,7 +442,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     outfit_style=outfit_style,
                 )
                 stem = f"promptbank_{vibe}_{camera_style}_{lighting}_{time_of_day}_{outfit_style}_{count}"
-                prompts_path = PHOTOVIDEO / f"{stem}.json"
+                prompts_path = PIPELINE_DIR / f"{stem}.json"
                 prompts_path.write_text(json.dumps(jobs, indent=2), encoding="utf-8")
                 _log_activity(
                     f"Prompt bank: {stem}.json ({len(jobs)} jobs, vibe={vibe}, "
@@ -610,9 +610,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
         pass  # quieter
 
 
-# ── Homepage HTML ─────────────────────────────────────────────
+# â”€â”€ Homepage HTML â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-STATIC_DIR = TIKTOK_DIR / "static"
+STATIC_DIR = WEBUI_DIR / "static"
 
 
 def _load_homepage():
@@ -624,7 +624,7 @@ def _load_homepage():
 
 
 HOMEPAGE_HTML = _load_homepage()
-# ── Run ──
+# â”€â”€ Run â”€â”€
 if __name__ == "__main__":
     port = 8000
     # Free port if stale
@@ -676,4 +676,5 @@ if __name__ == "__main__":
         print(f"\n{Colors.YELLOW}! Shutdown signal received...{Colors.END}")
         server.shutdown()
         print(f"{Colors.GREEN}+ Server stopped gracefully.{Colors.END}")
+
 

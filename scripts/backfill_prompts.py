@@ -16,7 +16,7 @@ from pathlib import Path
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, BASE)
-sys.path.insert(0, os.path.join(BASE, "pipeline-photovideo"))
+sys.path.insert(0, os.path.join(BASE, "pipeline"))
 
 from prompt_bank import (
     INDOOR_SCENES, MIRROR_SCENES, FRAMING,
