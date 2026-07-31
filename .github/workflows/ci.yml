@@ -65,3 +65,5 @@ jobs:
           test -f webui/static/style.css
           test -f webui/static/app.js
           echo "Frontend files present"
+      - name: Check JS syntax
+        run: node --check webui/static/app.js

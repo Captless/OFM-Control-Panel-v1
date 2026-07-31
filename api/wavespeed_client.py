@@ -28,7 +28,7 @@ class WaveSpeedClient:
         self.api_key = api_key
         self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
 
-    def _request(self, method, path, payload=None):
+    def _request(self, method, path, payload=None, timeout=10):
         url = f"{BASE_URL}{path}"
         data = None
         headers = {"Authorization": f"Bearer {self.api_key}"}
@@ -38,7 +38,7 @@ class WaveSpeedClient:
         req = urllib.request.Request(url, data=data, headers=headers, method=method)
         self.logger.debug("request %s %s", method, url)
         try:
-            with urllib.request.urlopen(req) as resp:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
                 body = json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             raise WaveSpeedError(f"HTTP {e.code}: {e.read().decode('utf-8', 'ignore')}", status=e.code)
@@ -52,7 +52,7 @@ class WaveSpeedClient:
 
     def validate(self):
         """Check whether the API key is valid. GET /models returns 401 for bad keys."""
-        self._request("GET", "/models")
+        self._request("GET", "/models", timeout=5)
         return True
 
     def submit(self, payload, model=None):

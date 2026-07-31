@@ -888,8 +888,6 @@ body.light::before {
   font-size: 13px;
   font-weight: 600;
   color: var(--fg);
-  cursor: text;
-  border-bottom: 1px dashed transparent;
   transition: border-color .15s;
 }
 .provider-name:hover { border-bottom-color: var(--fg3); }
@@ -1378,6 +1376,10 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
 }
 #api-provider-list .provider-status.valid { color: #4caf50; }
 #api-provider-list .provider-status.invalid { color: #dc2626; }
+#api-provider-list .provider-status.checking { color: var(--fg3); font-style: italic; }
+
+/* Provider dot checking state */
+#api-provider-list .provider-dot.checking { background: #ff9800; }
 
 /* Actions */
 #api-provider-list .provider-actions {

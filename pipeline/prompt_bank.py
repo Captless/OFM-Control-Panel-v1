@@ -54,10 +54,10 @@ FRAMING = [
 HAIR = [
     "damp half-up hairstyle with loose strands sticking flat to temples and neck",
     "wet side-parted hair clinging to one side of face and neck",
-    "damp loose wavy hair with strands falling across cheeks",
+    "damp loose hair with strands falling across cheeks",
     "wet tousled hair sticking unevenly to neck and shoulders",
     "damp low bun with loose strands around face",
-    "natural messy slightly voluminous hair",
+    "natural messy hair",
     "damp messy twin buns with loose strands sticking to forehead and jawline",
     "wet slick low bun with strands clinging to temples and neck",
 ]
@@ -70,14 +70,14 @@ OUTFIT_TOPS_POOLS = {
     "fem": [
         "black fitted micro tank top with ultra-thin straps, distressed edges, subtle faded gothic print text",
         "dark charcoal asymmetrical cut-out crop top with single-shoulder strap design, double-layer matte fabric with visible seam lines and subtle ribbed texture",
-        "black halter-style fitted micro top with ultra-thin neck strap, contour stitching and matte stretch fabric with subtle tension lines",
+        "black fitted micro cami with ultra-thin straps, soft matte cotton blend, subtle lace trim along neckline, delicate seam shaping and slight stretch tension, paired with high-waisted black tight shorts with smooth finish and minimal contour seams",
         "black strappy bandeau micro top with multiple thin intersecting straps, layered construction with irregular cut panels, raw hems and distressed stitching, faint washed gothic symbol print across chest",
-        "black fitted crop top with lace-trim neckline and sheer mesh overlay inserts, soft matte fabric with subtle shaping seams and delicate texture",
-        "black fitted micro tank top with ultra-thin straps, irregular distressing and frayed seams, subtle faded attitude print across chest, uneven hemline",
+        "charcoal grey cropped tank with soft ribbed texture, thin straps and gently curved hem, faint washed graphic detail across chest, paired with black fitted lounge shorts with subtle stitching and soft fabric folds",
+        "black asymmetrical soft crop top with one thin strap and lightly draped neckline, smooth stretch fabric with minimal seams, paired with high-waisted black short shorts with clean finish and slight shaping structure",
     ],
     "street": [
         "oversized black graphic tee with faded vintage band print, worn collar, boxy relaxed fit hanging loose off one shoulder",
-        "distressed grey washed hoodie with raw edges and oversized silhouette, layered over thin long-sleeved tee underneath",
+        "black sleeveless cropped top with industrial-style seams and subtle distressed edges, slightly structured fit, paired with black cargo joggers with tapered legs, oversized pockets and adjustable strap elements",
         "loose charcoal crewneck sweatshirt with wide ribbed neck, relaxed street wear fit, over longline camisole tank",
         "black tech windbreaker vest over fitted torso top, visible crossbody bag strap, urban practical layering",
     ],
@@ -86,6 +86,9 @@ OUTFIT_TOPS_POOLS = {
         "dark plaid flannel shirt unbuttoned over a black fitted tank, rolled sleeves, silver chain layered visible",
         "distressed black cropped knit sweater with one loose sleeve thread trailing, uneven chunky texture, thrifted look",
         "grey washed vintage concert tee layered under slouchy charcoal knit cardigan, oversized sleeves bunched at wrists",
+        "black distressed micro tank top with faded graphic print, raw edges and worn cotton texture, slightly stretched fabric, paired with high-waisted black tight shorts with subtle fraying and uneven seam details",
+        "washed black cropped tee with cut-off sleeves, distressed neckline and faded band-style graphic, soft worn fabric, paired with loose black cargo pants with heavy pocket detailing and worn texture",
+        "dark charcoal shredded crop top with irregular cuts, layered over thin mesh underlayer, rough raw hems and distressed stitching, paired with black fitted shorts with subtle fading and rugged seam lines",
     ],
     "academia": [
         "black fitted turtleneck in fine ribbed knit, close-to-body cut, matte texture against skin",
@@ -154,11 +157,11 @@ POSES = [
 
 LIGHTING_POOLS = {
     "warm": [
-        "dim subtle warm indoor lighting, soft shadows",
-        "dim subtle warm ambient light, soft natural shadows",
+        "dim subtle warm lamp indoor lighting, soft shadows",
+        "dim subtle warm lamp ambient light, soft natural shadows",
         "dim warm low light, moody shadows with soft falloff",
         "dim warm bathroom lighting, soft tile reflections",
-        "subtle dim warm light, soft gentle shadows on face",
+        "subtle dim warm lamp light, soft gentle shadows on face",
     ],
     "cool": [
         "cool soft window light, pale blue white wash, delicate shadows across features",
@@ -203,7 +206,7 @@ MIRROR_NEGATIVE = (
 # IDENTITY LOCK
 # ---------------------------------------------------------------------------
 
-IDENTITY_LOCK = "keep model identity/lip color consistent/accurate/similar"
+IDENTITY_LOCK = "keep model identity, hair/lip color consistent/accurate/similar"
 
 # ---------------------------------------------------------------------------
 # BUILD PROMPT
