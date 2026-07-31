@@ -155,6 +155,18 @@ This keeps AGENTS.md in sync with reality without re-running `/init-deep`.
 
 ## Recent Changes
 
+### 2026-07-31 — API selector modal simplification (check marks only)
+
+**rename removed** ✓ — `pipeline-tiktok/static/app.js`: `.provider-name` in `loadApiProviderList()` no longer has `onclick="startRenameApi(...)"` / `title="Click to rename"`. Deleted the `startRenameApi()` function entirely (dead code). Settings drawer rename (`startRename`) preserved.
+
+**hover-reveal removed** ✓ — `.provider-key` in the modal no longer carries `data-full` / `title="Hover to reveal"`; keys stay masked. Deleted the document-level `mouseover`/`mouseout` reveal delegation.
+
+**check-marks-only** ✓ — `pipeline-tiktok/static/style.css`: replaced `.provider-radio` circle buttons with `.provider-check` (plain 28px icon button, no circle border, `svg` always visible). Active = emerald `var(--accent)` check (disabled, default cursor); inactive = gray `var(--fg3)` check (pointer, hover → emerald + subtle tint). Responsive block updated `.provider-radio` → `.provider-check`.
+
+**key/name affordances** ✓ — `#api-provider-list .provider-name` dropped `cursor: text`; `.provider-key` dropped `cursor: help` + `:hover` color shift.
+
+**verified** ✓ — `node --check` clean; live server serves updated app.js (no `startRenameApi`) / style.css (no `provider-radio`); `/api/settings/wavespeed/accounts` returns 4 accounts, `captlessgaming` active.
+
 ### 2026-07-31 — API selector modal redesign + toolbar label sync
 
 **selected-account state** ✓ — `pipeline-tiktok/static/app.js`: new `_selectedAccount` / `_lastIdentity` / `_lastApiCount` globals + `updateApiLabel()` sets `#api-user` with priority: `_selectedAccount` → identity → `N API(s)` → 'No API keys'. `checkApiStatus()` no longer writes the label directly (only dot + balance); it clears stale `_selectedAccount` when the account disappears and falls back to `active`. `loadApiProviderList()` + `confirmSwitchApi()` set `_selectedAccount` and refresh the label. Toolbar now shows the modal account name (e.g. `captlessgaming`), NOT the API identity (`Alina Sky`).
