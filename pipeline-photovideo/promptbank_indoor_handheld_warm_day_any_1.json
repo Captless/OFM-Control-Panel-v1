@@ -1,0 +1,11 @@
+[
+  {
+    "prompt": "Front-facing handheld selfie, vertical 9:16, no phone visible, standing near couch in a dim living room, uneven framing with slight tilt, head to waist crop, damp half-up hairstyle with loose strands sticking flat to temples and neck, black strappy bandeau micro top with multiple thin intersecting straps, layered construction with irregular cut panels, raw hems and distressed stitching, faint washed gothic symbol print across chest, structured black cargo pants with oversized pockets, stitched panels and hanging strap details, candid and unposed, slight torso shift, comfortable relaxed posture, dim subtle warm indoor lighting, soft shadows, natural daylight, imperfect composition, authentic amateur snapchat aesthetic, deep blacks, moody contrast, photorealistic skin texture, subtle film grain, high detail, non-AI aesthetic\n\nnegative prompt: smiling, phone visible, mirror selfie, lamp object visible, overly staged pose, studio lighting, perfect symmetry, unrealistic skin, CGI look, cleavage\nkeep model identity/lip color consistent/accurate/similar",
+    "filename": "001_557750.png",
+    "labels": "standing near couch in a dim living room \u00b7 slight torso shift, comfortable relaxed posture",
+    "video_prompt": "auto",
+    "negative_prompt": "smiling, phone visible, mirror selfie, lamp object visible, overly staged pose, studio lighting, perfect symmetry, unrealistic skin, CGI look, cleavage",
+    "guidance_scale": 0.55,
+    "duration": 5
+  }
+]

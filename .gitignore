@@ -1,0 +1,27 @@
+# Bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+
+# Outputs (generated media)
+outputs/
+
+# Asset binaries
+pipeline-tiktok/fonts/*.ttf
+pipeline-tiktok/fonts/*.txt
+pipeline-tiktok/fonts/static/*.ttf
+
+# Logs
+*.log
+*.err
+
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

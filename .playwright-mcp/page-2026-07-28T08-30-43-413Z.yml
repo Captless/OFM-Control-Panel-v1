@@ -1,0 +1,498 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]: OFM
+      - generic [ref=e5]: 19 items · 3 batches
+      - generic [ref=e6]:
+        - generic [ref=e7] [cursor=pointer]:
+          - generic [ref=e8]: Generated
+          - generic [ref=e9]: "19"
+        - generic [ref=e10] [cursor=pointer]:
+          - generic [ref=e11]: Batches
+          - generic [ref=e12]: "3"
+        - generic [ref=e13] [cursor=pointer]: ⚙ Settings
+      - button "Toggle dark/light mode" [ref=e16] [cursor=pointer]
+    - main [ref=e19]:
+      - generic [ref=e20]:
+        - heading "Control Panel" [level=1] [ref=e21]
+        - generic [ref=e22]:
+          - generic [ref=e23]: $1.00
+          - generic [ref=e24]: ·
+          - generic [ref=e25]: $2.15 total
+          - button "↻" [ref=e26] [cursor=pointer]
+        - generic [ref=e27]:
+          - generic [ref=e28]: captlessgaming · 3 APIs
+          - generic [ref=e652]:
+            - generic [ref=e653]: API Status
+            - generic [ref=e654]:
+              - generic [ref=e656]: Alina Sky
+              - generic [ref=e657]: Valid
+            - generic [ref=e658]:
+              - generic [ref=e660]: wavespeed
+              - generic [ref=e661]: Valid
+            - generic [ref=e662]:
+              - generic [ref=e664]: captlessgaming (active)
+              - generic [ref=e665]: Valid
+          - generic [ref=e31]: Live
+      - generic [ref=e35]:
+        - heading "Image Generation" [level=3] [ref=e36]
+        - generic [ref=e37]:
+          - generic "All = mixed indoor + outdoor | Indoor only | Outdoor only" [ref=e38]: General Vibe
+          - generic [ref=e39]:
+            - generic [ref=e40] [cursor=pointer]: All
+            - generic [ref=e41] [cursor=pointer]: Indoor
+            - generic [ref=e42] [cursor=pointer]: Outdoor
+        - generic [ref=e43]:
+          - generic "Checking multiple = random per image" [ref=e44]: Lighting
+          - generic [ref=e45] [cursor=pointer]:
+            - checkbox "Warm Ambient" [checked] [ref=e46]
+            - text: Warm Ambient
+          - generic [ref=e47] [cursor=pointer]:
+            - checkbox "Cool Daylight" [checked] [ref=e48]
+            - text: Cool Daylight
+          - generic [ref=e49] [cursor=pointer]:
+            - checkbox "Low Light / Dark" [checked] [ref=e50]
+            - text: Low Light / Dark
+        - generic [ref=e51]:
+          - generic [ref=e52]: "Count: 1"
+          - slider [ref=e53] [cursor=pointer]: "1"
+        - button "Generate" [ref=e54] [cursor=pointer]
+        - generic [ref=e56]: $0.07 · $1.00
+      - generic [ref=e57]:
+        - generic [ref=e58]: Outputs
+        - button "↻ Refresh" [ref=e59] [cursor=pointer]
+      - generic [ref=e62]:
+        - generic [ref=e666]:
+          - heading "▸ July 28, 2026 13 0/13 used" [level=2] [ref=e667] [cursor=pointer]:
+            - generic [ref=e668]: ▸
+            - text: July 28, 2026
+            - generic [ref=e669]: "13"
+            - generic [ref=e670]: 0/13 used
+          - table [ref=e671]:
+            - rowgroup [ref=e672]:
+              - row [ref=e673]:
+                - columnheader [ref=e674]
+                - columnheader "#" [ref=e675]
+                - columnheader "Media" [ref=e676]
+                - columnheader "Text" [ref=e677]
+                - columnheader [ref=e678]
+                - columnheader [ref=e679]
+                - columnheader [ref=e680]
+                - columnheader [ref=e681]
+            - rowgroup [ref=e682]:
+              - row [ref=e683]:
+                - cell [ref=e684]:
+                  - checkbox [ref=e685] [cursor=pointer]
+                - cell "1" [ref=e686]
+                - cell [ref=e687] [cursor=pointer]
+                - cell "porch steps · arm extended holding phone · floor-level — PNG" [ref=e689]:
+                  - generic [ref=e690]: porch steps · arm extended holding phone · floor-level
+                  - text: —
+                  - generic [ref=e691]: PNG
+                - cell [ref=e692]:
+                  - button "Copy text" [ref=e693] [cursor=pointer]
+                - cell [ref=e697]:
+                  - button "Edit caption" [ref=e698] [cursor=pointer]
+                - cell [ref=e702]:
+                  - link "Download" [ref=e703] [cursor=pointer]:
+                    - /url: 2026-07-28/photos/001_35283c.png
+                - cell [ref=e707]:
+                  - button "Delete media" [ref=e708] [cursor=pointer]
+              - row [ref=e711]:
+                - cell [ref=e712]:
+                  - checkbox [ref=e713] [cursor=pointer]
+                - cell "2" [ref=e714]
+                - cell [ref=e715] [cursor=pointer]
+                - cell "outdoor cafe table with ambient street background · arm extended holding phone · selfie taken from slightly above looking down — PNG" [ref=e717]:
+                  - generic [ref=e718]: outdoor cafe table with ambient street background · arm extended holding phone · selfie taken from slightly above looking down
+                  - text: —
+                  - generic [ref=e719]: PNG
+                - cell [ref=e720]:
+                  - button "Copy text" [ref=e721] [cursor=pointer]
+                - cell [ref=e725]:
+                  - button "Edit caption" [ref=e726] [cursor=pointer]
+                - cell [ref=e730]:
+                  - link "Download" [ref=e731] [cursor=pointer]:
+                    - /url: 2026-07-28/photos/001_880056.png
+                - cell [ref=e735]:
+                  - button "Delete media" [ref=e736] [cursor=pointer]
+              - row [ref=e739]:
+                - cell [ref=e740]:
+                  - checkbox [ref=e741] [cursor=pointer]
+                - cell "3" [ref=e742]
+                - cell [ref=e743] [cursor=pointer]
+                - cell "bedroom lying on bed · sitting in car seat turned toward camera · slightly wide perspective — PNG" [ref=e745]:
+                  - generic [ref=e746]: bedroom lying on bed · sitting in car seat turned toward camera · slightly wide perspective
+                  - text: —
+                  - generic [ref=e747]: PNG
+                - cell [ref=e748]:
+                  - button "Copy text" [ref=e749] [cursor=pointer]
+                - cell [ref=e753]:
+                  - button "Edit caption" [ref=e754] [cursor=pointer]
+                - cell [ref=e758]:
+                  - link "Download" [ref=e759] [cursor=pointer]:
+                    - /url: 2026-07-28/photos/001_c9c5de.png
+                - cell [ref=e763]:
+                  - button "Delete media" [ref=e764] [cursor=pointer]
+              - row [ref=e767]:
+                - cell [ref=e768]:
+                  - checkbox [ref=e769] [cursor=pointer]
+                - cell "4" [ref=e770]
+                - cell [ref=e771] [cursor=pointer]
+                - cell "hallway with a mirror and window · slight crooked tilted framing · floor-level — PNG" [ref=e773]:
+                  - generic [ref=e774]: hallway with a mirror and window · slight crooked tilted framing · floor-level
+                  - text: —
+                  - generic [ref=e775]: PNG
+                - cell [ref=e776]:
+                  - button "Copy text" [ref=e777] [cursor=pointer]
+                - cell [ref=e781]:
+                  - button "Edit caption" [ref=e782] [cursor=pointer]
+                - cell [ref=e786]:
+                  - link "Download" [ref=e787] [cursor=pointer]:
+                    - /url: 2026-07-28/photos/001_e4185a.png
+                - cell [ref=e791]:
+                  - button "Delete media" [ref=e792] [cursor=pointer]
+              - row [ref=e795]:
+                - cell [ref=e796]:
+                  - checkbox [ref=e797] [cursor=pointer]
+                - cell "5" [ref=e798]
+                - cell [ref=e799] [cursor=pointer]
+                - cell "hotel bathroom with large mirror and marble · sitting crosslegged on floor · iPhone arm-extended selfie at face level — PNG" [ref=e801]:
+                  - generic [ref=e802]: hotel bathroom with large mirror and marble · sitting crosslegged on floor · iPhone arm-extended selfie at face level
+                  - text: —
+                  - generic [ref=e803]: PNG
+                - cell [ref=e804]:
+                  - button "Copy text" [ref=e805] [cursor=pointer]
+                - cell [ref=e809]:
+                  - button "Edit caption" [ref=e810] [cursor=pointer]
+                - cell [ref=e814]:
+                  - link "Download" [ref=e815] [cursor=pointer]:
+                    - /url: 2026-07-28/photos/001_40aa79.png
+                - cell [ref=e819]:
+                  - button "Delete media" [ref=e820] [cursor=pointer]
+              - row [ref=e823]:
+                - cell [ref=e824]:
+                  - checkbox [ref=e825] [cursor=pointer]
+                - cell "6" [ref=e826]
+                - cell [ref=e827] [cursor=pointer]
+                - cell "dorm room desk area · arm extended holding phone · low angle from below chin — PNG" [ref=e829]:
+                  - generic [ref=e830]: dorm room desk area · arm extended holding phone · low angle from below chin
+                  - text: —
+                  - generic [ref=e831]: PNG
+                - cell [ref=e832]:
+                  - button "Copy text" [ref=e833] [cursor=pointer]
+                - cell [ref=e837]:
+                  - button "Edit caption" [ref=e838] [cursor=pointer]
+                - cell [ref=e842]:
+                  - link "Download" [ref=e843] [cursor=pointer]:
+                    - /url: 2026-07-28/photos/001_d3fb6d.png
+                - cell [ref=e847]:
+                  - button "Delete media" [ref=e848] [cursor=pointer]
+              - row [ref=e851]:
+                - cell [ref=e852]:
+                  - checkbox [ref=e853] [cursor=pointer]
+                - cell "7" [ref=e854]
+                - cell [ref=e855] [cursor=pointer]
+                - cell "hallway with a mirror and window · slight crooked tilted framing · low angle from below chin — PNG" [ref=e857]:
+                  - generic [ref=e858]: hallway with a mirror and window · slight crooked tilted framing · low angle from below chin
+                  - text: —
+                  - generic [ref=e859]: PNG
+                - cell [ref=e860]:
+                  - button "Copy text" [ref=e861] [cursor=pointer]
+                - cell [ref=e865]:
+                  - button "Edit caption" [ref=e866] [cursor=pointer]
+                - cell [ref=e870]:
+                  - link "Download" [ref=e871] [cursor=pointer]:
+                    - /url: 2026-07-28/photos/001_4a67a4.png
+                - cell [ref=e875]:
+                  - button "Delete media" [ref=e876] [cursor=pointer]
+              - row [ref=e879]:
+                - cell [ref=e880]:
+                  - checkbox [ref=e881] [cursor=pointer]
+                - cell "8" [ref=e882]
+                - cell [ref=e883] [cursor=pointer]
+                - cell "outdoor cafe table with ambient street background · bent over slightly · over-the-shoulder shot taken by another person — PNG" [ref=e885]:
+                  - generic [ref=e886]: outdoor cafe table with ambient street background · bent over slightly · over-the-shoulder shot taken by another person
+                  - text: —
+                  - generic [ref=e887]: PNG
+                - cell [ref=e888]:
+                  - button "Copy text" [ref=e889] [cursor=pointer]
+                - cell [ref=e893]:
+                  - button "Edit caption" [ref=e894] [cursor=pointer]
+                - cell [ref=e898]:
+                  - link "Download" [ref=e899] [cursor=pointer]:
+                    - /url: 2026-07-28/photos/001_ad5889.png
+                - cell [ref=e903]:
+                  - button "Delete media" [ref=e904] [cursor=pointer]
+              - row [ref=e907]:
+                - cell [ref=e908]:
+                  - checkbox [ref=e909] [cursor=pointer]
+                - cell "9" [ref=e910]
+                - cell [ref=e911] [cursor=pointer]
+                - cell "bedroom floor sitting in front of a floor mirror · lied on bed · close framing — PNG" [ref=e913]:
+                  - generic [ref=e914]: bedroom floor sitting in front of a floor mirror · lied on bed · close framing
+                  - text: —
+                  - generic [ref=e915]: PNG
+                - cell [ref=e916]:
+                  - button "Copy text" [ref=e917] [cursor=pointer]
+                - cell [ref=e921]:
+                  - button "Edit caption" [ref=e922] [cursor=pointer]
+                - cell [ref=e926]:
+                  - link "Download" [ref=e927] [cursor=pointer]:
+                    - /url: 2026-07-28/photos/001_f1d7ee.png
+                - cell [ref=e931]:
+                  - button "Delete media" [ref=e932] [cursor=pointer]
+              - row [ref=e935]:
+                - cell [ref=e936]:
+                  - checkbox [ref=e937] [cursor=pointer]
+                - cell "10" [ref=e938]
+                - cell [ref=e939] [cursor=pointer]
+                - cell "parking garage with concrete walls · bent over slightly · candid shot taken from doorway — PNG" [ref=e941]:
+                  - generic [ref=e942]: parking garage with concrete walls · bent over slightly · candid shot taken from doorway
+                  - text: —
+                  - generic [ref=e943]: PNG
+                - cell [ref=e944]:
+                  - button "Copy text" [ref=e945] [cursor=pointer]
+                - cell [ref=e949]:
+                  - button "Edit caption" [ref=e950] [cursor=pointer]
+                - cell [ref=e954]:
+                  - link "Download" [ref=e955] [cursor=pointer]:
+                    - /url: 2026-07-28/photos/002_bcf194.png
+                - cell [ref=e959]:
+                  - button "Delete media" [ref=e960] [cursor=pointer]
+              - row [ref=e963]:
+                - cell [ref=e964]:
+                  - checkbox [ref=e965] [cursor=pointer]
+                - cell "11" [ref=e966]
+                - cell [ref=e967] [cursor=pointer]
+                - cell "cluttered room · leaning against counter with hips pushed back · phone propped against an object on timer — PNG" [ref=e969]:
+                  - generic [ref=e970]: cluttered room · leaning against counter with hips pushed back · phone propped against an object on timer
+                  - text: —
+                  - generic [ref=e971]: PNG
+                - cell [ref=e972]:
+                  - button "Copy text" [ref=e973] [cursor=pointer]
+                - cell [ref=e977]:
+                  - button "Edit caption" [ref=e978] [cursor=pointer]
+                - cell [ref=e982]:
+                  - link "Download" [ref=e983] [cursor=pointer]:
+                    - /url: 2026-07-28/photos/001_4f33b5.png
+                - cell [ref=e987]:
+                  - button "Delete media" [ref=e988] [cursor=pointer]
+              - row [ref=e991]:
+                - cell [ref=e992]:
+                  - checkbox [ref=e993] [cursor=pointer]
+                - cell "12" [ref=e994]
+                - cell [ref=e995] [cursor=pointer]
+                - cell "bedroom floor sitting in front of a floor mirror · kneeling on bed facing camera · narrow vertical framing — PNG" [ref=e997]:
+                  - generic [ref=e998]: bedroom floor sitting in front of a floor mirror · kneeling on bed facing camera · narrow vertical framing
+                  - text: —
+                  - generic [ref=e999]: PNG
+                - cell [ref=e1000]:
+                  - button "Copy text" [ref=e1001] [cursor=pointer]
+                - cell [ref=e1005]:
+                  - button "Edit caption" [ref=e1006] [cursor=pointer]
+                - cell [ref=e1010]:
+                  - link "Download" [ref=e1011] [cursor=pointer]:
+                    - /url: 2026-07-28/photos/001_84edf6.png
+                - cell [ref=e1015]:
+                  - button "Delete media" [ref=e1016] [cursor=pointer]
+              - row [ref=e1019]:
+                - cell [ref=e1020]:
+                  - checkbox [ref=e1021] [cursor=pointer]
+                - cell "13" [ref=e1022]
+                - cell [ref=e1023] [cursor=pointer]
+                - cell "elevator with mirrored walls · standing over-shoulder looking at mirror reflection · phone positioned on counter or shelf on timer — PNG" [ref=e1025]:
+                  - generic [ref=e1026]: elevator with mirrored walls · standing over-shoulder looking at mirror reflection · phone positioned on counter or shelf on timer
+                  - text: —
+                  - generic [ref=e1027]: PNG
+                - cell [ref=e1028]:
+                  - button "Copy text" [ref=e1029] [cursor=pointer]
+                - cell [ref=e1033]:
+                  - button "Edit caption" [ref=e1034] [cursor=pointer]
+                - cell [ref=e1038]:
+                  - link "Download" [ref=e1039] [cursor=pointer]:
+                    - /url: 2026-07-28/photos/001_7d4f7e.png
+                - cell [ref=e1043]:
+                  - button "Delete media" [ref=e1044] [cursor=pointer]
+        - generic [ref=e1047]:
+          - heading "▸ July 27, 2026 3 0/3 used" [level=2] [ref=e1048] [cursor=pointer]:
+            - generic [ref=e1049]: ▸
+            - text: July 27, 2026
+            - generic [ref=e1050]: "3"
+            - generic [ref=e1051]: 0/3 used
+          - table [ref=e1052]:
+            - rowgroup [ref=e1053]:
+              - row [ref=e1054]:
+                - columnheader [ref=e1055]
+                - columnheader "#" [ref=e1056]
+                - columnheader "Media" [ref=e1057]
+                - columnheader "Text" [ref=e1058]
+                - columnheader [ref=e1059]
+                - columnheader [ref=e1060]
+                - columnheader [ref=e1061]
+                - columnheader [ref=e1062]
+            - rowgroup [ref=e1063]:
+              - row [ref=e1064]:
+                - cell [ref=e1065]:
+                  - checkbox [ref=e1066] [cursor=pointer]
+                - cell "1" [ref=e1067]
+                - cell [ref=e1068] [cursor=pointer]
+                - cell "dorm room desk area — PNG" [ref=e1070]:
+                  - generic [ref=e1071]: dorm room desk area
+                  - text: —
+                  - generic [ref=e1072]: PNG
+                - cell [ref=e1073]:
+                  - button "Copy text" [ref=e1074] [cursor=pointer]
+                - cell [ref=e1078]:
+                  - button "Edit caption" [ref=e1079] [cursor=pointer]
+                - cell [ref=e1083]:
+                  - link "Download" [ref=e1084] [cursor=pointer]:
+                    - /url: 2026-07-27/photos/001_b21d18.png
+                - cell [ref=e1088]:
+                  - button "Delete media" [ref=e1089] [cursor=pointer]
+              - row [ref=e1092]:
+                - cell [ref=e1093]:
+                  - checkbox [ref=e1094] [cursor=pointer]
+                - cell "2" [ref=e1095]
+                - cell [ref=e1096] [cursor=pointer]
+                - cell "parking garage with concrete walls — PNG" [ref=e1098]:
+                  - generic [ref=e1099]: parking garage with concrete walls
+                  - text: —
+                  - generic [ref=e1100]: PNG
+                - cell [ref=e1101]:
+                  - button "Copy text" [ref=e1102] [cursor=pointer]
+                - cell [ref=e1106]:
+                  - button "Edit caption" [ref=e1107] [cursor=pointer]
+                - cell [ref=e1111]:
+                  - link "Download" [ref=e1112] [cursor=pointer]:
+                    - /url: 2026-07-27/photos/001_9468c0.png
+                - cell [ref=e1116]:
+                  - button "Delete media" [ref=e1117] [cursor=pointer]
+              - row [ref=e1120]:
+                - cell [ref=e1121]:
+                  - checkbox [ref=e1122] [cursor=pointer]
+                - cell "3" [ref=e1123]
+                - cell [ref=e1124] [cursor=pointer]
+                - cell "bedroom wardrobe mirror hello PNG" [ref=e1126]:
+                  - generic [ref=e1127]: bedroom wardrobe mirror
+                  - generic "hello" [ref=e1128]
+                  - generic [ref=e1129]: PNG
+                - cell [ref=e1130]:
+                  - button "Copy text" [ref=e1131] [cursor=pointer]
+                - cell [ref=e1135]:
+                  - button "Edit caption" [ref=e1136] [cursor=pointer]
+                - cell [ref=e1140]:
+                  - link "Download" [ref=e1141] [cursor=pointer]:
+                    - /url: 2026-07-27/photos/001_570364.png
+                - cell [ref=e1145]:
+                  - button "Delete media" [ref=e1146] [cursor=pointer]
+        - generic [ref=e1149]:
+          - heading "▸ July 26, 2026 3 0/3 used" [level=2] [ref=e1150] [cursor=pointer]:
+            - generic [ref=e1151]: ▸
+            - text: July 26, 2026
+            - generic [ref=e1152]: "3"
+            - generic [ref=e1153]: 0/3 used
+          - table [ref=e1154]:
+            - rowgroup [ref=e1155]:
+              - row [ref=e1156]:
+                - columnheader [ref=e1157]
+                - columnheader "#" [ref=e1158]
+                - columnheader "Media" [ref=e1159]
+                - columnheader "Text" [ref=e1160]
+                - columnheader [ref=e1161]
+                - columnheader [ref=e1162]
+                - columnheader [ref=e1163]
+                - columnheader [ref=e1164]
+            - rowgroup [ref=e1165]:
+              - row [ref=e1166]:
+                - cell [ref=e1167]:
+                  - checkbox [ref=e1168] [cursor=pointer]
+                - cell "1" [ref=e1169]
+                - cell [ref=e1170] [cursor=pointer]
+                - cell "staircase landing with mirror · black biker shorts under an ov · natural loose w what are you doing step bro? PNG" [ref=e1172]:
+                  - generic [ref=e1173]: staircase landing with mirror · black biker shorts under an ov · natural loose w
+                  - generic "what are you doing step bro?" [ref=e1174]
+                  - generic [ref=e1175]: PNG
+                - cell [ref=e1176]:
+                  - button "Copy text" [ref=e1177] [cursor=pointer]
+                - cell [ref=e1181]:
+                  - button "Edit caption" [ref=e1182] [cursor=pointer]
+                - cell [ref=e1186]:
+                  - link "Download" [ref=e1187] [cursor=pointer]:
+                    - /url: 2026-07-26/photos/001_ce52f2.png
+                - cell [ref=e1191]:
+                  - button "Delete media" [ref=e1192] [cursor=pointer]
+              - row [ref=e1195]:
+                - cell [ref=e1196]:
+                  - checkbox [ref=e1197] [cursor=pointer]
+                - cell "2" [ref=e1198]
+                - cell [ref=e1199] [cursor=pointer]
+                - cell "living room couch · black cargo pants (straight le · low messy ponyt hello my world is my world from the hell PNG" [ref=e1201]:
+                  - generic [ref=e1202]: living room couch · black cargo pants (straight le · low messy ponyt
+                  - generic "hello my world is my world from the hell" [ref=e1203]
+                  - generic [ref=e1204]: PNG
+                - cell [ref=e1205]:
+                  - button "Copy text" [ref=e1206] [cursor=pointer]
+                - cell [ref=e1210]:
+                  - button "Edit caption" [ref=e1211] [cursor=pointer]
+                - cell [ref=e1215]:
+                  - link "Download" [ref=e1216] [cursor=pointer]:
+                    - /url: 2026-07-26/photos/001_random.png
+                - cell [ref=e1220]:
+                  - button "Delete media" [ref=e1221] [cursor=pointer]
+              - row [ref=e1224]:
+                - cell [ref=e1225]:
+                  - checkbox [ref=e1226] [cursor=pointer]
+                - cell "3" [ref=e1227]
+                - cell [ref=e1228] [cursor=pointer]
+                - cell "no phone · mirror · bedroom · sports bra · damp braid you ever realize that the person you lost sleep over is out there living life completely unbothered while youre still analyzing their last text from 6 weeks ago. thats the plot twist nobody prepared you for. MP4" [ref=e1230]:
+                  - generic [ref=e1231]: no phone · mirror · bedroom · sports bra · damp braid
+                  - generic "you ever realize that the person you lost sleep over is out there living life completely unbothered while youre still analyzing their last text from 6 weeks ago. thats the plot twist nobody prepared you for." [ref=e1232]
+                  - generic [ref=e1233]: MP4
+                - cell [ref=e1234]:
+                  - button "Copy text" [ref=e1235] [cursor=pointer]
+                - cell [ref=e1239]:
+                  - button "Edit caption" [ref=e1240] [cursor=pointer]
+                - cell [ref=e1244]:
+                  - link "Download" [ref=e1245] [cursor=pointer]:
+                    - /url: alina_tiktok_b1/001_tiktok.mp4
+                - cell [ref=e1249]:
+                  - button "Delete media" [ref=e1250] [cursor=pointer]
+  - generic [ref=e1254]:
+    - generic [ref=e1259]:
+      - heading "API Keys" [level=4] [ref=e1260]
+      - paragraph [ref=e1261]: Manage your API provider keys
+    - generic [ref=e1262]:
+      - generic [ref=e1263]:
+        - generic [ref=e1264]: Account
+        - generic [ref=e1265]: API Key
+        - generic [ref=e1266]: Status
+      - generic [ref=e1267]:
+        - generic [ref=e1268]: A
+        - generic "Click to rename" [ref=e1269]: Alina Sky
+        - generic [ref=e1270]: wsk_****N9xk
+        - generic [ref=e1271]: Valid
+        - button "Use" [ref=e1272] [cursor=pointer]
+        - button "Remove account" [ref=e1273] [cursor=pointer]
+      - generic [ref=e1276]:
+        - generic [ref=e1277]: W
+        - generic "Click to rename" [ref=e1278]: wavespeed
+        - generic [ref=e1279]: wsk_****S5Do
+        - generic [ref=e1280]: Valid
+        - button "Use" [ref=e1281] [cursor=pointer]
+        - button "Remove account" [ref=e1282] [cursor=pointer]
+      - generic [ref=e1285]:
+        - generic [ref=e1286]: C
+        - generic "Click to rename" [ref=e1287]: captlessgaming
+        - generic [ref=e1288]: wsk_****fWuE
+        - generic [ref=e1289]: Valid
+        - generic [ref=e1290]: Active
+        - button "Remove account" [ref=e1291] [cursor=pointer]
+    - generic [ref=e1294]:
+      - generic [ref=e1295]: Add New Provider
+      - generic [ref=e1296]:
+        - textbox "e.g. replicate" [ref=e1297]
+        - textbox "API key..." [ref=e1298]
+        - button "Add" [ref=e1299] [cursor=pointer]
+      - generic [ref=e1300]: Enter any provider name and its API key
+    - button "Done" [ref=e1302] [cursor=pointer]

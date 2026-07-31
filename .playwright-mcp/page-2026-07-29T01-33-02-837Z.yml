@@ -1,0 +1,73 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]: OFM
+      - generic [ref=e6]:
+        - generic [ref=e7]: $0.00
+        - generic [ref=e8]: ·
+        - generic [ref=e9]: $0.00 total
+        - button "↻" [ref=e10] [cursor=pointer]
+      - generic [ref=e11] [cursor=pointer]: Checking...
+      - generic [ref=e14]: Starting...
+      - button "Settings" [ref=e17] [cursor=pointer]
+      - button "Toggle dark/light mode" [ref=e21] [cursor=pointer]
+    - main [ref=e24]:
+      - generic [ref=e26]:
+        - heading "Image Generation" [level=3] [ref=e27]
+        - generic [ref=e28]:
+          - generic [ref=e29]: Vibe
+          - generic [ref=e30]:
+            - generic [ref=e31] [cursor=pointer]: All
+            - generic [ref=e32] [cursor=pointer]: Indoor
+            - generic [ref=e33] [cursor=pointer]: Outdoor
+        - generic [ref=e34]:
+          - generic [ref=e35]: Camera Style
+          - generic [ref=e36]:
+            - generic [ref=e37] [cursor=pointer]: Handheld Selfie
+            - generic [ref=e38] [cursor=pointer]: Mirror Selfie
+        - generic [ref=e39]:
+          - generic [ref=e40]: Lighting
+          - generic [ref=e41]:
+            - generic [ref=e42] [cursor=pointer]: Warm
+            - generic [ref=e43] [cursor=pointer]: Cool
+            - generic [ref=e44] [cursor=pointer]: Dimlit
+        - generic [ref=e45]:
+          - generic [ref=e46]: Outfit Style
+          - generic [ref=e47]:
+            - generic [ref=e48] [cursor=pointer]: Any
+            - generic [ref=e49] [cursor=pointer]: Femme Alt
+            - generic [ref=e50] [cursor=pointer]: Street Alt
+            - generic [ref=e51] [cursor=pointer]: Grunge
+            - generic [ref=e52] [cursor=pointer]: Academia
+        - generic [ref=e53]:
+          - generic [ref=e54]: Time
+          - generic [ref=e55]:
+            - generic [ref=e56] [cursor=pointer]: Day
+            - generic [ref=e57] [cursor=pointer]: Night
+        - generic [ref=e58]:
+          - generic [ref=e59]: "Count: 1"
+          - slider [ref=e60] [cursor=pointer]: "1"
+        - button "Generate" [ref=e61] [cursor=pointer]
+    - generic [ref=e65]:
+      - generic [ref=e66]: Outputs
+      - button "↻ Refresh" [ref=e67] [cursor=pointer]
+  - generic [ref=e70]:
+    - button "Close" [ref=e71] [cursor=pointer]
+    - generic [ref=e75]:
+      - generic [ref=e80]:
+        - heading "API Keys" [level=4] [ref=e81]
+        - paragraph [ref=e82]: Manage your API provider keys
+      - generic [ref=e83]:
+        - generic [ref=e84]:
+          - generic [ref=e85]: Account
+          - generic [ref=e86]: API Key
+          - generic [ref=e87]: Status
+        - generic [ref=e88]: No providers configured
+      - generic [ref=e89]:
+        - generic [ref=e90]: Add New Provider
+        - generic [ref=e91]:
+          - textbox "e.g. replicate" [ref=e92]
+          - textbox "API key..." [ref=e93]
+          - button "Add" [ref=e94] [cursor=pointer]
+        - generic [ref=e95]: Enter any provider name and its API key
+      - button "Done" [ref=e97] [cursor=pointer]

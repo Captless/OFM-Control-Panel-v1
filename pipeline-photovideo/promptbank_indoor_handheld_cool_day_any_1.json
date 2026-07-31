@@ -1,0 +1,11 @@
+[
+  {
+    "prompt": "Front-facing handheld selfie, vertical 9:16, no phone visible, standing near couch in a dim living room, uneven framing with slight tilt, head to waist crop, natural messy slightly voluminous hair, distressed black cropped knit sweater with one loose sleeve thread trailing, uneven chunky texture, thrifted look, high-waisted black tight shorts with contour stitching and slight shaping seams, candid and unposed, soft angle turn of torso, shoulders naturally uneven, casual mid-frame posture, overcast cool ambient light, soft blue grey shadow split across one side of face, natural daylight, imperfect composition, authentic amateur snapchat aesthetic, deep blacks, moody contrast, photorealistic skin texture, subtle film grain, high detail, non-AI aesthetic\n\nnegative prompt: smiling, phone visible, mirror selfie, lamp object visible, overly staged pose, studio lighting, perfect symmetry, unrealistic skin, CGI look, cleavage\nkeep model identity/lip color consistent/accurate/similar",
+    "filename": "001_c440c6.png",
+    "labels": "standing near couch in a dim living room \u00b7 soft angle turn of torso, shoulders naturally uneven, casual mid-frame posture",
+    "video_prompt": "auto",
+    "negative_prompt": "smiling, phone visible, mirror selfie, lamp object visible, overly staged pose, studio lighting, perfect symmetry, unrealistic skin, CGI look, cleavage",
+    "guidance_scale": 0.55,
+    "duration": 5
+  }
+]

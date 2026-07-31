@@ -1,0 +1,51 @@
+- generic [ref=e2]:
+  - complementary [ref=e3]:
+    - generic [ref=e4]: OFM
+    - generic [ref=e5]: Loading...
+    - generic [ref=e6]:
+      - generic [ref=e7] [cursor=pointer]:
+        - generic [ref=e8]: Generated
+        - generic [ref=e9]: "0"
+      - generic [ref=e10] [cursor=pointer]:
+        - generic [ref=e11]: Batches
+        - generic [ref=e12]: "0"
+      - generic [ref=e13] [cursor=pointer]: ⚙ Settings
+    - button "Toggle dark/light mode" [ref=e16] [cursor=pointer]
+  - main [ref=e19]:
+    - generic [ref=e20]:
+      - heading "Control Panel" [level=1] [ref=e21]
+      - generic [ref=e22]:
+        - generic [ref=e23]: $0.00
+        - generic [ref=e24]: ·
+        - generic [ref=e25]: $0.00 total
+        - button "↻" [ref=e26] [cursor=pointer]
+      - generic [ref=e27]:
+        - generic [ref=e28]: Checking...
+        - generic [ref=e31]: Starting...
+    - generic [ref=e35]:
+      - heading "Image Generation" [level=3] [ref=e36]
+      - generic [ref=e37]:
+        - generic "All = mixed indoor + outdoor | Indoor only | Outdoor only" [ref=e38]: General Vibe
+        - generic [ref=e39]:
+          - generic [ref=e40] [cursor=pointer]: All
+          - generic [ref=e41] [cursor=pointer]: Indoor
+          - generic [ref=e42] [cursor=pointer]: Outdoor
+      - generic [ref=e43]:
+        - generic "Checking multiple = random per image" [ref=e44]: Lighting
+        - generic [ref=e45] [cursor=pointer]:
+          - checkbox "Warm Ambient" [checked] [ref=e46]
+          - text: Warm Ambient
+        - generic [ref=e47] [cursor=pointer]:
+          - checkbox "Cool Daylight" [checked] [ref=e48]
+          - text: Cool Daylight
+        - generic [ref=e49] [cursor=pointer]:
+          - checkbox "Low Light / Dark" [checked] [ref=e50]
+          - text: Low Light / Dark
+      - generic [ref=e51]:
+        - generic [ref=e52]: "Count: 1"
+        - slider [ref=e53] [cursor=pointer]: "1"
+      - button "Generate" [ref=e54] [cursor=pointer]
+      - generic [ref=e56]: $0.07 · $0.00
+    - generic [ref=e57]:
+      - generic [ref=e58]: Outputs
+      - button "↻ Refresh" [ref=e59] [cursor=pointer]

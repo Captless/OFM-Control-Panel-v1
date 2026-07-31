@@ -1,0 +1,11 @@
+[
+  {
+    "prompt": "Front-facing handheld selfie, vertical 9:16, mirror selfie, standing near bathroom sink area, slight torso angle with uneven framing, head to waist composition, damp messy twin buns with loose strands sticking to forehead and jawline, off-white relaxed fit soft blazer layered over black camisole top, visible silk texture at neckline, black and grey distressed denim jeans with random pattern patch and elastic waistband, candid and unposed, subtle weight shift, confident composed stance, subtle dim warm light, soft gentle shadows on face, natural daylight, imperfect composition, authentic amateur snapchat aesthetic, deep blacks, moody contrast, photorealistic skin texture, subtle film grain, high detail, non-AI aesthetic\nblack iPhone\n\nnegative prompt: smiling, lamp object visible, overly staged pose, studio lighting, perfect symmetry, unrealistic skin, CGI look, cleavage\nkeep model identity/lip color consistent/accurate/similar",
+    "filename": "001_26b0ad.png",
+    "labels": "standing near bathroom sink area \u00b7 subtle weight shift, confident composed stance",
+    "video_prompt": "auto",
+    "negative_prompt": "smiling, phone visible, mirror selfie, lamp object visible, overly staged pose, studio lighting, perfect symmetry, unrealistic skin, CGI look, cleavage",
+    "guidance_scale": 0.55,
+    "duration": 5
+  }
+]
