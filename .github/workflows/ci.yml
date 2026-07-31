@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  syntax-check:
+    name: Python Syntax & Imports
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check Python syntax
+        run: |
+          python -m py_compile server.py
+          python -m py_compile pipeline-photovideo/pipeline.py
+          python -m py_compile pipeline-photovideo/prompt_bank.py
+          python -m py_compile pipeline-photovideo/wavespeed_i2v_client.py
+          python -m py_compile pipeline-photovideo/text_generator.py
+          python -m py_compile pipeline-tiktok/server.py
+          python -m py_compile pipeline-tiktok/wavespeed_tiktok_client.py
+          python -m py_compile pipeline-tiktok/dashboard.py
+          python -m py_compile pipeline-tiktok/run.py
+          python -m py_compile pipeline-tiktok/daybatch.py
+          python -m py_compile pipeline-tiktok/text_generator.py
+          python -m py_compile wavespeed-batch-api/wavespeed_client.py
+          python -m py_compile core/config.py
+          python -m py_compile core/daybatch.py
+          python -m py_compile core/errors.py
+          python -m py_compile core/text_generator.py
+          python -m py_compile scripts/backfill_prompts.py
+          python -m py_compile scripts/open_dashboard.py
+          python -m py_compile scripts/open_server.py
+          python -m py_compile scripts/save_meta.py
+          python -m py_compile scripts/update_config.py
+          python -m py_compile hot-take-influencer/scripts/wavespeed_client.py
+
+  import-test:
+    name: Basic Import Test
+    runs-on: ubuntu-latest
+    needs: syntax-check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test core imports
+        run: |
+          python -c "import core.config; import core.daybatch; import core.errors; import core.text_generator; print('core OK')"
+          python -c "import pipeline_photovideo.pipeline; import pipeline_photovideo.prompt_bank; print('pipeline-photovideo OK')"
+          python -c "import pipeline_tiktok.server; import pipeline_tiktok.wavespeed_tiktok_client; print('pipeline-tiktok OK')"
+          python -c "import wavespeed_batch_api.wavespeed_client; print('wavespeed-batch-api OK')"
+
+  frontend-lint:
+    name: Frontend Basic Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check HTML/CSS/JS exist
+        run: |
+          test -f pipeline-tiktok/static/index.html
+          test -f pipeline-tiktok/static/style.css
+          test -f pipeline-tiktok/static/app.js
+          echo "Frontend files present"
