@@ -1,5 +1,9 @@
 [
   {
+    "time": "00:48",
+    "message": "Photo pack started: C:\\Users\\User\\Desktop\\OFM\\pipeline\\edited_prompts_9e4c566b.json [009160a9]"
+  },
+  {
     "time": "13:01",
     "message": "WaveSpeed account removed: testinvalid"
   },
@@ -194,9 +198,5 @@
   {
     "time": "03:04",
     "message": "Active WaveSpeed account set to: captlessgaming"
-  },
-  {
-    "time": "01:18",
-    "message": "Photo pack started: C:\\Users\\User\\Desktop\\OFM\\pipeline-photovideo\\promptbank_indoor_handheld_warm_day_any_1.json [3a1eb2f4]"
   }
 ]

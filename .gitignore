@@ -9,10 +9,15 @@ __pycache__/
 # Outputs (generated media)
 outputs/
 
+# Runtime-generated prompt/job files (regenerated on demand)
+pipeline/promptbank_*.json
+pipeline/edited_prompts_*.json
+pipeline/checkpoint_*.json
+
 # Asset binaries
-pipeline-tiktok/fonts/*.ttf
-pipeline-tiktok/fonts/*.txt
-pipeline-tiktok/fonts/static/*.ttf
+webui/fonts/*.ttf
+webui/fonts/*.txt
+webui/fonts/static/*.ttf
 
 # Logs
 *.log

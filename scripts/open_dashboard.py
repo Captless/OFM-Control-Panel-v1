@@ -10,7 +10,7 @@ import os
 import sys
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DASHBOARD_SCRIPT = os.path.join(BASE, "pipeline-tiktok", "dashboard.py")
+DASHBOARD_SCRIPT = os.path.join(BASE, "webui", "dashboard.py")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Open main dashboard")

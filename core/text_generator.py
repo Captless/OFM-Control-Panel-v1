@@ -1,6 +1,6 @@
 """
 Random paragraph text generator — altgirl leaning.
-Shared with pipeline-tiktok. Same topics, same tones.
+Shared across all pipelines. Same topics, same tones.
 """
 
 import random

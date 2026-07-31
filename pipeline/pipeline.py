@@ -16,13 +16,12 @@ from pathlib import Path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.insert(0, os.path.join(BASE_DIR, ".."))
-sys.path.insert(0, os.path.join(BASE_DIR, "..", "wavespeed-batch-api"))
+sys.path.insert(0, os.path.join(BASE_DIR, "..", "api"))
 from core.config import API_KEY, AVATAR_URL
 from wavespeed_client import WaveSpeedClient as PhotoClient
 sys.path.insert(0, BASE_DIR)
 
-sys.path.insert(0, os.path.join(BASE_DIR, "..", "pipeline-tiktok"))
-from daybatch import day_path
+from core.daybatch import day_path
 
 def _build_meta(jobs):
     """Build a meta dict {stem: {"labels": ..., "prompt": ..., "negative_prompt": ..., "guidance_scale": ...}} from a jobs list."""

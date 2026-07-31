@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 
 
-_identity_path = Path(__file__).resolve().parent.parent / "wavespeed_identity_alina.md"
+_identity_path = Path(__file__).resolve().parent.parent / "docs" / "wavespeed_identity_alina.md"
 SETTINGS_PATH = Path(__file__).resolve().parent / "settings.json"
 
 
@@ -249,7 +249,7 @@ def test_wavespeed_account(label: str) -> dict:
         0,
         os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            "..", "wavespeed-batch-api",
+            "..", "api",
         ),
     )
     from wavespeed_client import WaveSpeedClient  # noqa: E402 — lazy import avoids circular dep

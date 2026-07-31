@@ -1,7 +1,7 @@
 ---
-name: wavespeed-batch-api
+name: api
 description: "Full auto-generation pipeline for AI influencer photo packs via the WaveSpeed AI API (Seedream 4.5 Edit — image-to-image). Generates amateur iPhone prompts (selfies + mirror selfies only, 50/50 ratio), calls the WaveSpeed API in concurrent batches, downloads the final photos, and presents them to the user. Use this skill whenever the user wants to auto-generate a batch of photos via WaveSpeed, launch a pack automatically, automate influencer content production, or mentions wavespeed pipeline, wavespeed batch, seedream, auto-generation, automatic batch. Triggers for 'launch a batch', 'generate N automatic photos', 'launch the pipeline', 'auto-generate', 'run the batch'. DO NOT use for generating prompts only to copy-paste, nor for other skills. Always respond in English."
-version: 1.2.0
+version: 1.2.1
 ---
 
 # WaveSpeed Batch API (Seedream 4.5 Edit — i2i)

@@ -2,25 +2,26 @@
 Run N TikTok clips into outputs/<today>/ with auto-text & auto-meta.
 
 Usage:
-  py pipeline-tiktok/run.py 5          # 5 clips
-  py pipeline-tiktok/run.py 10 --fast  # 10 clips, more aggressive prompts
+  py scripts/run_tiktok.py 5          # 5 clips
+  py scripts/run_tiktok.py 10 --fast  # 10 clips, more aggressive prompts
 """
 
 import argparse
 import json
 import os
+import random
 import sys
 from pathlib import Path
 
-BASE = os.path.dirname(os.path.abspath(__file__))
+BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(BASE, "webui"))
 sys.path.insert(0, BASE)
-sys.path.insert(0, os.path.join(BASE, ".."))
-sys.path.insert(0, os.path.join(BASE, "..", "wavespeed-batch-api"))
+sys.path.insert(0, os.path.join(BASE, "api"))
 
 from core.config import API_KEY, AVATAR_URL
 from wavespeed_tiktok_client import WaveSpeedTikTokClient
-from text_generator import batch_texts, random_text, TOPICS
-from daybatch import day_path
+from core.text_generator import batch_texts, random_text, TOPICS
+from core.daybatch import day_path
 IMAGE_MODEL = "google/nano-banana-2/edit"
 VIDEO_MODEL = "kwaivgi/kling-v2.5-turbo-std/image-to-video"
 
@@ -116,7 +117,7 @@ def main():
     save_meta(output_dir, jobs)
 
     # Regenerate dashboard
-    dashboard_py = os.path.join(BASE, "dashboard.py")
+    dashboard_py = os.path.join(BASE, "webui", "dashboard.py")
     os.system(f"py \"{dashboard_py}\" --all")
 
 

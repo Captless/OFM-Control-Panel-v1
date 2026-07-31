@@ -1,10 +1,10 @@
 ---
-name: pipeline-tiktok
+name: webui
 description: "Pipeline for generating TikTok-style short-form videos with AI-generated paragraph text. Uses WaveSpeed AI: nano-banana-2 for first frame, kling-v2.5-turbo-std for video. All outputs go into daily batch folders (outputs/YYYY-MM-DD/)."
-version: 2.0.0
+version: 2.1.0
 ---
 
-# pipeline-tiktok
+# webui
 
 Three-stage pipeline: reference image → AI video → text saved as `.txt`.
 
@@ -17,8 +17,8 @@ Three-stage pipeline: reference image → AI video → text saved as `.txt`.
 All runs go into `outputs/YYYY-MM-DD/` — generate in the morning, add more at night, same batch.
 
 ```powershell
-py pipeline-tiktok/run.py 5    # 5 clips into today's folder
-py pipeline-tiktok/run.py 10   # 10 clips
+py scripts/run_tiktok.py 5    # 5 clips into today's folder
+py scripts/run_tiktok.py 10   # 10 clips
 ```
 
 Auto-generates:
@@ -30,9 +30,9 @@ Auto-generates:
 
 ```python
 import sys, os
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from pipeline_tiktok.wavespeed_tiktok_client import WaveSpeedTikTokClient  # lives in pipeline-tiktok/
-from pipeline_tiktok.daybatch import day_path  # re-export shim from core.daybatch
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "webui"))
+from wavespeed_tiktok_client import WaveSpeedTikTokClient  # lives in webui/
+from core.daybatch import day_path
 
 client = WaveSpeedTikTokClient("api_key")
 result = client.batch_generate(
@@ -46,8 +46,8 @@ result = client.batch_generate(
 ## Dashboard
 
 ```powershell
-py pipeline-tiktok/dashboard.py --all       # rebuild from all date folders
-py pipeline-tiktok/dashboard.py --all --serve  # serve on phone
+py webui/dashboard.py --all       # rebuild from all date folders
+py webui/dashboard.py --all --serve  # serve on phone
 ```
 
 ## Style guide (Alina — simple altgirl)
@@ -68,15 +68,13 @@ py pipeline-tiktok/dashboard.py --all --serve  # serve on phone
 
 ## text_generator.py
 
-10 altgirl topic banks: situationship, self_worth, late_nights, anxiety, identity, dark_humor, dating_take, music_obsession, soft_moments, rebellion.
+10 altgirl topic banks: situationship, self_worth, late_nights, anxiety, identity, dark_humor, dating_take, music_obsession, soft_moments, rebellion. Lives in `core/text_generator.py`.
 
 ```python
-from text_generator import random_text, batch_texts
+from core.text_generator import random_text, batch_texts
 text = random_text("alt_situationship")
 texts = batch_texts(5)  # 5 random paragraphs, mixed topics
 ```
-
-> `text_generator.py` is now a re-export shim from `core.text_generator`.
 
 ## Output per job
 

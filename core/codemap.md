@@ -13,5 +13,5 @@ Shared configuration, error handling, and utility layer consumed by all pipeline
 | `settings.json` | Persistent JSON store for API keys + active account |
 
 ## Integration
-- **Consumed by**: `pipeline-tiktok/server.py`, `pipeline-photovideo/pipeline.py`, `pipeline-tiktok/run.py`
+- **Consumed by**: `webui/server.py`, `pipeline/pipeline.py`, `scripts/run_tiktok.py`, `scripts/backfill_prompts.py`
 - **Depends on**: stdlib only (os, json, pathlib, random)

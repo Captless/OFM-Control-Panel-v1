@@ -18,41 +18,43 @@ OFM/
 ├── AGENTS.md                          ★ THIS FILE (agents auto-load)
 ├── codemap.md                         ★ Repository atlas (read first!)
 ├── .gitignore
-├── scripts/                           Utility entry points
-│   ├── open_server.py                 Server launcher
-│   ├── open_dashboard.py              Dashboard viewer
-│   └── save_meta.py                   Meta.json saver
-├── pipeline-tiktok/
-│   ├── server.py                      HTTP server (port 8000)
-│   ├── run.py                         Batch TikTok generation CLI
-│   ├── dashboard.py                   Dashboard page generator
-│   ├── wavespeed_tiktok_client.py     TikTok video pipeline
-│   ├── daybatch.py                    day_path() re-export
-│   ├── text_generator.py              Alt-girl text prompts
-│   └── static/
-│       ├── index.html                 Main UI (nav pill, panels, outputs)
-│       ├── style.css                  All styles (glassmorphism, dark mode)
-│       └── app.js                     All frontend logic
-├── pipeline-photovideo/
-│   ├── pipeline.py                    Photo generation entry point
-│   ├── prompt_bank.py                 Prompt templates, job builder (v3)
-│   ├── wavespeed_i2v_client.py        Image-to-video client
-│   └── text_generator.py              Text generation
-├── core/
+├── .github/workflows/ci.yml           Syntax + import checks on GitHub
+├── core/                              Shared config, errors, day-path, text
 │   ├── config.py                      API keys, avatar URL, PHOTO_PRICE, settings
 │   ├── errors.py                      WaveSpeedError exception
 │   ├── daybatch.py                    day_path() → outputs/YYYY-MM-DD/<subdir>
 │   └── text_generator.py              Alt-girl text prompts
-├── wavespeed-batch-api/
+├── api/                               Reusable WaveSpeed REST client
 │   └── wavespeed_client.py            WaveSpeed REST client (generate, enhance, batch)
+├── webui/                             Web control panel
+│   ├── server.py                      HTTP server (port 8000) + REST API
+│   ├── dashboard.py                   Dashboard page generator
+│   ├── wavespeed_tiktok_client.py     TikTok video pipeline client
+│   ├── activity.json                  Run history log
+│   ├── static/                        Frontend (index.html, style.css, app.js)
+│   └── fonts/                          TikTok Sans (gitignored binaries)
+├── pipeline/                          Photo + video generation pipeline
+│   ├── pipeline.py                    Photo generation entry point
+│   ├── prompt_bank.py                 Prompt templates, job builder (v3)
+│   ├── wavespeed_i2v_client.py        Image-to-video client
+│   └── alina_video_guide.md           Video prompt style guide
+├── scripts/                           Utility entry points
+│   ├── run_tiktok.py                  Batch TikTok generation CLI
+│   ├── open_server.py                 Server launcher
+│   ├── open_dashboard.py              Dashboard viewer
+│   ├── save_meta.py                   Meta.json saver
+│   ├── update_config.py               OpenCode model-list updater (external)
+│   └── backfill_prompts.py            Rebuild .prompt files from meta.json
+├── docs/                              Style guides + identity reference
+│   ├── alina_style_guide.md           Photo prompt style guide (Alina)
+│   └── wavespeed_identity_alina.md    Identity file (name, avatar URL, API key)
 ├── outputs/                           Generated media in YYYY-MM-DD/photos/ or /videos/
-├── hot-take-influencer/               Influencer workflow project
-└── .omo/                              Agent work state (plans, boulder)
+└── hot-take-influencer/               Influencer workflow project
 ```
 
 ## Active Components (built & working)
 
-### Web UI (`pipeline-tiktok/static/`)
+### Web UI (`webui/static/`)
 - **Top nav pill**: `position: fixed; top: 24px`, glassmorphism. Contains: brand "OFM", balance pill, Live indicator, **API nav trigger** (dot · user · balance · caret ▽), settings gear, dark mode toggle
 - **API nav trigger**: Click toggles centered modal popup showing all WaveSpeed accounts with balances, editable names, status indicators, and Add New Provider button. ESC, outside-click, re-click closes. No page layout shift.
 - **API status checking**: `checkApiStatus()` polls `/api/settings/key/status` every 30s with 10s AbortController timeout. AbortError → invalid dot + auto-retry.
@@ -61,7 +63,7 @@ OFM/
 - **Outputs table**: Grouped by date, hover preview, fullscreen, caption edit, download, delete
 - **Balance display**: Per-account and total balance, auto-refresh every 60s
 
-### API Endpoints (`pipeline-tiktok/server.py`)
+### API Endpoints (`webui/server.py`)
 
 | Method | Path | Purpose |
 |--------|------|---------|
@@ -79,7 +81,7 @@ OFM/
 | GET/POST | `/api/settings/wavespeed/*` | CRUD for API key accounts |
 | GET | `/api/settings/key/status` | Account list + active account |
 
-### Photo Pipeline (`pipeline-photovideo/pipeline.py`)
+### Photo Pipeline (`pipeline/pipeline.py`)
 
 1. `pipeline.py --prompts <json>` loads jobs from JSON
 2. Each job has a `"prompt"` string and `"filename"` (e.g., `001_a3f8b2.png`)
@@ -88,14 +90,14 @@ OFM/
 5. Saves to `outputs/YYYY-MM-DD/photos/`
 6. Writes `meta.json` with labels per stem
 
-### Prompt Bank (`pipeline-photovideo/prompt_bank.py`)
+### Prompt Bank (`pipeline/prompt_bank.py`)
 
 - `build_jobs_multi(count, vibe, camera_style, lighting, time_of_day, outfit_style)`
 - Randomized: scenes, framing, hair, tops, bottoms, poses, lighting, quality
 - Camera modes: handheld selfie OR mirror selfie (with phone token)
 - Elements: `{index:03d}_{time-based-md5-6chars}.png` — timestamp hash prevents same-day collisions
 
-### WaveSpeed Client (`wavespeed-batch-api/wavespeed_client.py`)
+### WaveSpeed Client (`api/wavespeed_client.py`)
 
 - `generate(prompt, image_url, resolution, format, aspect_ratio)` — submit + poll
 - `enhance(image_url, scale, format)` — upscale 4x
@@ -124,19 +126,19 @@ Before working on any task, read `codemap.md` to understand:
 - Directory responsibilities and design patterns
 - Data flow and integration points between modules
 
-For deep work on a specific folder, also read that folder's `codemap.md` (e.g. `pipeline-tiktok/codemap.md`).
+For deep work on a specific folder, also read that folder's `codemap.md` (e.g. `webui/codemap.md`).
 
 ## Paths
 
 | Key | Value |
 |-----|-------|
-| Server root | `pipeline-tiktok/server.py` |
+| Server root | `webui/server.py` |
 | Server port | `8000` |
-| Photo pipeline | `pipeline-photovideo/pipeline.py` |
-| Prompt bank | `pipeline-photovideo/prompt_bank.py` |
+| Photo pipeline | `pipeline/pipeline.py` |
+| Prompt bank | `pipeline/prompt_bank.py` |
 | Outputs root | `outputs/` (YYYY-MM-DD/photos/) |
 | Settings | `core/settings.json` |
-| Static UI | `pipeline-tiktok/static/index.html` |
+| Static UI | `webui/static/index.html` |
 | Utility scripts | `scripts/` |
 
 ## Session Discipline
@@ -154,6 +156,24 @@ This keeps AGENTS.md in sync with reality without re-running `/init-deep`.
 ---
 
 ## Recent Changes
+
+### 2026-08-01 — Repo reorganization: github-ready layout
+
+**restructured** ✓ — Applied approved 10-step reorg, preserving local behavior:
+- `pipeline-tiktok/` → `webui/` (web control panel: server.py, dashboard.py, wavespeed_tiktok_client.py, activity.json, static/, fonts/)
+- `pipeline-photovideo/` → `pipeline/` (pipeline.py, prompt_bank.py, wavespeed_i2v_client.py, alina_video_guide.md)
+- `wavespeed-batch-api/` → `api/` (wavespeed_client.py)
+- root `server.py` → `webui/server.py`; `pipeline-tiktok/run.py` → `scripts/run_tiktok.py`
+- `alina_style_guide.md` + `wavespeed_identity_alina.md` → `docs/`
+- Deleted 3 shims (daybatch/text_generator), style.css.backup.css, 13 runtime JSON files, __pycache__
+
+**imports fixed** ✓ — `webui/server.py` BASE=parent.parent, dir vars renamed (PIPELINE_DIR/WEBUI_DIR/API_DIR); `pipeline/pipeline.py` uses `core.daybatch` + `../api`; `scripts/run_tiktok.py` imports from webui/ + core; `core/config.py` identity → `docs/`, lazy path → `../api`; scripts paths updated.
+
+**packages** ✓ — Added `__init__.py` to webui/, pipeline/, api/ so `import webui.server` etc. work. CI now has valid package imports + `pip install requests` + new path lists. `.gitignore` updated for webui/fonts + runtime promptbank/checkpoint JSONs. Fixed latent `NameError: random` in run_tiktok.py (was never imported).
+
+**docs** ✓ — Rewrote root codemap.md + all folder codemaps (webui, static, pipeline, api, scripts, core) and SKILL.md frontmatter (webui, pipeline, api). AGENTS.md File Structure/Paths/Active Components updated. Stripped UTF-8 BOM from static/index.html.
+
+**verified** ✓ — py_compile all 18 files clean; full import graph resolves; live boot on :8765 returns 200 for `/`, `/static/style.css`, `/api/ping`, `/api/presets`, `/api/outputs`.
 
 ### 2026-07-31 — API selector modal simplification (check marks only)
 

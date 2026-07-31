@@ -1,10 +1,10 @@
 ---
-name: pipeline-photovideo
+name: pipeline
 description: "3-mode pipeline for Alina Sky: photo, video, or photo+video packs. All outputs go into daily batch folders (outputs/YYYY-MM-DD/)."
-version: 2.0.0
+version: 2.1.0
 ---
 
-# pipeline-photovideo
+# pipeline
 
 Three modes — all output to `outputs/YYYY-MM-DD/` daily folders:
 
@@ -47,18 +47,18 @@ Each mode reads from the same file — the mode key determines which list is use
 ## Dashboard
 
 ```powershell
-py ../pipeline-tiktok/dashboard.py --all
-py ../pipeline-tiktok/dashboard.py --all --serve
+py webui/dashboard.py --all
+py webui/dashboard.py --all --serve
 ```
 
 ## Configuration
 
-API key and avatar URL are centralized in `../core/config.py`:
-- `WAVESPEED_API_KEY` env var → `core/config.py` → `.env` file (fallback to `wavespeed_identity_alina.md`)
-- `WAVESPEED_AVATAR_URL` env var → fallback to `wavespeed_identity_alina.md`
+API key and avatar URL are centralized in `core/config.py`:
+- `WAVESPEED_API_KEY` env var → `core/config.py` → `.env` file (fallback to `docs/wavespeed_identity_alina.md`)
+- `WAVESPEED_AVATAR_URL` env var → fallback to `docs/wavespeed_identity_alina.md`
 - `WaveSpeedError` is now imported from `core.errors`
 
 ## Identity reference
 
-API key and avatar URL are loaded from `../core/config.py` (or `WAVESPEED_API_KEY` / `WAVESPEED_AVATAR_URL` env var → `.env` file).
-See `../wavespeed_identity_alina.md` for identity details.
+API key and avatar URL are loaded from `core/config.py` (or `WAVESPEED_API_KEY` / `WAVESPEED_AVATAR_URL` env var → `.env` file).
+See `docs/wavespeed_identity_alina.md` for identity details.

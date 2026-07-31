@@ -6,7 +6,7 @@ import sys
 import webbrowser
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SERVER = os.path.join(BASE, "server.py")
+SERVER = os.path.join(BASE, "webui", "server.py")
 
 if __name__ == "__main__":
     webbrowser.open("http://127.0.0.1:8000")
