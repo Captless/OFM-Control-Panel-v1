@@ -217,22 +217,6 @@ body.light::before {
 .api-nav-caret { font-size: 9px; color: var(--fg3); margin-left: 2px; transition: transform .2s; }
 .api-nav-trigger.open .api-nav-caret { transform: rotate(180deg); }
 
-.toolbar .nav-settings {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px; height: 32px;
-  color: var(--fg2);
-  padding: 6px;
-  transition: background .15s, color .15s;
-}
-.toolbar .nav-settings:hover { background: var(--btn-hover); color: var(--fg); }
-.toolbar .nav-settings svg { display: block; width: 16px; height: 16px; }
-
 /* Toolbar right-aligned container */
 .toolbar-right {
    margin-left: auto;

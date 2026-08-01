@@ -926,22 +926,9 @@ async function checkApiStatus() {
     }
 }
 
-// ── Settings panel ──
-function openSettings() {
-    document.getElementById('settings-modal').classList.add('show');
-    loadProviderList();
-}
-function closeSettings() {
-    document.getElementById('settings-modal').classList.remove('show');
-}
-
-// ESC key closes settings drawer / API dropdown
+// ── ESC key closes API dropdown / prompt modal ──
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-        var settingsModal = document.getElementById('settings-modal');
-        if (settingsModal && settingsModal.classList.contains('show')) {
-            closeSettings();
-        }
         var apiModal = document.getElementById('api-modal');
         if (apiModal && apiModal.classList.contains('show')) {
             closeApiModal();
@@ -1388,10 +1375,26 @@ async function confirmSwitchApi(label) {
       _lastIdentity = '';
       updateApiLabel();
       _invalidateValidation();
-      _invalidateAccounts();
-      loadApiProviderList();
       checkApiStatus();
       fetchBalance();
+      
+      // Optimistically update cache and re-render with empty validation (no spinner flash)
+      if (_accountsCache && _accountsCache.accounts) {
+        _accountsCache.active = label;
+        _renderAccounts(_accountsCache, {});
+      }
+      
+      // Background: fetch fresh accounts + validation, then update
+      try {
+        var rr = await fetch('/api/settings/wavespeed/accounts');
+        var fresh = await rr.json();
+        if (fresh.ok && fresh.accounts) {
+          _accountsCache = fresh;
+          _accountsCacheTime = Date.now();
+          var validation = await _getValidationResults();
+          _renderAccounts(fresh, validation);
+        }
+      } catch(e) {}
     }
   } catch(e) {
     var result = document.getElementById('api-modal-result');
