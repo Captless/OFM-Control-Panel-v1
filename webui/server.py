@@ -433,7 +433,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             camera_style = body.get("camera_style", "handheld")
             lighting = body.get("lighting", "warm")
             time_of_day = body.get("time_of_day", "day")
-            outfit_style = body.get("outfit_style", "any")
+            outfit_style = body.get("outfit_style", "sexy")
             count = int(body.get("count", 6))
             try:
                 jobs = build_jobs_multi(
