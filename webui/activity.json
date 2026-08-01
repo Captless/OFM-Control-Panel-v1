@@ -1,5 +1,13 @@
 [
   {
+    "time": "15:30",
+    "message": "Prompt bank: promptbank_outdoor_handheld_dimlit_night_academia_1.json (1 jobs, vibe=outdoor, camera=handheld, light=dimlit, time=night, outfit=academia)"
+  },
+  {
+    "time": "15:13",
+    "message": "Prompt bank: promptbank_outdoor_handheld_warm_day_any_1.json (1 jobs, vibe=outdoor, camera=handheld, light=warm, time=day, outfit=any)"
+  },
+  {
     "time": "15:00",
     "message": "Prompt bank: promptbank_indoor_handheld_cool_day_any_1.json (1 jobs, vibe=indoor, camera=handheld, light=cool, time=day, outfit=any)"
   },
@@ -190,13 +198,5 @@
   {
     "time": "12:30",
     "message": "WaveSpeed account saved: asdsad ****"
-  },
-  {
-    "time": "12:21",
-    "message": "Prompt bank: promptbank_indoor_handheld_warm_day_fem_1.json (1 jobs, vibe=indoor, camera=handheld, light=warm, time=day, outfit=fem)"
-  },
-  {
-    "time": "12:10",
-    "message": "Prompt bank: promptbank_indoor_handheld_warm_day_fem_1.json (1 jobs, vibe=indoor, camera=handheld, light=warm, time=day, outfit=fem)"
   }
 ]

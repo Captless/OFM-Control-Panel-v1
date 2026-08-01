@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="theme-terminal">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -42,9 +42,11 @@
               <span class="api-nav-bal" id="api-tab-bal">$--</span>
               <span class="api-nav-caret">▾</span>
             </span>
-   <button class="toggle-btn" onclick="toggleTheme()" title="Toggle dark/light mode" aria-label="Toggle dark/light mode" id="theme-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-    </button>
+   <span class="theme-nav-trigger" id="theme-nav-trigger" onclick="toggleThemeModal()" role="button" tabindex="0" aria-haspopup="dialog" aria-expanded="false" aria-label="Theme selection">
+      <span class="theme-nav-dot" id="theme-nav-dot"></span>
+      <span class="theme-nav-name" id="theme-nav-name">Terminal</span>
+      <span class="theme-nav-caret">▾</span>
+    </span>
 </div>
 </header>
 
@@ -76,6 +78,28 @@
     </div>
     <div style="display:flex;justify-content:flex-end;padding:12px 24px;border-top:1px solid var(--border);">
       <button class="btn btn-sm btn-outline" onclick="closeApiModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Theme Modal (centered popup) ── -->
+<div id="theme-modal" role="dialog" aria-modal="true" aria-label="Theme selection">
+  <div id="theme-modal-box">
+    <button class="modal-close" onclick="closeThemeModal()" title="Close">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header">
+      <h4>Theme</h4>
+      <p>Select color theme</p>
+    </div>
+    <div class="theme-list" id="theme-list">
+      <!-- Theme rows injected here -->
+    </div>
+    <div style="display:flex;justify-content:flex-end;padding:12px 24px;border-top:1px solid var(--border);">
+      <button class="btn btn-sm btn-outline" onclick="closeThemeModal()">Done</button>
     </div>
   </div>
 </div>
