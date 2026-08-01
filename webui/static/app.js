@@ -48,9 +48,9 @@ function setLive(state, msg) {
     var tx = document.getElementById('live-text');
     if (!el) return;
     el.className = 'live';
-    if (state === 'ok') { el.classList.add('ok'); dt.style.background = '#4caf50'; tx.textContent = msg || 'Live'; }
-    else if (state === 'loading') { el.classList.add('loading'); dt.style.background = '#ff9800'; tx.textContent = msg || 'Loading...'; }
-    else { el.classList.add('error'); dt.style.background = '#f44336'; tx.textContent = msg || 'Error'; }
+    if (state === 'ok') { el.classList.add('ok'); dt.style.background = '#00ff88'; tx.textContent = msg || 'Live'; }
+    else if (state === 'loading') { el.classList.add('loading'); dt.style.background = '#ffb000'; tx.textContent = msg || 'Loading...'; }
+    else { el.classList.add('error'); dt.style.background = '#ff6b6b'; tx.textContent = msg || 'Error'; }
 }
 
 async function api(url, body) {
@@ -436,7 +436,7 @@ function renderOutputs() {
     var area = document.getElementById('outputs-area');
     if (!area) return;
     if (_preview) { _preview.style.display = 'none'; var ov = _preview.querySelector('video'); if (ov) { ov.pause(); ov.currentTime = 0; } }
-    if (!batches.length) { area.innerHTML = '<div class="outputs-empty"><span class="empty-illustration">&#127912;</span>No outputs yet.<br>Generate your first images above.</div>'; return; }
+    if (!batches.length) { area.innerHTML = '<div class="outputs-empty"><span class="empty-illustration">$ ls outputs/</span>No outputs yet.<br>Generate your first images above.</div>'; return; }
 
     var total = batches.reduce(function(s, b) { return s + b.items.length; }, 0);
     var gs = document.getElementById('global-stats');
@@ -1313,6 +1313,13 @@ function _renderAccounts(data, validation) {
 }
 
 // ── API Modal toggle ──
+function _setApiExpanded(open) {
+    var t = document.getElementById('api-nav-trigger');
+    if (t) {
+        t.setAttribute('aria-expanded', open ? 'true' : 'false');
+        t.classList.toggle('open', open);
+    }
+}
 function toggleApiModal() {
     var modal = document.getElementById('api-modal');
     if (!modal) return;
@@ -1320,6 +1327,7 @@ function toggleApiModal() {
         closeApiModal();
     } else {
         modal.classList.add('show');
+        _setApiExpanded(true);
         loadApiProviderList();
     }
 }
@@ -1327,7 +1335,16 @@ function toggleApiModal() {
 function closeApiModal() {
     var modal = document.getElementById('api-modal');
     if (modal) modal.classList.remove('show');
+    _setApiExpanded(false);
 }
+
+document.addEventListener('keydown', function(e) {
+    var trigger = document.getElementById('api-nav-trigger');
+    if (trigger && document.activeElement === trigger && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        toggleApiModal();
+    }
+});
 
 async function loadApiProviderList() {
     var list = document.getElementById('api-provider-list');

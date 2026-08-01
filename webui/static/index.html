@@ -8,12 +8,12 @@
 <meta http-equiv="Expires" content="0">
 <title>OFM Control Panel</title>
 <meta name="description" content="Alina Sky image & video generation control panel — WaveSpeed AI pipeline manager">
-<meta name="theme-color" content="#141413">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23059669'/><text x='16' y='22' font-family='system-ui' font-size='18' font-weight='700' fill='white' text-anchor='middle'>O</text></svg>">
+<meta name="theme-color" content="#0a0f0a">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='3' fill='%2300ff88'/><text x='16' y='22' font-family='monospace' font-size='18' font-weight='700' fill='%23062b16' text-anchor='middle'>O</text></svg>">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<a href="#main-content" style="position:fixed;top:-100%;left:8px;z-index:99999;padding:8px 16px;background:var(--accent);color:#fff;border-radius:0 0 8px 8px;font-size:12px;font-weight:500;text-decoration:none;transition:top .2s" onfocus="this.style.top='0'" onblur="this.style.top='-100%'">Skip to content</a>
+<a href="#main-content" style="position:fixed;top:-100%;left:8px;z-index:99999;padding:8px 16px;background:var(--accent);color:var(--accent-contrast);border-radius:0 0 4px 4px;font-family:var(--font-mono);font-size:12px;font-weight:600;text-decoration:none;transition:top .2s" onfocus="this.style.top='0'" onblur="this.style.top='-100%'">Skip to content</a>
 <div class="app">
 
 <!-- ── Toolbar ── -->
@@ -31,25 +31,25 @@
     <span class="bp-active" id="bp-active">$0.00</span>
     <span class="bp-sep">&middot;</span>
     <span class="bp-total" id="bp-total">$0.00 total</span>
-    <button class="bp-refresh" id="bp-refresh" onclick="refreshBalance()" title="Refresh balance">&#8635;</button>
+    <button class="bp-refresh" id="bp-refresh" onclick="refreshBalance()" title="Refresh balance" aria-label="Refresh balance">&#8635;</button>
   </div>
 
 <div class="toolbar-right">
    <span class="live" id="live-indicator"><span class="live-dot" id="live-dot"></span><span class="live-text" id="live-text">Live</span></span>
-   <span class="api-nav-trigger" id="api-nav-trigger" onclick="toggleApiModal()">
+   <span class="api-nav-trigger" id="api-nav-trigger" onclick="toggleApiModal()" role="button" tabindex="0" aria-haspopup="dialog" aria-expanded="false" aria-label="API provider selection">
               <span class="api-nav-dot" id="api-dot"></span>
               <span class="api-nav-user" id="api-user">Checking...</span>
               <span class="api-nav-bal" id="api-tab-bal">$--</span>
               <span class="api-nav-caret">▾</span>
             </span>
-   <button class="toggle-btn" onclick="toggleTheme()" title="Toggle dark/light mode" id="theme-btn">
+   <button class="toggle-btn" onclick="toggleTheme()" title="Toggle dark/light mode" aria-label="Toggle dark/light mode" id="theme-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
 </div>
 </header>
 
 <!-- ── API Modal (centered popup) ── -->
-<div id="api-modal">
+<div id="api-modal" role="dialog" aria-modal="true" aria-label="API Provider selection">
   <div id="api-modal-box">
     <button class="modal-close" onclick="closeApiModal()" title="Close">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -186,7 +186,7 @@
 <div id="fs-modal"></div>
 
 <!-- ── Edit Caption Modal ── -->
-<div id="edit-modal">
+<div id="edit-modal" role="dialog" aria-modal="true" aria-label="Edit caption">
   <div id="edit-box">
     <h4>Edit caption</h4>
     <textarea id="edit-text" placeholder="Caption text..."></textarea>
@@ -202,7 +202,7 @@
 </div>
 
 <!-- ── Prompt Used Modal ── -->
-<div id="prompt-modal">
+<div id="prompt-modal" role="dialog" aria-modal="true" aria-label="Prompt used">
   <div id="prompt-box">
     <div id="prompt-header">
       <h4>Prompt Used</h4>
