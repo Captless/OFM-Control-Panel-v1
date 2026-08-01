@@ -17,11 +17,33 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.insert(0, os.path.join(BASE_DIR, ".."))
 sys.path.insert(0, os.path.join(BASE_DIR, "..", "api"))
-from core.config import API_KEY, AVATAR_URL
 from wavespeed_client import WaveSpeedClient as PhotoClient
 sys.path.insert(0, BASE_DIR)
 
 from core.daybatch import day_path
+
+
+def _load_active_key():
+    """Load the active account key from settings.json only (no env/local fallback)."""
+    settings_path = Path(__file__).parent.parent / "core" / "settings.json"
+    if settings_path.exists():
+        try:
+            settings = json.loads(settings_path.read_text(encoding="utf-8"))
+            active = settings.get("active_wavespeed_account", "")
+            return settings.get("wavespeed_accounts", {}).get(active, "")
+        except Exception:
+            return ""
+    return ""
+
+
+def _load_avatar_url():
+    """Load avatar URL from identity file."""
+    import sys as _sys
+    _sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "core"))
+    from core.config import _parse_identity_file  # noqa: E402
+    identity = _parse_identity_file()
+    return identity.get("avatar_url", "")
+
 
 def _build_meta(jobs):
     """Build a meta dict {stem: {"labels": ..., "prompt": ..., "negative_prompt": ..., "guidance_scale": ...}} from a jobs list."""
@@ -53,7 +75,13 @@ def _merge_meta(existing_path, new_meta):
 
 
 def mode_photo(jobs, enhance=False):
-    client = PhotoClient(API_KEY)
+    api_key = _load_active_key()
+    if not api_key:
+        print("ERROR: No active API account. Add one via the API selector in the web UI.", file=sys.stderr)
+        sys.exit(1)
+    
+    client = PhotoClient(api_key)
+    avatar_url = _load_avatar_url()
     output_dir = day_path(subdir="photos")
     checkpoint = output_dir.parent / "checkpoint_photo.json"
     if checkpoint.exists():
@@ -61,7 +89,7 @@ def mode_photo(jobs, enhance=False):
 
     result = client.batch_generate(
         jobs=jobs,
-        avatar_url=AVATAR_URL,
+        avatar_url=avatar_url,
         output_dir=str(output_dir),
         resolution="1k",
         output_format="png",

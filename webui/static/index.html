@@ -226,39 +226,6 @@
   </div>
 </div>
 
-<!-- ── Settings Drawer ── -->
-<div id="settings-modal">
-  <button class="drawer-close" onclick="closeSettings()" title="Close">
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-  </button>
-  <div id="settings-box">
-    <div class="settings-header">
-
-      <div class="settings-header-text">
-        <h4>API Keys</h4>
-        <p>Manage your API provider keys</p>
-      </div>
-    </div>
-    <div class="provider-list" id="provider-list">
-      <div class="provider-header"><span style="min-width:100px;flex:1">Account</span><span style="width:80px;text-align:right">Bal</span><span style="flex:1">API Key</span><span style="width:60px">Status</span><span style="width:70px"></span></div>
-      <div class="settings-empty">No providers configured</div>
-    </div>
-    <div class="add-provider-section">
-      <div class="field-label">Add New Provider</div>
-      <div class="provider-add-row">
-        <input type="text" class="pname" id="new-provider-name" placeholder="API name..." autocomplete="off">
-        <input type="text" class="pkey" id="new-provider-key" placeholder="API key..." autocomplete="off">
-        <button class="add-provider-btn" onclick="addProvider()">Add</button>
-      </div>
-      <div class="field-hint">Enter the API name and its key</div>
-      <div id="settings-result"></div>
-    </div>
-    <div style="display:flex;justify-content:flex-end;padding:12px 24px;border-top:1px solid var(--border);">
-      <button class="btn btn-sm btn-outline" onclick="closeSettings()">Done</button>
-    </div>
-  </div>
-</div>
-
 <!-- ── JS Error Banner ── -->
 <div id="js-error" style="display:none;background:#f44336;color:#fff;padding:8px 12px;margin:8px;border-radius:6px;font-size:11px;"></div>
 

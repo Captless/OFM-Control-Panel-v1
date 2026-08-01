@@ -869,9 +869,7 @@ async function checkApiStatus() {
         var data = await r.json();
         var accounts = data.wavespeed_accounts || {};
         var active = data.active_wavespeed_account || '';
-        var identity = data.identity_name || '';
         var count = Object.keys(accounts).length;
-        _lastIdentity = identity;
         _lastApiCount = count;
         if (count > 0) {
             dot.className = 'api-tab-dot valid';
@@ -898,20 +896,11 @@ async function checkApiStatus() {
                 bal.textContent = '$--';
             }
         } else {
-            var provCount = data.providers ? Object.keys(data.providers).length : 0;
-            if (provCount > 0) {
-                dot.className = 'api-tab-dot valid';
-                _lastApiCount = provCount;
-                _selectedAccount = null;
-                updateApiLabel();
-                bal.textContent = '$--';
-            } else {
-                dot.className = 'api-tab-dot invalid';
-                _lastApiCount = 0;
-                _selectedAccount = null;
-                updateApiLabel();
-                bal.textContent = '$--';
-            }
+            dot.className = 'api-tab-dot invalid';
+            _lastApiCount = 0;
+            _selectedAccount = null;
+            updateApiLabel();
+            bal.textContent = '$--';
         }
     } catch(e) {
         if (e.name === 'AbortError') {
@@ -948,195 +937,6 @@ document.addEventListener('click', function(e) {
 });
 var _delSvg2 = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 var _checkSvg = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-
-async function loadProviderList() {
-    var list = document.getElementById('provider-list');
-    try {
-        var r = await fetch('/api/settings/wavespeed/accounts');
-        var data = await r.json();
-        var validation = await _getValidationResults();
-        var headerHtml = '<div class="provider-header"><span style="min-width:100px;flex:1">Account</span><span style="width:80px;text-align:right">Bal</span><span style="flex:1">API Key</span><span style="width:60px">Status</span><span style="width:70px"></span></div>';
-        if (!data.ok || !data.accounts || Object.keys(data.accounts).length === 0) {
-            list.innerHTML = headerHtml + '<div class="settings-empty">No accounts configured</div>';
-            return;
-        }
-        var html = headerHtml;
-        var active = data.active || '';
-        Object.keys(data.accounts).forEach(function(label) {
-            var preview = data.accounts[label];
-            var isActive = (label === active);
-            var isValid = validation[label];
-            var statusClass = isValid ? 'valid' : 'invalid';
-            var statusText = isValid ? 'Valid' : 'Invalid';
-            html += '<div class="provider-row">';
-            html += '<span class="provider-name" onclick="startRename(this, \'' + esc(label) + '\')" title="Click to rename">' + esc(label) + '</span>';
-            html += '<span class="provider-bal" data-account="' + esc(label) + '">--</span>';
-            html += '<span class="provider-key">' + esc(preview) + '</span>';
-            html += '<span class="provider-status ' + statusClass + '">' + statusText + '</span>';
-            if (isActive) {
-                html += '<span class="provider-active-badge">Active</span>';
-            } else {
-                html += '<button class="use-btn" onclick="confirmSwitchAccount(\'' + esc(label) + '\')">Use</button>';
-            }
-            html += '<button class="provider-remove" onclick="removeProvider(\'' + esc(label) + '\')" title="Remove account">' + _delSvg2 + '</button>';
-            html += '</div>';
-        });
-        list.innerHTML = html;
-        Object.keys(data.accounts).forEach(function(label) {
-            fetch('/api/balance/account?account=' + encodeURIComponent(label))
-                .then(function(r) { return r.json(); })
-                .then(function(d) {
-                    var balSpan = document.querySelector('.provider-bal[data-account="' + label.replace(/"/g, '\\"') + '"]');
-                    if (balSpan && d && typeof d.balance === 'number') {
-                        balSpan.textContent = '$' + d.balance.toFixed(2);
-                    }
-                })
-                .catch(function() {
-                    var balSpan = document.querySelector('.provider-bal[data-account="' + label.replace(/"/g, '\\"') + '"]');
-                    if (balSpan) balSpan.textContent = '$--';
-                });
-        });
-    } catch(e) {
-    list.innerHTML = '<div class="provider-header"><span style="min-width:100px;flex:1">Account</span><span style="width:80px;text-align:right">Bal</span><span style="flex:1">API Key</span><span style="width:60px">Status</span><span style="width:70px"></span></div><div class="settings-empty">Error loading accounts</div>';
-    }
-}
-
-function startRename(el, oldLabel) {
-    var input = document.createElement('input');
-    input.type = 'text';
-    input.value = oldLabel;
-    input.className = 'provider-name-input';
-    input.style.width = el.offsetWidth + 'px';
-    el.parentNode.replaceChild(input, el);
-    input.focus();
-    input.select();
-
-    function cancel() {
-        var span = document.createElement('span');
-        span.className = 'provider-name';
-        span.onclick = function() { startRename(span, oldLabel); };
-        span.title = 'Click to rename';
-        span.textContent = oldLabel;
-        input.parentNode.replaceChild(span, input);
-    }
-
-    async function save() {
-        var newLabel = input.value.trim();
-        if (!newLabel || newLabel === oldLabel) { cancel(); return; }
-        try {
-            var r = await fetch('/api/settings/wavespeed/accounts/rename', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({old_label: oldLabel, new_label: newLabel})
-            });
-            var data = await r.json();
-            if (data.ok) {
-                loadProviderList();
-                checkApiStatus();
-                _invalidateAccounts();
-            } else {
-                alert(data.error || 'Rename failed');
-                cancel();
-            }
-        } catch(e) {
-            alert('Error: ' + e.message);
-            cancel();
-        }
-    }
-
-    input.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') save();
-        else if (e.key === 'Escape') cancel();
-    });
-    input.addEventListener('blur', save);
-}
-
-async function confirmSwitchAccount(label) {
-    if (!confirm('Switch active API to "' + label + '"? This will use this key for all new generations.')) return;
-    try {
-        var r = await fetch('/api/settings/wavespeed/active', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({label: label})
-        });
-        var data = await r.json();
-        if (data.ok) {
-            loadProviderList();
-            checkApiStatus();
-            fetchBalance();
-            showSuccess('Active API switched to ' + label);
-        }
-    } catch(e) {
-        showError('Error switching account: ' + e.message);
-        var result = document.getElementById('settings-result');
-        if (result) { result.className = 'settings-result error'; result.textContent = 'Error switching account'; result.style.display = 'block'; }
-    }
-}
-
-async function addProvider() {
-    var name = document.getElementById('new-provider-name').value.trim().toLowerCase();
-    var key = document.getElementById('new-provider-key').value.trim();
-    var result = document.getElementById('settings-result');
-    result.className = 'settings-result';
-    result.style.display = 'none';
-    if (!name || !key) { result.className = 'settings-result error'; result.textContent = 'Enter both account name and key'; result.style.display = 'block'; return; }
-    try {
-        var r = await fetch('/api/settings/wavespeed/accounts/set', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({label: name, key: key})
-        });
-        var data = await r.json();
-        if (data.ok) {
-            document.getElementById('new-provider-name').value = '';
-            document.getElementById('new-provider-key').value = '';
-            loadProviderList();
-            checkApiStatus();
-            result.className = 'settings-result success';
-            result.textContent = 'Account saved: ' + name;
-            result.style.display = 'block';
-            setTimeout(function() { result.style.display = 'none'; }, 2000);
-        } else {
-            result.className = 'settings-result error';
-            result.textContent = data.error || 'Failed to save';
-            result.style.display = 'block';
-        }
-    } catch(e) {
-        result.className = 'settings-result error';
-        result.textContent = 'Error: ' + e.message;
-        result.style.display = 'block';
-    }
-}
-async function removeProvider(label) {
-    if (!confirm('Remove account "' + label + '"?')) return;
-    var result = document.getElementById('settings-result');
-    result.className = 'settings-result';
-    result.style.display = 'none';
-    try {
-        var r = await fetch('/api/settings/wavespeed/accounts/remove', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({label: label})
-        });
-        var data = await r.json();
-        if (data.ok) {
-            loadProviderList();
-            checkApiStatus();
-            result.className = 'settings-result success';
-            result.textContent = 'Removed ' + label;
-            result.style.display = 'block';
-            setTimeout(function() { result.style.display = 'none'; }, 2000);
-        } else {
-            result.className = 'settings-result error';
-            result.textContent = data.error || 'Failed to remove';
-            result.style.display = 'block';
-        }
-    } catch(e) {
-        result.className = 'settings-result error';
-        result.textContent = 'Error: ' + e.message;
-        result.style.display = 'block';
-    }
-}
 
 var _validationCache = null;
 var _validationCacheTime = 0;
@@ -1274,12 +1074,13 @@ function _renderAccounts(data, validation) {
         html += '</div>';
         html += '</div>';
         html += '<div class="provider-actions">';
-        if (isActive) {
-            html += '<button class="provider-check active" title="Active provider" disabled>' + _checkSvg + '</button>';
-        } else {
-            html += '<button class="provider-check" onclick="confirmSwitchApi(\'' + esc(label) + '\')" title="Set as default">' + _checkSvg + '</button>';
-        }
-        html += '<button class="provider-remove" onclick="removeApiProvider(\'' + esc(label) + '\')" title="Remove provider">' + _delSvg2 + '</button>';
+        // Toggle switch
+        html += '<label class="provider-toggle" title="' + (isActive ? 'Active provider' : 'Set as active provider') + '">';
+        html += '<input type="checkbox" role="switch" aria-label="Set as active provider" ' + (isActive ? 'checked' : '') + (count === 1 ? ' disabled' : '') + ' onclick="toggleProvider(\'' + esc(label) + '\', this)">';
+        html += '<span class="toggle-slider"></span>';
+        html += '</label>';
+        // Hover-reveal delete
+        html += '<button class="provider-delete" onclick="removeApiProvider(\'' + esc(label) + '\')" title="Remove provider" aria-label="Remove provider">' + _delSvg2 + '</button>';
         html += '</div>';
         html += '</div>';
     });
@@ -1378,7 +1179,6 @@ async function loadApiProviderList() {
 }
 
 async function confirmSwitchApi(label) {
-  if (!confirm('Switch active API to "' + label + '"? This will use this key for all new generations.')) return;
   try {
     var r = await fetch('/api/settings/wavespeed/active', {
       method: 'POST',
@@ -1422,6 +1222,21 @@ async function confirmSwitchApi(label) {
       setTimeout(function() { result.style.display = 'none'; }, 3000);
     }
   }
+}
+
+function toggleProvider(label, checkbox) {
+  // Prevent unchecking the only active provider
+  if (!checkbox.checked) {
+    checkbox.checked = true;
+    return;
+  }
+  
+  // Prevent switching if already active (checkbox would be checked)
+  if (_selectedAccount === label && checkbox.checked) {
+    return;
+  }
+  
+  confirmSwitchApi(label);
 }
 
 async function addApiProvider() {

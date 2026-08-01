@@ -18,12 +18,36 @@ sys.path.insert(0, os.path.join(BASE, "webui"))
 sys.path.insert(0, BASE)
 sys.path.insert(0, os.path.join(BASE, "api"))
 
-from core.config import API_KEY, AVATAR_URL
 from wavespeed_tiktok_client import WaveSpeedTikTokClient
 from core.text_generator import batch_texts, random_text, TOPICS
 from core.daybatch import day_path
+
 IMAGE_MODEL = "google/nano-banana-2/edit"
 VIDEO_MODEL = "kwaivgi/kling-v2.5-turbo-std/image-to-video"
+
+
+def _load_active_key():
+    """Load the active account key from settings.json only (no env/local fallback)."""
+    settings_path = Path(__file__).parent.parent / "core" / "settings.json"
+    if settings_path.exists():
+        try:
+            settings = json.loads(settings_path.read_text(encoding="utf-8"))
+            active = settings.get("active_wavespeed_account", "")
+            return settings.get("wavespeed_accounts", {}).get(active, "")
+        except Exception:
+            return ""
+    return ""
+
+
+def _load_avatar_url():
+    """Load avatar URL from identity file."""
+    identity_path = Path(__file__).parent.parent / "docs" / "wavespeed_identity_alina.md"
+    if identity_path.is_file():
+        text = identity_path.read_text(encoding="utf-8")
+        for line in text.splitlines():
+            if "**Avatar URL:**" in line:
+                return line.split("**Avatar URL:**")[1].strip()
+    return ""
 
 
 BASE_IMAGE_PROMPT = (
@@ -88,8 +112,9 @@ def main():
     parser.add_argument("--fast", action="store_true", help="Use faster video model / shorter duration")
     args = parser.parse_args()
 
-    if not API_KEY:
-        print("Set API_KEY in run.py or load from identity file")
+    api_key = _load_active_key()
+    if not api_key:
+        print("No active API account. Add one via the API selector in the web UI.", file=sys.stderr)
         sys.exit(1)
 
     output_dir = day_path()
@@ -98,12 +123,13 @@ def main():
     jobs = make_jobs(args.n)
     print(f"Jobs: {len(jobs)}")
 
-    client = WaveSpeedTikTokClient(API_KEY)
+    client = WaveSpeedTikTokClient(api_key)
+    avatar_url = _load_avatar_url()
     print(f"Balance: ${client.get_balance():.4f}")
 
     result = client.batch_generate(
         jobs=jobs,
-        avatar_url=AVATAR_URL,
+        avatar_url=avatar_url,
         output_dir=str(output_dir),
         aspect_ratio="9:16",
         duration=5,
