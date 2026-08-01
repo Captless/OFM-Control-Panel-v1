@@ -13,23 +13,127 @@ window.addEventListener('unhandledrejection', function(e) {
 });
 
 // ── Theme ──
-var _moonSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-var _sunSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
-function setThemeIcon(isLight) {
-    var btn = document.getElementById('theme-btn');
-    if (!btn) return;
-    btn.innerHTML = isLight ? _sunSvg : _moonSvg;
+var _themes = {
+    terminal:   { name: 'Terminal',   color: '#00ff88', meta: '#0a0f0a', bg: '#0a0f0a', surface: '#0e150e' },
+    paper:      { name: 'Paper',      color: '#007a33', meta: '#f0f4f0', bg: '#f0f4f0', surface: '#f7faf7' },
+    'neon-pink':{ name: 'Neon Pink',  color: '#ff006e', meta: '#0a0a0a', bg: '#0a0a0a', surface: '#120a12' },
+    amber:      { name: 'Amber',      color: '#ffb000', meta: '#0f0c06', bg: '#0f0c06', surface: '#16110a' },
+    nord:       { name: 'Nord',       color: '#88c0d0', meta: '#10151b', bg: '#10151b', surface: '#161d26' },
+    cyberpunk:  { name: 'Cyberpunk',  color: '#00e5ff', meta: '#06070c', bg: '#06070c', surface: '#0c0e18' }
+};
+function setTheme(name) {
+    if (!_themes[name]) name = 'terminal';
+    var root = document.documentElement;
+    Object.keys(_themes).forEach(function(k) {
+        root.classList.remove('theme-' + k);
+    });
+    root.classList.add('theme-' + name);
+    var dot = document.getElementById('theme-nav-dot');
+    var nm = document.getElementById('theme-nav-name');
+    if (dot) dot.style.background = _themes[name].color;
+    if (nm) nm.textContent = _themes[name].name;
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', _themes[name].meta);
+    localStorage.setItem('ofm_theme', name);
+    // Update modal if open
+    if (document.getElementById('theme-modal')?.classList.contains('show')) {
+        loadThemeList();
+    }
 }
-function toggleTheme() {
-    document.body.classList.toggle('light');
-    var isLight = document.body.classList.contains('light');
-    var btn = document.getElementById('theme-btn');
-    if (btn) { btn.classList.add('rotate'); setTimeout(function() { btn.classList.remove('rotate'); }, 300); }
-    setThemeIcon(isLight);
-    localStorage.setItem('ofm_theme', isLight ? 'light' : 'dark');
+function initTheme() {
+    var saved = localStorage.getItem('ofm_theme');
+    setTheme(_themes[saved] ? saved : 'terminal');
 }
-var savedTheme = localStorage.getItem('ofm_theme');
-if (savedTheme === 'light') { document.body.classList.add('light'); setThemeIcon(true); } else { setThemeIcon(false); }
+initTheme();
+
+// ── Theme Modal ──
+function toggleThemeModal() {
+    var modal = document.getElementById('theme-modal');
+    var trigger = document.getElementById('theme-nav-trigger');
+    if (!modal || !trigger) return;
+    if (modal.classList.contains('show')) {
+        closeThemeModal();
+    } else {
+        modal.classList.add('show');
+        trigger.setAttribute('aria-expanded', 'true');
+        trigger.classList.add('open');
+        loadThemeList();
+        // Focus first row for keyboard nav
+        setTimeout(function() {
+            var first = document.querySelector('.theme-row');
+            if (first) first.focus();
+        }, 0);
+    }
+}
+function closeThemeModal() {
+    var modal = document.getElementById('theme-modal');
+    var trigger = document.getElementById('theme-nav-trigger');
+    if (modal) modal.classList.remove('show');
+    if (trigger) {
+        trigger.setAttribute('aria-expanded', 'false');
+        trigger.classList.remove('open');
+    }
+}
+function loadThemeList() {
+    var list = document.getElementById('theme-list');
+    if (!list) return;
+    var active = localStorage.getItem('ofm_theme') || 'terminal';
+    var html = '';
+    Object.keys(_themes).forEach(function(key) {
+        var t = _themes[key];
+        var isActive = (key === active);
+        html += '<div class="theme-row' + (isActive ? ' selected' : '') + '" data-theme="' + key + '" tabindex="0" role="radio" aria-checked="' + isActive + '" onclick="selectTheme(\'' + key + '\')" onkeydown="handleThemeKeydown(event, \'' + key + '\')">';
+        html += '<span class="theme-swatch-lg" style="background:' + t.color + '"></span>';
+        html += '<div class="theme-palette">';
+        html += '<div class="pal-bg" style="background:' + t.bg + '" title="Background"></div>';
+        html += '<div class="pal-surface" style="background:' + t.surface + '" title="Surface"></div>';
+        html += '<div class="pal-accent" style="background:' + t.color + '" title="Accent"></div>';
+        html += '</div>';
+        html += '<span class="theme-name">' + t.name + '</span>';
+        html += '<span class="theme-radio" aria-hidden="true"></span>';
+        html += '</div>';
+    });
+    list.innerHTML = html;
+}
+function selectTheme(name) {
+    if (!_themes[name]) return;
+    setTheme(name);
+    closeThemeModal();
+}
+function handleThemeKeydown(e, name) {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        selectTheme(name);
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        var rows = document.querySelectorAll('.theme-row');
+        var idx = Array.from(rows).findIndex(function(r) { return r.dataset.theme === name; });
+        var dir = (e.key === 'ArrowDown') ? 1 : -1;
+        var next = rows[(idx + dir + rows.length) % rows.length];
+        if (next) next.focus();
+    } else if (e.key === 'Escape') {
+        closeThemeModal();
+    }
+}
+
+// ESC closes theme modal
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var modal = document.getElementById('theme-modal');
+        if (modal && modal.classList.contains('show')) {
+            closeThemeModal();
+        }
+    }
+});
+
+// Outside click closes theme modal
+document.addEventListener('click', function(e) {
+    var modal = document.getElementById('theme-modal');
+    var trigger = document.getElementById('theme-nav-trigger');
+    if (modal && modal.classList.contains('show') && !e.target.closest('#theme-modal') && !e.target.closest('#theme-nav-trigger')) {
+        closeThemeModal();
+    }
+});
 
 // ── Reduced motion listener ──
 var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -48,9 +152,9 @@ function setLive(state, msg) {
     var tx = document.getElementById('live-text');
     if (!el) return;
     el.className = 'live';
-    if (state === 'ok') { el.classList.add('ok'); dt.style.background = '#4caf50'; tx.textContent = msg || 'Live'; }
-    else if (state === 'loading') { el.classList.add('loading'); dt.style.background = '#ff9800'; tx.textContent = msg || 'Loading...'; }
-    else { el.classList.add('error'); dt.style.background = '#f44336'; tx.textContent = msg || 'Error'; }
+    if (state === 'ok') { el.classList.add('ok'); dt.style.background = '#00ff88'; tx.textContent = msg || 'Live'; }
+    else if (state === 'loading') { el.classList.add('loading'); dt.style.background = '#ffb000'; tx.textContent = msg || 'Loading...'; }
+    else { el.classList.add('error'); dt.style.background = '#ff6b6b'; tx.textContent = msg || 'Error'; }
 }
 
 async function api(url, body) {
@@ -436,7 +540,7 @@ function renderOutputs() {
     var area = document.getElementById('outputs-area');
     if (!area) return;
     if (_preview) { _preview.style.display = 'none'; var ov = _preview.querySelector('video'); if (ov) { ov.pause(); ov.currentTime = 0; } }
-    if (!batches.length) { area.innerHTML = '<div class="outputs-empty"><span class="empty-illustration">&#127912;</span>No outputs yet.<br>Generate your first images above.</div>'; return; }
+    if (!batches.length) { area.innerHTML = '<div class="outputs-empty"><span class="empty-illustration">$ ls outputs/</span>No outputs yet.<br>Generate your first images above.</div>'; return; }
 
     var total = batches.reduce(function(s, b) { return s + b.items.length; }, 0);
     var gs = document.getElementById('global-stats');
@@ -711,6 +815,12 @@ function _renderFs() {
     if (!srcEl) return;
     var isV = item.isVideo;
     modal.innerHTML = '';
+    for (var ci = 0; ci < _fsCleanup.length; ci++) {
+        var h = _fsCleanup[ci];
+        window.removeEventListener('mousemove', h);
+        window.removeEventListener('mouseup', h);
+        window.removeEventListener('keydown', h);
+    }
     _fsScale = 1; _fsPanX = 0; _fsPanY = 0;
     _fsDragging = false; _fsDragRef = null; _fsMoved = false;
     _fsCleanup = [];
@@ -869,9 +979,7 @@ async function checkApiStatus() {
         var data = await r.json();
         var accounts = data.wavespeed_accounts || {};
         var active = data.active_wavespeed_account || '';
-        var identity = data.identity_name || '';
         var count = Object.keys(accounts).length;
-        _lastIdentity = identity;
         _lastApiCount = count;
         if (count > 0) {
             dot.className = 'api-tab-dot valid';
@@ -898,20 +1006,11 @@ async function checkApiStatus() {
                 bal.textContent = '$--';
             }
         } else {
-            var provCount = data.providers ? Object.keys(data.providers).length : 0;
-            if (provCount > 0) {
-                dot.className = 'api-tab-dot valid';
-                _lastApiCount = provCount;
-                _selectedAccount = null;
-                updateApiLabel();
-                bal.textContent = '$--';
-            } else {
-                dot.className = 'api-tab-dot invalid';
-                _lastApiCount = 0;
-                _selectedAccount = null;
-                updateApiLabel();
-                bal.textContent = '$--';
-            }
+            dot.className = 'api-tab-dot invalid';
+            _lastApiCount = 0;
+            _selectedAccount = null;
+            updateApiLabel();
+            bal.textContent = '$--';
         }
     } catch(e) {
         if (e.name === 'AbortError') {
@@ -948,195 +1047,6 @@ document.addEventListener('click', function(e) {
 });
 var _delSvg2 = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 var _checkSvg = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-
-async function loadProviderList() {
-    var list = document.getElementById('provider-list');
-    try {
-        var r = await fetch('/api/settings/wavespeed/accounts');
-        var data = await r.json();
-        var validation = await _getValidationResults();
-        var headerHtml = '<div class="provider-header"><span style="min-width:100px;flex:1">Account</span><span style="width:80px;text-align:right">Bal</span><span style="flex:1">API Key</span><span style="width:60px">Status</span><span style="width:70px"></span></div>';
-        if (!data.ok || !data.accounts || Object.keys(data.accounts).length === 0) {
-            list.innerHTML = headerHtml + '<div class="settings-empty">No accounts configured</div>';
-            return;
-        }
-        var html = headerHtml;
-        var active = data.active || '';
-        Object.keys(data.accounts).forEach(function(label) {
-            var preview = data.accounts[label];
-            var isActive = (label === active);
-            var isValid = validation[label];
-            var statusClass = isValid ? 'valid' : 'invalid';
-            var statusText = isValid ? 'Valid' : 'Invalid';
-            html += '<div class="provider-row">';
-            html += '<span class="provider-name" onclick="startRename(this, \'' + esc(label) + '\')" title="Click to rename">' + esc(label) + '</span>';
-            html += '<span class="provider-bal" data-account="' + esc(label) + '">--</span>';
-            html += '<span class="provider-key">' + esc(preview) + '</span>';
-            html += '<span class="provider-status ' + statusClass + '">' + statusText + '</span>';
-            if (isActive) {
-                html += '<span class="provider-active-badge">Active</span>';
-            } else {
-                html += '<button class="use-btn" onclick="confirmSwitchAccount(\'' + esc(label) + '\')">Use</button>';
-            }
-            html += '<button class="provider-remove" onclick="removeProvider(\'' + esc(label) + '\')" title="Remove account">' + _delSvg2 + '</button>';
-            html += '</div>';
-        });
-        list.innerHTML = html;
-        Object.keys(data.accounts).forEach(function(label) {
-            fetch('/api/balance/account?account=' + encodeURIComponent(label))
-                .then(function(r) { return r.json(); })
-                .then(function(d) {
-                    var balSpan = document.querySelector('.provider-bal[data-account="' + label.replace(/"/g, '\\"') + '"]');
-                    if (balSpan && d && typeof d.balance === 'number') {
-                        balSpan.textContent = '$' + d.balance.toFixed(2);
-                    }
-                })
-                .catch(function() {
-                    var balSpan = document.querySelector('.provider-bal[data-account="' + label.replace(/"/g, '\\"') + '"]');
-                    if (balSpan) balSpan.textContent = '$--';
-                });
-        });
-    } catch(e) {
-    list.innerHTML = '<div class="provider-header"><span style="min-width:100px;flex:1">Account</span><span style="width:80px;text-align:right">Bal</span><span style="flex:1">API Key</span><span style="width:60px">Status</span><span style="width:70px"></span></div><div class="settings-empty">Error loading accounts</div>';
-    }
-}
-
-function startRename(el, oldLabel) {
-    var input = document.createElement('input');
-    input.type = 'text';
-    input.value = oldLabel;
-    input.className = 'provider-name-input';
-    input.style.width = el.offsetWidth + 'px';
-    el.parentNode.replaceChild(input, el);
-    input.focus();
-    input.select();
-
-    function cancel() {
-        var span = document.createElement('span');
-        span.className = 'provider-name';
-        span.onclick = function() { startRename(span, oldLabel); };
-        span.title = 'Click to rename';
-        span.textContent = oldLabel;
-        input.parentNode.replaceChild(span, input);
-    }
-
-    async function save() {
-        var newLabel = input.value.trim();
-        if (!newLabel || newLabel === oldLabel) { cancel(); return; }
-        try {
-            var r = await fetch('/api/settings/wavespeed/accounts/rename', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({old_label: oldLabel, new_label: newLabel})
-            });
-            var data = await r.json();
-            if (data.ok) {
-                loadProviderList();
-                checkApiStatus();
-                _invalidateAccounts();
-            } else {
-                alert(data.error || 'Rename failed');
-                cancel();
-            }
-        } catch(e) {
-            alert('Error: ' + e.message);
-            cancel();
-        }
-    }
-
-    input.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') save();
-        else if (e.key === 'Escape') cancel();
-    });
-    input.addEventListener('blur', save);
-}
-
-async function confirmSwitchAccount(label) {
-    if (!confirm('Switch active API to "' + label + '"? This will use this key for all new generations.')) return;
-    try {
-        var r = await fetch('/api/settings/wavespeed/active', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({label: label})
-        });
-        var data = await r.json();
-        if (data.ok) {
-            loadProviderList();
-            checkApiStatus();
-            fetchBalance();
-            showSuccess('Active API switched to ' + label);
-        }
-    } catch(e) {
-        showError('Error switching account: ' + e.message);
-        var result = document.getElementById('settings-result');
-        if (result) { result.className = 'settings-result error'; result.textContent = 'Error switching account'; result.style.display = 'block'; }
-    }
-}
-
-async function addProvider() {
-    var name = document.getElementById('new-provider-name').value.trim().toLowerCase();
-    var key = document.getElementById('new-provider-key').value.trim();
-    var result = document.getElementById('settings-result');
-    result.className = 'settings-result';
-    result.style.display = 'none';
-    if (!name || !key) { result.className = 'settings-result error'; result.textContent = 'Enter both account name and key'; result.style.display = 'block'; return; }
-    try {
-        var r = await fetch('/api/settings/wavespeed/accounts/set', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({label: name, key: key})
-        });
-        var data = await r.json();
-        if (data.ok) {
-            document.getElementById('new-provider-name').value = '';
-            document.getElementById('new-provider-key').value = '';
-            loadProviderList();
-            checkApiStatus();
-            result.className = 'settings-result success';
-            result.textContent = 'Account saved: ' + name;
-            result.style.display = 'block';
-            setTimeout(function() { result.style.display = 'none'; }, 2000);
-        } else {
-            result.className = 'settings-result error';
-            result.textContent = data.error || 'Failed to save';
-            result.style.display = 'block';
-        }
-    } catch(e) {
-        result.className = 'settings-result error';
-        result.textContent = 'Error: ' + e.message;
-        result.style.display = 'block';
-    }
-}
-async function removeProvider(label) {
-    if (!confirm('Remove account "' + label + '"?')) return;
-    var result = document.getElementById('settings-result');
-    result.className = 'settings-result';
-    result.style.display = 'none';
-    try {
-        var r = await fetch('/api/settings/wavespeed/accounts/remove', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({label: label})
-        });
-        var data = await r.json();
-        if (data.ok) {
-            loadProviderList();
-            checkApiStatus();
-            result.className = 'settings-result success';
-            result.textContent = 'Removed ' + label;
-            result.style.display = 'block';
-            setTimeout(function() { result.style.display = 'none'; }, 2000);
-        } else {
-            result.className = 'settings-result error';
-            result.textContent = data.error || 'Failed to remove';
-            result.style.display = 'block';
-        }
-    } catch(e) {
-        result.className = 'settings-result error';
-        result.textContent = 'Error: ' + e.message;
-        result.style.display = 'block';
-    }
-}
 
 var _validationCache = null;
 var _validationCacheTime = 0;
@@ -1274,12 +1184,13 @@ function _renderAccounts(data, validation) {
         html += '</div>';
         html += '</div>';
         html += '<div class="provider-actions">';
-        if (isActive) {
-            html += '<button class="provider-check active" title="Active provider" disabled>' + _checkSvg + '</button>';
-        } else {
-            html += '<button class="provider-check" onclick="confirmSwitchApi(\'' + esc(label) + '\')" title="Set as default">' + _checkSvg + '</button>';
-        }
-        html += '<button class="provider-remove" onclick="removeApiProvider(\'' + esc(label) + '\')" title="Remove provider">' + _delSvg2 + '</button>';
+        // Toggle switch
+        html += '<label class="provider-toggle" title="' + (isActive ? 'Active provider' : 'Set as active provider') + '">';
+        html += '<input type="checkbox" role="switch" aria-label="Set as active provider" ' + (isActive ? 'checked' : '') + (count === 1 ? ' disabled' : '') + ' onclick="toggleProvider(\'' + esc(label) + '\', this)">';
+        html += '<span class="toggle-slider"></span>';
+        html += '</label>';
+        // Hover-reveal delete
+        html += '<button class="provider-delete" onclick="removeApiProvider(\'' + esc(label) + '\')" title="Remove provider" aria-label="Remove provider">' + _delSvg2 + '</button>';
         html += '</div>';
         html += '</div>';
     });
@@ -1313,6 +1224,13 @@ function _renderAccounts(data, validation) {
 }
 
 // ── API Modal toggle ──
+function _setApiExpanded(open) {
+    var t = document.getElementById('api-nav-trigger');
+    if (t) {
+        t.setAttribute('aria-expanded', open ? 'true' : 'false');
+        t.classList.toggle('open', open);
+    }
+}
 function toggleApiModal() {
     var modal = document.getElementById('api-modal');
     if (!modal) return;
@@ -1320,6 +1238,7 @@ function toggleApiModal() {
         closeApiModal();
     } else {
         modal.classList.add('show');
+        _setApiExpanded(true);
         loadApiProviderList();
     }
 }
@@ -1327,7 +1246,16 @@ function toggleApiModal() {
 function closeApiModal() {
     var modal = document.getElementById('api-modal');
     if (modal) modal.classList.remove('show');
+    _setApiExpanded(false);
 }
+
+document.addEventListener('keydown', function(e) {
+    var trigger = document.getElementById('api-nav-trigger');
+    if (trigger && document.activeElement === trigger && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        toggleApiModal();
+    }
+});
 
 async function loadApiProviderList() {
     var list = document.getElementById('api-provider-list');
@@ -1361,7 +1289,6 @@ async function loadApiProviderList() {
 }
 
 async function confirmSwitchApi(label) {
-  if (!confirm('Switch active API to "' + label + '"? This will use this key for all new generations.')) return;
   try {
     var r = await fetch('/api/settings/wavespeed/active', {
       method: 'POST',
@@ -1405,6 +1332,21 @@ async function confirmSwitchApi(label) {
       setTimeout(function() { result.style.display = 'none'; }, 3000);
     }
   }
+}
+
+function toggleProvider(label, checkbox) {
+  // Prevent unchecking the only active provider
+  if (!checkbox.checked) {
+    checkbox.checked = true;
+    return;
+  }
+  
+  // Prevent switching if already active (checkbox would be checked)
+  if (_selectedAccount === label && checkbox.checked) {
+    return;
+  }
+  
+  confirmSwitchApi(label);
 }
 
 async function addApiProvider() {

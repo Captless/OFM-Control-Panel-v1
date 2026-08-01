@@ -29,7 +29,7 @@ ACTIVITY_LOG = WEBUI_DIR / "activity.json"
 PORT = 8000
 
 sys.path.insert(0, str(BASE))
-from core.config import API_KEY, PHOTO_PRICE, get_api_key, set_api_key, remove_api_key, list_api_keys, SETTINGS_PATH, list_wavespeed_accounts, set_wavespeed_account, remove_wavespeed_account, rename_wavespeed_account, get_active_wavespeed_key, set_active_wavespeed_account, test_wavespeed_account
+from core.config import PHOTO_PRICE, SETTINGS_PATH, list_wavespeed_accounts, set_wavespeed_account, remove_wavespeed_account, rename_wavespeed_account, get_active_wavespeed_key, set_active_wavespeed_account, test_wavespeed_account
 
 sys.path.insert(0, str(PIPELINE_DIR))
 from prompt_bank import list_presets, build_jobs, build_jobs_multi
@@ -54,6 +54,8 @@ def _get_balance(account_label=None):
                 return 0.0
         else:
             key = get_active_wavespeed_key()
+        if not key:
+            return 0.0
         client = WaveSpeedClient(key)
         bal = client.get_balance()
         if account_label is None:
@@ -62,16 +64,6 @@ def _get_balance(account_label=None):
         return bal
     except Exception:
         return 0.0
-
-
-def _get_identity_name():
-    identity_path = BASE / "docs" / "wavespeed_identity_alina.md"
-    if not identity_path.is_file():
-        return ""
-    for line in identity_path.read_text(encoding="utf-8").splitlines():
-        if "**Name:**" in line:
-            return line.split("**Name:**")[1].strip()
-    return ""
 
 
 # â”€â”€ Activity log â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -231,12 +223,10 @@ def _start_pipeline(mode, prompts, with_text=False):
 
     def _run():
         t0 = time.time()
-        env = os.environ.copy()
-        env["WAVESPEED_API_KEY"] = get_active_wavespeed_key()
         try:
             proc = subprocess.Popen(
                 cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                text=True, env=env
+                text=True
             )
             for line in proc.stdout:
                 _update_progress(run_id, line.rstrip())
@@ -352,20 +342,21 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._json(dict(state))
 
         elif path == "/api/wavespeed/status":
-            key = get_api_key("wavespeed")
-            owner = _get_identity_name() if key else ""
+            key = get_active_wavespeed_key()
+            raw = SETTINGS_PATH.read_text(encoding="utf-8") if SETTINGS_PATH.exists() else "{}"
+            owner = json.loads(raw).get("active_wavespeed_account", "") if key else ""
             self._json({"connected": bool(key), "owner": owner})
 
         elif path == "/api/settings/key/status":
-            providers = list_api_keys()
             raw = SETTINGS_PATH.read_text(encoding="utf-8") if SETTINGS_PATH.exists() else "{}"
             settings = json.loads(raw)
             active_label = settings.get("active_wavespeed_account", "")
+            accounts = list_wavespeed_accounts()
             self._json({
-                "ok": True, "providers": providers, "count": len(providers),
-                "wavespeed_accounts": list_wavespeed_accounts(),
+                "ok": True,
+                "wavespeed_accounts": accounts,
                 "active_wavespeed_account": active_label,
-                "identity_name": _get_identity_name(),
+                "count": len(accounts),
             })
 
         elif path == "/api/settings/wavespeed/accounts":
@@ -501,25 +492,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 except Exception as e:
                     self._json({"ok": False, "error": str(e)}, 500)
 
-        elif parsed.path == "/api/settings/key":
-            key = body.get("key", "").strip()
-            provider = body.get("provider", "wavespeed").strip().lower()
-            if not key:
-                self._json({"ok": False, "error": "missing key"}, 400)
-            elif not provider:
-                self._json({"ok": False, "error": "missing provider"}, 400)
-            else:
-                set_api_key(key, provider)
-                preview = (key[:4] + "****" + key[-4:]) if len(key) > 8 else "****"
-                _log_activity(f"API key updated for {provider}: {preview}")
-                self._json({"ok": True, "key_preview": preview, "provider": provider})
-
-        elif parsed.path == "/api/settings/key/remove":
-            provider = body.get("provider", "wavespeed").strip().lower() if body else "wavespeed"
-            remove_api_key(provider)
-            _log_activity(f"API key removed for {provider}")
-            self._json({"ok": True, "provider": provider})
-
         elif parsed.path == "/api/settings/wavespeed/test":
             label = body.get("label", "").strip()
             if not label:
@@ -546,19 +518,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._json({"ok": False, "error": "missing label"}, 400)
             elif not key:
                 self._json({"ok": False, "error": "missing key"}, 400)
-            elif not key.startswith("sk-"):
-                self._json({"ok": False, "error": "Invalid WaveSpeed API key"}, 400)
             else:
-                try:
-                    client = WaveSpeedClient(key)
-                    client.validate()
-                except Exception:
-                    self._json({"ok": False, "error": "Invalid WaveSpeed API key"}, 400)
-                    return
                 set_wavespeed_account(label, key)
+                raw = SETTINGS_PATH.read_text(encoding="utf-8") if SETTINGS_PATH.exists() else "{}"
+                active_label = json.loads(raw).get("active_wavespeed_account", "")
+                if not active_label:
+                    set_active_wavespeed_account(label)
+                    active_label = label
                 preview = (key[:4] + "****" + key[-4:]) if len(key) > 8 else "****"
                 _log_activity(f"WaveSpeed account saved: {label} {preview}")
-                self._json({"ok": True, "label": label, "preview": preview})
+                self._json({"ok": True, "label": label, "preview": preview, "active": active_label})
 
         elif parsed.path == "/api/settings/wavespeed/accounts/remove":
             label = body.get("label", "").strip()
