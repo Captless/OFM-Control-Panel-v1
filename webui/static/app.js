@@ -926,22 +926,9 @@ async function checkApiStatus() {
     }
 }
 
-// ── Settings panel ──
-function openSettings() {
-    document.getElementById('settings-modal').classList.add('show');
-    loadProviderList();
-}
-function closeSettings() {
-    document.getElementById('settings-modal').classList.remove('show');
-}
-
-// ESC key closes settings drawer / API dropdown
+// ── ESC key closes API dropdown / prompt modal ──
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-        var settingsModal = document.getElementById('settings-modal');
-        if (settingsModal && settingsModal.classList.contains('show')) {
-            closeSettings();
-        }
         var apiModal = document.getElementById('api-modal');
         if (apiModal && apiModal.classList.contains('show')) {
             closeApiModal();
