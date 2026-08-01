@@ -711,6 +711,12 @@ function _renderFs() {
     if (!srcEl) return;
     var isV = item.isVideo;
     modal.innerHTML = '';
+    for (var ci = 0; ci < _fsCleanup.length; ci++) {
+        var h = _fsCleanup[ci];
+        window.removeEventListener('mousemove', h);
+        window.removeEventListener('mouseup', h);
+        window.removeEventListener('keydown', h);
+    }
     _fsScale = 1; _fsPanX = 0; _fsPanY = 0;
     _fsDragging = false; _fsDragRef = null; _fsMoved = false;
     _fsCleanup = [];

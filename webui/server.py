@@ -54,6 +54,8 @@ def _get_balance(account_label=None):
                 return 0.0
         else:
             key = get_active_wavespeed_key()
+        if not key:
+            return 0.0
         client = WaveSpeedClient(key)
         bal = client.get_balance()
         if account_label is None:
