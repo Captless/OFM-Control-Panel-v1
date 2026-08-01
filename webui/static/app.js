@@ -130,7 +130,7 @@ document.addEventListener('keydown', function(e) {
 document.addEventListener('click', function(e) {
     var modal = document.getElementById('theme-modal');
     var trigger = document.getElementById('theme-nav-trigger');
-    if (modal && modal.classList.contains('show') && !e.target.closest('#theme-modal') && !e.target.closest('#theme-nav-trigger')) {
+    if (modal && modal.classList.contains('show') && !e.target.closest('#theme-modal-box') && !e.target.closest('#theme-nav-trigger')) {
         closeThemeModal();
     }
 });
@@ -1041,7 +1041,7 @@ document.addEventListener('keydown', function(e) {
 
 // Outside click closes API modal
 document.addEventListener('click', function(e) {
-    if (!e.target.closest('#api-modal') && !e.target.closest('#api-nav-trigger')) {
+    if (!e.target.closest('#api-modal-box') && !e.target.closest('#api-nav-trigger')) {
         closeApiModal();
     }
 });

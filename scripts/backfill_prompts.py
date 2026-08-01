@@ -29,7 +29,7 @@ from prompt_bank import (
 OUTPUTS = Path(BASE) / "outputs"
 
 DEFAULT_LIGHTING = "warm"
-DEFAULT_OUTFIT = "fem"
+DEFAULT_OUTFIT = "sexy"
 
 
 def _scene_and_pose_from_labels(labels):
