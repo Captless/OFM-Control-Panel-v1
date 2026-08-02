@@ -16,7 +16,7 @@ window.addEventListener('unhandledrejection', function(e) {
 var _themes = {
     terminal:   { name: 'Terminal',   color: '#00ff88', meta: '#0a0f0a', bg: '#0a0f0a', surface: '#0e150e' },
     paper:      { name: 'Paper',      color: '#007a33', meta: '#f0f4f0', bg: '#f0f4f0', surface: '#f7faf7' },
-    'neon-pink':{ name: 'Neon Pink',  color: '#ff006e', meta: '#0a0a0a', bg: '#0a0a0a', surface: '#120a12' },
+    'neon-pink':{ name: 'Rose Pink',  color: '#e880ad', meta: '#0a0a0a', bg: '#0a0a0a', surface: '#120a12' },
     amber:      { name: 'Amber',      color: '#ffb000', meta: '#0f0c06', bg: '#0f0c06', surface: '#16110a' },
     nord:       { name: 'Nord',       color: '#88c0d0', meta: '#10151b', bg: '#10151b', surface: '#161d26' },
     cyberpunk:  { name: 'Cyberpunk',  color: '#00e5ff', meta: '#06070c', bg: '#06070c', surface: '#0c0e18' }
@@ -28,6 +28,10 @@ function setTheme(name) {
         root.classList.remove('theme-' + k);
     });
     root.classList.add('theme-' + name);
+    // Force body::after repaint so gradient wave updates with new --accent-dim
+    document.body.style.display = 'none';
+    document.body.offsetHeight;
+    document.body.style.display = '';
     var dot = document.getElementById('theme-nav-dot');
     var nm = document.getElementById('theme-nav-name');
     if (dot) dot.style.background = _themes[name].color;

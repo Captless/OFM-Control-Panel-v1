@@ -38,7 +38,7 @@ html.theme-terminal {
   --btn-hover: #1a281a;
   --row-hover: rgba(0, 255, 136, 0.05);
   --th-bg: #0b120b;
-  --scanline: rgba(0, 255, 136, 0.035);
+  --scanline: rgba(0, 255, 136, 0.08);
   --card-inner: rgba(0, 255, 136, 0.05);
   --shadow-lg: rgba(0, 0, 0, 0.28);
   --meta-color: #0a0f0a;
@@ -71,13 +71,13 @@ html.theme-paper {
   --btn-hover: #cddacc;
   --row-hover: rgba(0, 122, 51, 0.05);
   --th-bg: #e6ece6;
-  --scanline: rgba(0, 122, 51, 0.03);
+  --scanline: rgba(0, 122, 51, 0.07);
   --card-inner: rgba(0, 122, 51, 0.06);
   --shadow-lg: rgba(0, 0, 0, 0.10);
   --meta-color: #f0f4f0;
 }
 
-/* ── Theme: Neon Pink ── */
+/* ── Theme: Rose Pink ── */
 html.theme-neon-pink {
   color-scheme: dark;
   --bg: #0a0a0a;
@@ -90,22 +90,22 @@ html.theme-neon-pink {
   --fg: #fff0f8;
   --fg2: #ddaaaa;
   --fg3: #bb6688;
-  --accent: #ff006e;
-  --accent-hover: #ff3385;
+  --accent: #e880ad;
+  --accent-hover: #f095bb;
   --accent-contrast: #0a0004;
-  --accent-bg: rgba(255, 0, 110, 0.08);
-  --accent-dim: rgba(255, 0, 110, 0.05);
-  --accent-soft: rgba(255, 0, 110, 0.14);
+  --accent-bg: rgba(232, 128, 173, 0.08);
+  --accent-dim: rgba(232, 128, 173, 0.05);
+  --accent-soft: rgba(232, 128, 173, 0.14);
   --amber: #ff6b9d;
   --amber-bg: rgba(255, 107, 157, 0.1);
   --error: #ff3366;
   --error-bg: rgba(255, 51, 102, 0.1);
   --btn-bg: #1a0a1a;
   --btn-hover: #220a22;
-  --row-hover: rgba(255, 0, 110, 0.05);
+  --row-hover: rgba(232, 128, 173, 0.05);
   --th-bg: #120a12;
-  --scanline: rgba(255, 0, 110, 0.035);
-  --card-inner: rgba(255, 0, 110, 0.05);
+  --scanline: rgba(232, 128, 173, 0.07);
+  --card-inner: rgba(232, 128, 173, 0.05);
   --shadow-lg: rgba(0, 0, 0, 0.45);
   --meta-color: #0a0a0a;
 }
@@ -137,7 +137,7 @@ html.theme-amber {
   --btn-hover: #2a2118;
   --row-hover: rgba(255, 176, 0, 0.05);
   --th-bg: #120d06;
-  --scanline: rgba(255, 176, 0, 0.035);
+  --scanline: rgba(255, 176, 0, 0.08);
   --card-inner: rgba(255, 176, 0, 0.05);
   --shadow-lg: rgba(0, 0, 0, 0.35);
   --meta-color: #0f0c06;
@@ -170,7 +170,7 @@ html.theme-nord {
   --btn-hover: #2a3442;
   --row-hover: rgba(136, 192, 208, 0.05);
   --th-bg: #161d26;
-  --scanline: rgba(136, 192, 208, 0.035);
+  --scanline: rgba(136, 192, 208, 0.07);
   --card-inner: rgba(136, 192, 208, 0.05);
   --shadow-lg: rgba(0, 0, 0, 0.35);
   --meta-color: #10151b;
@@ -203,7 +203,7 @@ html.theme-cyberpunk {
   --btn-hover: #1a1e3d;
   --row-hover: rgba(0, 229, 255, 0.05);
   --th-bg: #0c0e18;
-  --scanline: rgba(0, 229, 255, 0.035);
+  --scanline: rgba(0, 229, 255, 0.08);
   --card-inner: rgba(0, 229, 255, 0.05);
   --shadow-lg: rgba(0, 0, 0, 0.45);
   --meta-color: #06070c;
@@ -245,30 +245,25 @@ body::before {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 820px;
-  height: 820px;
-  background: radial-gradient(circle, var(--accent-dim) 0%, transparent 70%);
+  width: 900px;
+  height: 900px;
+  background: radial-gradient(circle, rgba(91, 90, 91, 0.1) 0%, transparent 70%);
+  /* background: radial-gradient(circle, var(--accent-dim) 0%, transparent 70%); */
   pointer-events: none;
   z-index: 0;
 }
 
-/* CRT scanlines — slow vertical drift, GPU-safe (transform only) */
+/* Static gray dot grid — fixed, no animation, theme-agnostic */
 body::after {
   content: '';
   position: fixed;
-  inset: -8px 0 0 0;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: repeating-linear-gradient(
-    to bottom,
-    transparent 0px,
-    transparent 3px,
-    var(--scanline) 3px,
-    var(--scanline) 4px
-  );
-  animation: scan-drift 0.6s linear infinite;
+  background-image: radial-gradient(circle, rgba(74,74,74,0.4) 1.5px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 0 0;
 }
-@keyframes scan-drift { from { transform: translateY(0); } to { transform: translateY(4px); } }
 
 .app {
   display: flex;
