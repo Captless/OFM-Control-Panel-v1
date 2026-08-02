@@ -265,11 +265,12 @@ body::before {
   z-index: 0;
 }
 
-/* Static gray dot grid — fixed, no animation, theme-agnostic */
+/* Static gray dot grid — diagonal, covers viewport, no animation, theme-agnostic */
 body::after {
   content: '';
   position: fixed;
-  inset: 0;
+  inset: -50%;
+  transform: rotate(45deg);
   z-index: 0;
   pointer-events: none;
   background-image: radial-gradient(circle, rgba(74,74,74,0.4) 1.5px, transparent 1px);
