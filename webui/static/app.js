@@ -88,11 +88,6 @@ function loadThemeList() {
         var isActive = (key === active);
         html += '<div class="theme-row' + (isActive ? ' selected' : '') + '" data-theme="' + key + '" tabindex="0" role="radio" aria-checked="' + isActive + '" onclick="selectTheme(\'' + key + '\')" onkeydown="handleThemeKeydown(event, \'' + key + '\')">';
         html += '<span class="theme-swatch-lg" style="background:' + t.color + '"></span>';
-        html += '<div class="theme-palette">';
-        html += '<div class="pal-bg" style="background:' + t.bg + '" title="Background"></div>';
-        html += '<div class="pal-surface" style="background:' + t.surface + '" title="Surface"></div>';
-        html += '<div class="pal-accent" style="background:' + t.color + '" title="Accent"></div>';
-        html += '</div>';
         html += '<span class="theme-name">' + t.name + '</span>';
         html += '<span class="theme-radio" aria-hidden="true"></span>';
         html += '</div>';
