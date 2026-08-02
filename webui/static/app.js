@@ -533,6 +533,58 @@ var _outputsData = [];
 
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+var _preview = null;
+var _viewMode = 'table';
+try { _viewMode = localStorage.getItem('ofm_view_mode') || 'table'; } catch(e) {}
+
+function setViewMode(mode) {
+    _viewMode = (mode === 'grid') ? 'grid' : 'table';
+    try { localStorage.setItem('ofm_view_mode', _viewMode); } catch(e) {}
+    syncViewToggle();
+    var area = document.getElementById('outputs-area');
+    if (area) renderOutputs();
+}
+
+function syncViewToggle() {
+    document.querySelectorAll('.view-toggle button').forEach(function(b) {
+        var on = b.dataset.view === _viewMode;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+}
+
+var _cpySvg = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+var _dlSvg = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+var _delSvg = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+
+function _batchCount(b) {
+    var t = b.items.length + ' item' + (b.items.length !== 1 ? 's' : '');
+    var vids = b.items.filter(function(it) { return it.is_video; }).length;
+    if (vids) t += ' \u00b7 ' + vids + ' video' + (vids !== 1 ? 's' : '');
+    return t;
+}
+
+function _captionSpan(item, sid) {
+    var txt = item.txt_content;
+    var srcEsc = item.src.replace(/'/g, "\\'");
+    var txtShort = txt ? txt.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
+    if (txtShort.length > 80) txtShort = txtShort.substring(0, 80) + '...';
+    var title = txt ? txt : 'Click to add caption';
+    if (txt) {
+        return '<span class="caption-text" onclick="editCaption(\'' + sid + '\',\'' + srcEsc + '\')" title="' + esc(title) + '\n\nClick to edit caption">' + esc(txtShort) + '</span>';
+    }
+    return '<span class="caption-text caption-placeholder" onclick="editCaption(\'' + sid + '\',\'' + srcEsc + '\')" title="' + esc(title) + '">Add caption</span>';
+}
+
+function _itemMeta(item, sid) {
+    var html = '<div class="item-meta">';
+    if (item.prompt) html += '<span class="prompt-link" onclick="showPrompt(\'' + sid + '\')">Prompt Used</span>';
+    var ext = item.filename ? item.filename.split('.').pop().toUpperCase() : (item.is_video ? 'MP4' : 'PNG');
+    html += '<span class="item-meta-right"><span class="fmt">' + ext + '</span><span class="created">' + esc(item.created_at || '') + '</span></span>';
+    html += '</div>';
+    return html;
+}
+
 function renderOutputs() {
     try {
     var batches = _outputsData;
@@ -550,10 +602,26 @@ function renderOutputs() {
     document.getElementById('sidebar-generated').textContent = total;
     document.getElementById('sidebar-batches').textContent = batches.length;
 
-    var cpySvg = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-    var dlSvg = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
-    var delSvg = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+    var collapsed = {};
+    document.querySelectorAll('.b.collapsed').forEach(function(el) {
+        collapsed[el.id.replace('batch-', '')] = true;
+    });
+    if (_viewMode === 'grid') { area.innerHTML = buildGridHtml(batches); }
+    else { area.innerHTML = buildTableHtml(batches); }
+    Object.keys(collapsed).forEach(function(id) {
+        var el = document.getElementById('batch-' + id);
+        if (el) el.classList.add('collapsed');
+    });
+    bindHoverPreview();
+} catch(e) {
+    var area2 = document.getElementById('outputs-area');
+    if (area2) area2.innerHTML = '<div style="color:#f44336;font-size:11px;padding:12px;background:var(--bg3);border-radius:6px;"><b>Render error:</b> ' + esc(e.message) + '</div>';
+    var el = document.getElementById('js-error');
+    if (el) { el.style.display = 'block'; el.textContent = 'renderOutputs error: ' + e.message; }
+}
+}
 
+function buildTableHtml(batches) {
     var html = '';
     batches.forEach(function(b, bIdx) {
         var bid = b.id;
@@ -561,21 +629,20 @@ function renderOutputs() {
         html += '<div class="b-header" onclick="toggleBatch(\'' + bid + '\')">';
         html += '<span class="chevron">\u25b8</span>';
         html += '<span class="b-title">' + esc(b.name) + '</span>';
-        html += '<span class="b-count">' + b.items.length + ' item' + (b.items.length !== 1 ? 's' : '') + '</span>';
+        html += '<span class="b-count">' + _batchCount(b) + '</span>';
         html += '</div>';
         html += '<div class="b-body"><table class="tw"><tbody>';
         b.items.forEach(function(item, iIdx) {
             var sid = bid + '_' + item.stem;
             var txt = item.txt_content;
             var ext = item.filename ? item.filename.split('.').pop().toUpperCase() : '';
-            var display = item.name || item.filename || item.stem;
             var num = iIdx + 1;
             html += '<tr>';
             html += '<td class="n">' + num + '</td>';
             html += '<td class="m">';
             if (item.is_video) { html += '<span class="thumb" id="' + sid + '_m">'; } else { html += '<span class="thumb" id="' + sid + '_m" onclick="fullscreen(\'' + sid + '_m\',0)">'; }
             if (item.is_video) {
-                html += '<video muted loop playsinline preload="metadata"><source src="' + item.src + '" type="video/mp4"></video><span class="vid-badge">VID</span>';
+                html += '<video muted loop playsinline preload="metadata"><source src="' + item.src + '" type="video/mp4"></video>';
             } else {
                 html += '<img src="' + item.src + '" loading="lazy">';
             }
@@ -584,39 +651,61 @@ function renderOutputs() {
             if (txt) html += '<div class="txt" id="' + sid + '_t">' + esc(txt) + '</div>';
             html += '</td>';
             html += '<td class="info">';
-            var txtShort = txt ? txt.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
-            if (txtShort.length > 80) txtShort = txtShort.substring(0, 80) + '...';
-            if (txt) {
-                html += '<span class="caption-text" onclick="editCaption(\'' + sid + '\',\'' + item.src.replace(/'/g, "\\'") + '\')" title="' + esc(txt) + '\n\nClick to edit caption">' + esc(txtShort) + '</span>';
-            } else {
-                html += '<span class="caption-placeholder" onclick="editCaption(\'' + sid + '\',\'' + item.src.replace(/'/g, "\\'") + '\')" title="Click to add caption">Add caption</span>';
-            }
-            html += '<div class="info-meta">';
-            if (item.prompt) html += '<span class="prompt-link" onclick="showPrompt(\'' + sid + '\')" title="View full prompt">Prompt Used</span><span class="info-sep">&middot;</span>';
-            html += '<span class="fmt">' + (ext || (item.is_video ? 'MP4' : 'PNG')) + '</span>';
-            html += '</div>';
+            html += _captionSpan(item, sid);
+            html += _itemMeta(item, sid);
             html += '</td>';
             html += '<td class="bt">';
-            html += '<button class="cp" onclick="copyText(\'' + sid + '\')" title="Copy caption">' + cpySvg + '</button>';
-            html += '<a class="dl" href="' + item.src + '" download="' + item.filename + '" title="Download">' + dlSvg + '</a>';
-            html += '<button class="del" onclick="deleteMedia(\'' + item.src.replace(/'/g, "\\'") + '\')" title="Delete">' + delSvg + '</button>';
+            html += '<button class="cp" onclick="copyText(\'' + sid + '\')" title="Copy caption">' + _cpySvg + '</button>';
+            html += '<a class="dl" href="' + item.src + '" download="' + item.filename + '" title="Download">' + _dlSvg + '</a>';
+            html += '<button class="del" onclick="deleteMedia(\'' + item.src.replace(/'/g, "\\'") + '\')" title="Delete">' + _delSvg + '</button>';
             html += '</td>';
             html += '</tr>';
         });
         html += '</tbody></table></div></div>';
     });
-    var collapsed = {};
-    document.querySelectorAll('.b.collapsed').forEach(function(el) {
-        collapsed[el.id.replace('batch-', '')] = true;
-    });
-    area.innerHTML = html;
-    Object.keys(collapsed).forEach(function(id) {
-        var el = document.getElementById('batch-' + id);
-        if (el) el.classList.add('collapsed');
-    });
+    return html;
+}
 
-    // Hover preview
-    var _preview = document.getElementById('hover-preview');
+function buildGridHtml(batches) {
+    var html = '';
+    batches.forEach(function(b, bIdx) {
+        var bid = b.id;
+        html += '<div class="b ' + (bIdx === 0 ? '' : 'collapsed') + '" id="batch-' + bid + '">';
+        html += '<div class="b-header" onclick="toggleBatch(\'' + bid + '\')">';
+        html += '<span class="chevron">\u25b8</span>';
+        html += '<span class="b-title">' + esc(b.name) + '</span>';
+        html += '<span class="b-count">' + _batchCount(b) + '</span>';
+        html += '</div>';
+        html += '<div class="b-body"><div class="g-grid">';
+        b.items.forEach(function(item, iIdx) {
+            var sid = bid + '_' + item.stem;
+            var srcEsc = item.src.replace(/'/g, "\\'");
+            html += '<div class="g-card">';
+            html += '<div class="g-thumb" id="' + sid + '_m"' + (item.is_video ? '' : ' onclick="fullscreen(\'' + sid + '_m\',0)"') + '>';
+            if (item.is_video) {
+                html += '<video muted loop playsinline preload="metadata"><source src="' + item.src + '" type="video/mp4"></video>';
+            } else {
+                html += '<img src="' + item.src + '" loading="lazy">';
+            }
+            html += '</div>';
+            if (item.prompt) html += '<pre class="prompt-box" id="pb-' + sid + '" data-negative="' + esc(item.negative_prompt || '') + '">' + esc(item.prompt) + '</pre>';
+            html += '<div class="g-body">';
+            html += _captionSpan(item, sid);
+            html += _itemMeta(item, sid);
+            html += '<div class="g-actions">';
+            if (item.txt_content) html += '<button class="cp" onclick="copyText(\'' + sid + '\')" title="Copy caption">' + _cpySvg + '</button>';
+            html += '<a class="dl" href="' + item.src + '" download="' + item.filename + '" title="Download">' + _dlSvg + '</a>';
+            html += '<button class="del" onclick="deleteMedia(\'' + srcEsc + '\')" title="Delete">' + _delSvg + '</button>';
+            html += '</div>';
+            html += '</div></div>';
+        });
+        html += '</div></div></div>';
+    });
+    return html;
+}
+
+function bindHoverPreview() {
+    _preview = document.getElementById('hover-preview');
     if (!_preview) { _preview = document.createElement('div'); _preview.id = 'hover-preview'; document.body.appendChild(_preview); }
     _preview.onmouseleave = function() { _preview.style.display = 'none'; };
     document.querySelectorAll('.tw .thumb').forEach(function(cell) {
@@ -644,12 +733,8 @@ function renderOutputs() {
         media.addEventListener('mouseenter', function() { if (isVid && !fsActive) media.play(); });
         media.addEventListener('mouseleave', function() { if (isVid && !fsActive) media.pause(); media.currentTime = 0; });
     });
-} catch(e) {
-    if (area) area.innerHTML = '<div style="color:#f44336;font-size:11px;padding:12px;background:var(--bg3);border-radius:6px;"><b>Render error:</b> ' + esc(e.message) + '</div>';
-    var el = document.getElementById('js-error');
-    if (el) { el.style.display = 'block'; el.textContent = 'renderOutputs error: ' + e.message; }
 }
-}
+
 
 function toggleBatch(bid) {
     var b = document.getElementById('batch-' + bid);
@@ -730,9 +815,23 @@ document.addEventListener('keydown', function(e) {
 function showPrompt(sid) {
     var box = document.getElementById('pb-' + sid);
     if (!box) return;
-    document.getElementById('prompt-main').textContent = box.textContent || '(empty)';
-    document.getElementById('prompt-negative').textContent = box.getAttribute('data-negative') || '(empty)';
-    document.getElementById('prompt-identity').textContent = 'keep model identity/lip color consistent/accurate/similar';
+    var full = box.textContent || '';
+    var main = full, negative = '', identity = '';
+    var i = full.indexOf('negative prompt:');
+    if (i >= 0) {
+        main = full.substring(0, i).replace(/\n+$/g, '').trim();
+        var rest = full.substring(i + 'negative prompt:'.length);
+        var j = rest.search(/keep model identity/i);
+        if (j >= 0) {
+            negative = rest.substring(0, j).trim();
+            identity = rest.substring(j).trim();
+        } else {
+            negative = rest.trim();
+        }
+    }
+    document.getElementById('prompt-main').textContent = main || '(empty)';
+    document.getElementById('prompt-negative').textContent = negative || '(empty)';
+    document.getElementById('prompt-identity').textContent = identity || 'keep model identity/lip color consistent/accurate/similar';
     document.getElementById('prompt-modal').classList.add('show');
 }
 function closePrompt() {
@@ -1450,6 +1549,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setLive('loading', 'Starting...');
         fetchBalance();
         refreshOutputs();
+        syncViewToggle();
         
         checkApiStatus();
         preloadAccounts();
