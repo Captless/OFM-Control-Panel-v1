@@ -161,6 +161,7 @@ def _collect():
                     "stem": unique_stem, "src": src, "is_video": path.suffix == ".mp4",
                     "txt_content": txt_content, "filename": path.name, "labels": labels,
                     "prompt": prompt, "negative_prompt": negative_prompt, "guidance_scale": guidance_scale,
+                    "created_at": datetime.fromtimestamp(path.stat().st_mtime).strftime("%I:%M %p").lstrip("0"),
                 })
         if all_items:
             batches.append({"id": date_key, "name": date_label, "items": all_items})
@@ -569,10 +570,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
-        try:
-            self.wfile.write(json.dumps(data).encode("utf-8"))
-        except ConnectionAbortedError:
-            pass  # Client disconnected, ignore
+        self.wfile.write(json.dumps(data).encode("utf-8"))
 
     def _read_body(self):
         length = int(self.headers.get("Content-Length", 0))

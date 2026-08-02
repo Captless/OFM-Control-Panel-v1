@@ -190,6 +190,10 @@
   <div class="out-header" style="margin-top:0">
     <h2>Outputs</h2>
     <span class="out-meta" id="global-stats">Loading...</span>
+    <span class="view-toggle" role="tablist" aria-label="Output view mode">
+      <button role="tab" data-view="table" class="active" aria-selected="true" onclick="setViewMode('table')">Table</button>
+      <button role="tab" data-view="grid" aria-selected="false" onclick="setViewMode('grid')">Grid</button>
+    </span>
     <span class="out-spacer"></span>
     <button class="btn btn-sm btn-outline" onclick="refreshOutputs()" id="btn-refresh"><span class="spinner"></span><span class="btn-text">&#8635; Refresh</span></button>
   </div>

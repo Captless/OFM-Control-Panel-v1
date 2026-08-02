@@ -357,6 +357,7 @@ def build_jobs_multi(count=1, vibe=None, outfit_style=None, camera_style=None, l
         quality = random.choice(QUALITY)
 
         camera_mode = "mirror" if camera_style == "mirror" else "handheld"
+        negative = MIRROR_NEGATIVE if camera_mode == "mirror" else DEFAULT_NEGATIVE
         prompt = _build_prompt(camera_mode, scene, framing, hair, top, bottom, pose, light, quality, time_of_day)
 
         short_id = hashlib.md5((str(len(jobs)) + str(time.time())).encode()).hexdigest()[:6]
@@ -367,7 +368,7 @@ def build_jobs_multi(count=1, vibe=None, outfit_style=None, camera_style=None, l
             "filename": filename,
             "labels": f"{scene.split(',')[0]} · {pose}",
             "video_prompt": "auto",
-            "negative_prompt": DEFAULT_NEGATIVE,
+            "negative_prompt": negative,
             "guidance_scale": 0.55,
             "duration": 5,
         })
