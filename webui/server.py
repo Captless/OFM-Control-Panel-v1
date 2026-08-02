@@ -569,7 +569,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
-        self.wfile.write(json.dumps(data).encode("utf-8"))
+        try:
+            self.wfile.write(json.dumps(data).encode("utf-8"))
+        except ConnectionAbortedError:
+            pass  # Client disconnected, ignore
 
     def _read_body(self):
         length = int(self.headers.get("Content-Length", 0))
