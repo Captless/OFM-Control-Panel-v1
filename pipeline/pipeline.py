@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.insert(0, os.path.join(BASE_DIR, ".."))
 sys.path.insert(0, os.path.join(BASE_DIR, "..", "api"))
-from wavespeed_client import WaveSpeedClient as PhotoClient
+from wavespeed_client import WaveSpeedClient as PhotoClient, _is_explicit_flag
 sys.path.insert(0, BASE_DIR)
 
 from core.daybatch import day_path
@@ -75,6 +75,7 @@ def _merge_meta(existing_path, new_meta):
 
 
 def mode_photo(jobs, enhance=False):
+    print("@P starting|Initializing pipeline\u2026", flush=True)
     api_key = _load_active_key()
     if not api_key:
         print("ERROR: No active API account. Add one via the API selector in the web UI.", file=sys.stderr)
@@ -97,12 +98,22 @@ def mode_photo(jobs, enhance=False):
         enhance=enhance,
         max_concurrent=3,
         progress_callback=lambda d, t, last: print(f"[{d}/{t}] {last}", flush=True),
+        status_callback=lambda status, elapsed: print(f"@P processing|WaveSpeed {status} {elapsed}s", flush=True),
         checkpoint_path=str(checkpoint),
     )
     print(f"\nPhotos: {result['n_success']}/{result['n_total']} | Failed: {result['n_failed']} | {result['duration_s']:.0f}s")
 
     if result['n_failed'] > 0:
         first_err = result['failed'][0]['error']
+        if result.get('explicit_hit'):
+            for f in result['failed']:
+                if _is_explicit_flag(str(f['error'])):
+                    first_err = f['error']
+                    break
+            msg = f"explicit_content_flagged: {first_err}"
+            print(f"@P failed|explicit_content|{msg}", flush=True)
+            print(f"@P failed|explicit_content|{msg}", file=sys.stderr, flush=True)
+            sys.exit(1)
         print(f"{result['n_failed']}/{result['n_total']} failed. First error: {first_err}", file=sys.stderr, flush=True)
         if result['n_success'] > 0:
             _merge_meta(output_dir.parent / "meta.json", _build_meta(jobs))
@@ -135,4 +146,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     jobs = load_jobs(args.prompts)
-    mode_photo(jobs)
+    try:
+        mode_photo(jobs)
+    except SystemExit:
+        raise
+    except Exception as e:
+        print(f"@P failed|{e}", flush=True)
+        print(f"@P failed|{e}", file=sys.stderr, flush=True)
+        sys.exit(1)

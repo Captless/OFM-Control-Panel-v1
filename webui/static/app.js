@@ -421,7 +421,7 @@ async function confirmGeneration() {
     if (!jobs.length) return;
     _resetPromptList();
     btn.disabled = true;
-    btn.classList.add('loading'); _btnTxt(jobs.length + ' prompts \u2192 starting\u2026');
+    btn.classList.add('loading'); _btnTxt('Generating ' + jobs.length + '\u2026');
     var r2 = await api('/api/run/photo', {prompts: jobs});
     if (!r2.ok) {
         _btnTxt('FAIL: ' + (r2.output || 'error'));
@@ -437,19 +437,41 @@ async function confirmGeneration() {
     var _retryCount = 0;
     var _maxRetries = 3;
     var _deadline = Date.now() + 45 * 60 * 1000;
-    var _fail = function(msg) {
+var _fail = function(msg) {
         btn.classList.remove('loading');
         _btnTxt(msg);
         fetchBalance();
         setTimeout(_resetBtn, 3000);
     };
+
+    var _stageMap = {
+        'submitting': 'Submitting',
+        'generating': 'Generating',
+        'polling': 'Processing',
+        'downloading': 'Downloading',
+        'enhancing': 'Enhancing',
+        'complete': 'Complete'
+    };
+    var _friendlyStage = function(stage) {
+        return _stageMap[stage] || (stage ? stage.charAt(0).toUpperCase() + stage.slice(1) : 'Running');
+    };
+
     while (Date.now() < _deadline) {
         var p = await api('/api/progress?run_id=' + runId);
         if (p && p.done === true) {
-            _btnTxt(p.ok ? 'OK (' + p.duration_s + 's)' : 'FAIL: ' + (p.detail || 'error'));
-            btn.classList.remove('loading');
-            if (p.ok) { refreshOutputs(); showSuccess('Generation complete \u2014 ' + p.duration_s + 's'); }
-            else { showError('Generation failed: ' + (p.detail || 'error')); }
+            if (p.error_type === 'explicit_content') {
+                _btnTxt('FAIL: content flagged');
+                btn.classList.remove('loading');
+                showWarning('Generation blocked \u2014 WaveSpeed flagged content as sensitive. Try different prompts or outfit style.', 8000);
+            } else if (p.ok) {
+                _btnTxt('OK (' + p.duration_s + 's)');
+                btn.classList.remove('loading');
+                refreshOutputs(); showSuccess('Generation complete \u2014 ' + p.duration_s + 's');
+            } else {
+                _btnTxt('FAIL: ' + (p.detail || 'error'));
+                btn.classList.remove('loading');
+                showError('Generation failed: ' + (p.detail || 'error'));
+            }
             fetchBalance();
             setTimeout(_resetBtn, 3000);
             _pendingJobs = null;
@@ -462,8 +484,9 @@ async function confirmGeneration() {
             _resetPromptList();
             break;
         }
-        var stage = p.stage ? p.stage.charAt(0).toUpperCase() + p.stage.slice(1) : 'Running';
-        var detail = stage + (p.detail ? ': ' + p.detail : '') + ((p.total > 0) ? ' (' + p.current + '/' + p.total + ')' : '');
+        var stage = p.stage ? _friendlyStage(p.stage) : 'Running';
+        var detail = stage + (p.detail ? ': ' + p.detail : '');
+        if (p.total > 0) detail += ' (' + p.current + '/' + p.total + ')';
         if (detail !== _lastDetail) {
             _lastDetail = detail;
             _lastChangeTime = Date.now();
@@ -472,7 +495,7 @@ async function confirmGeneration() {
         var elapsed = Math.floor(Date.now() / 1000 - updatedAt);
         if (elapsed >= 300 && _retryCount < _maxRetries) {
             _retryCount++;
-            _btnTxt('Stalled \u2014 retry ' + _retryCount + '/' + _maxRetries + '\u2026');
+            _btnTxt('Reconnecting\u2026');
             var r3 = await api('/api/run/photo', {prompts: jobs});
             if (r3.ok) {
                 runId = r3.run_id;
@@ -493,7 +516,7 @@ async function confirmGeneration() {
             _resetPromptList();
             break;
         }
-        _btnTxt(detail + ' \u00b7 ' + Math.floor((Date.now() - _startTs) / 1000) + 's');
+        _btnTxt(stage + ' ' + (p.total > 0 ? p.current + '/' + p.total + ' \u00b7 ' : '') + Math.floor((Date.now() - _startTs) / 1000) + 's');
         await new Promise(r3 => setTimeout(r3, 1000));
     }
     if (Date.now() >= _deadline) {
