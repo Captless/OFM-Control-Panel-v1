@@ -14,26 +14,28 @@ import time
 # ---------------------------------------------------------------------------
 
 INDOOR_SCENES = [
-    "standing casually near closet in a dim bedroom",
-    "standing near bathroom sink area",
-    "standing near couch in a dim living room",
-    "standing near wardrobe",
-    "standing near sofa in dim living room",
-    "standing casually in bathroom with tiled background",
+    "standing casually near closet in a dim bedroom, facing camera",
+    "standing near bathroom sink area, facing camera",
+    "standing near couch in a dim living room, facing camera",
+    "standing near wardrobe with slightly messy background, facing camera",
+    "standing near sofa in dim living room, facing camera",
+    "standing casually in bathroom with tiled background, facing camera",
 ]
 
 MIRROR_SCENES = [
     "standing near bathroom sink area",
     "standing near wardrobe",
+    "standing casually beside an open closet in a dim bedroom",
+    "standing casually near bathroom sink area with tiled background",
+
 ]
 
 OUTDOOR_SCENES = [
-    "standing in a dim alley at dusk with brick walls behind",
-    "standing on a quiet city street at night under a streetlamp",
+    "standing in a dim alley with brick walls behind",
+    "standing on a quiet city street under a streetlamp",
     "standing near a graffiti wall in a dim city corner",
-    "standing on a rooftop at night with city lights blurred behind",
-    "standing by a parked car on a dim street at night",
-    "standing in front of a dark storefront with soft neon glow",
+    "standing on a rooftop with city lights blurred behind",
+    "standing by a parked car on a dim street",
 ]
 
 # ---------------------------------------------------------------------------
@@ -41,10 +43,10 @@ OUTDOOR_SCENES = [
 # ---------------------------------------------------------------------------
 
 FRAMING = [
-    "slight torso angle with uneven framing, head to waist composition",
-    "slightly off-center framing, head to waist shot",
-    "uneven framing with slight tilt, head to waist crop",
-    "uneven framing, head to waist shot",
+    "slight torso angle with uneven framing, head to waist composition, midshot",
+    "slightly off-center framing, head to waist shot, midshot",
+    "uneven framing with slight tilt, head to waist crop, midshot",
+    "uneven framing, head to waist shot, midshot",
 ]
 
 # ---------------------------------------------------------------------------
@@ -130,36 +132,36 @@ OUTFIT_TOPS_POOLS = {
 
 OUTFIT_BOTTOMS_POOLS = {
     "sexy": [
-        "high-waisted black short shorts with smooth finish and subtle contour seams",
-        "high-waisted black tight shorts with contour stitching and slight shaping seams",
-        "black high-waisted micro shorts with raw hem and minimal seams",
-        "structured black cargo shorts with oversized flap pockets, reinforced side seams and subtle strap details",
+        "high-waisted beige cargo pants with smooth finish and subtle contour seams",
+        "high-waisted sweatpants slight shaping seams",
+        "black high-waisted micro shorts",
+        "structured black cargo pants with oversized flap pockets, reinforced side seams and subtle strap details",
         "black fitted lounge shorts with subtle stitching and soft fabric folds",
         "black high-waisted biker shorts with ruched side seams, tight fit",
-        "black micro denim shorts with distressed hem, high-waisted fit",
-        "black satin mini skirt with high waist, smooth drape, short length",
+        "black denim pants with distressed hem, high-waisted fit",
+        "black satin mini skirt with high waist, short length",
         "black bodycon skirt, mid-thigh length, fitted through hips",
     ],
     "date_night": [
-        "dark wine wide-leg pleated trousers pooling slight break at top of shoe",
-        "dark wool high-waist pleated trousers in soft black plaid, front crease straight from hip to foot",
-        "black full-length narrow pants with prominent central crease, ending straight with cuffs resting on ankle",
+        "dark wine wide-leg pleated trousers",
+        "dark wool high-waist pleated trousers in soft black plaid, front crease",
+        "black full-length narrow pants with prominent central crease",
         "deep charcoal tailored trousers with subtle drape, fitted through seat, relaxed at hem",
         "black high-waisted pleated midi skirt in structured wool blend, clean lines",
         "black satin midi skirt with slit, smooth drape, elastic waist",
         "dark grey slim-fit trousers with zip front, sharp contained silhouette",
         "black fitted pencil skirt, knee length, back slit",
-        "navy tailored trousers with subtle pinstripe, straight leg",
+        "navy tailored trousers with subtle pinstripe",
     ],
     "night_club": [
         "black leather mini skirt with asymmetrical zip hem, low-rise fit",
         "black high-waisted vinyl shorts with side zip, structured waistband",
         "black wide-leg trousers with metallic thread woven through, dramatic flare",
         "black fitted midi skirt with thigh-high slit, hidden side zip",
-        "black cargo pants with chain details, oversized pockets, tapered ankle",
+        "black cargo pants with chain details, oversized pockets",
         "black sequin mini skirt, high waist, short length",
         "black mini skirt in patent leather, straight silhouette",
-        "black skinny trousers with side stripe detail, ankle length",
+        "black skinny trousers with side stripe detail",
         "black cut-out shorts with side zip, high-waisted, structured fit",
     ],
     "baggy": [
@@ -238,8 +240,9 @@ LIGHTING_POOLS = {
 # ---------------------------------------------------------------------------
 
 QUALITY = [
-    "imperfect composition, authentic amateur snapchat aesthetic, deep blacks, moody contrast, photorealistic skin texture, subtle film grain, high detail, non-AI aesthetic",
-    "imperfect composition, snapchat realism, deep dark tones, moody atmosphere, photorealistic skin texture, subtle grain, high detail, authentic lifestyle feel",
+#    "imperfect composition, snapchat realism, deep dark tones, moody atmosphere, photorealistic skin texture, subtle grain, high detail, authentic lifestyle feel, shot on iPhone 15 Pro Max",
+#    "imperfect composition, authentic amateur snapchat-style quality, deep blacks, moody contrast, photorealistic skin texture, subtle film grain, high detail, non-AI aesthetic, shot on iPhone 15 Pro Max",
+    "imperfect composition, snapchat realism, photorealistic skin texture, subtle grain, high detail, instagram-style iphone photo quality, natural lighting falloff with soft shadows and warm tone balance, realistic dynamic range with muted highlights and deep blacks, authentic unfiltered look"
 ]
 
 # ---------------------------------------------------------------------------
