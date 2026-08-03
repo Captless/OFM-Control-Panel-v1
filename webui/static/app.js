@@ -446,10 +446,19 @@ async function confirmGeneration() {
     while (Date.now() < _deadline) {
         var p = await api('/api/progress?run_id=' + runId);
         if (p && p.done === true) {
-            _btnTxt(p.ok ? 'OK (' + p.duration_s + 's)' : 'FAIL: ' + (p.detail || 'error'));
-            btn.classList.remove('loading');
-            if (p.ok) { refreshOutputs(); showSuccess('Generation complete \u2014 ' + p.duration_s + 's'); }
-            else { showError('Generation failed: ' + (p.detail || 'error')); }
+            if (p.error_type === 'explicit_content') {
+                _btnTxt('FAIL: content flagged');
+                btn.classList.remove('loading');
+                showWarning('Generation blocked \u2014 WaveSpeed flagged content as sensitive. Try different prompts or outfit style.', 8000);
+            } else if (p.ok) {
+                _btnTxt('OK (' + p.duration_s + 's)');
+                btn.classList.remove('loading');
+                refreshOutputs(); showSuccess('Generation complete \u2014 ' + p.duration_s + 's');
+            } else {
+                _btnTxt('FAIL: ' + (p.detail || 'error'));
+                btn.classList.remove('loading');
+                showError('Generation failed: ' + (p.detail || 'error'));
+            }
             fetchBalance();
             setTimeout(_resetBtn, 3000);
             _pendingJobs = null;

@@ -16,6 +16,13 @@ BASE_URL = "https://api.wavespeed.ai/api/v3"
 IMAGE_MODEL = "google/nano-banana-2/edit"
 ENHANCE_MODEL = "wavespeed-ai/image-enhancer"
 
+EXPLICIT_FLAG_MARKERS = ("sensitive", "explicit", "flagged")
+
+
+def _is_explicit_flag(msg):
+    m = (msg or "").lower()
+    return any(k in m for k in EXPLICIT_FLAG_MARKERS)
+
 import sys as _sys
 _sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from core.errors import WaveSpeedError  # noqa: E402
@@ -61,15 +68,22 @@ class WaveSpeedClient:
         data = self._request("POST", f"/{model}", payload)
         return data["id"]
 
-    def poll(self, task_id, interval=3, timeout=600):
+    def poll(self, task_id, interval=3, timeout=600, status_callback=None):
         deadline = time.time() + timeout
+        t0 = time.time()
         while time.time() < deadline:
             data = self._request("GET", f"/predictions/{task_id}/result")
             status = data.get("status")
             if status == "completed":
                 return data
             if status == "failed":
-                raise WaveSpeedError(f"generation_failed: {data.get('error')}", code="generation_failed")
+                err = data.get("error") or "unknown error"
+                if _is_explicit_flag(err):
+                    raise WaveSpeedError(f"explicit_content_flagged: {err}", code="explicit_content_flagged")
+                raise WaveSpeedError(f"generation_failed: {err}", code="generation_failed")
+            elapsed = int(time.time() - t0)
+            if status_callback:
+                status_callback(status, elapsed)
             time.sleep(interval)
         raise WaveSpeedError("polling_timeout", code="polling_timeout")
 
@@ -88,7 +102,7 @@ class WaveSpeedClient:
         return body["data"]["download_url"]
 
     def generate(self, prompt, image_url, resolution="1k", output_format="png",
-                 aspect_ratio="9:16"):
+                 aspect_ratio="9:16", status_callback=None):
         payload = {
             "prompt": prompt,
             "images": [image_url],
@@ -97,7 +111,7 @@ class WaveSpeedClient:
             "aspect_ratio": aspect_ratio,
         }
         task_id = self.submit(payload, model=IMAGE_MODEL)
-        result = self.poll(task_id, interval=3)
+        result = self.poll(task_id, interval=3, status_callback=status_callback)
         self.logger.debug("generate completed for task %s", task_id)
         return result["outputs"][0]
 
@@ -113,13 +127,20 @@ class WaveSpeedClient:
         return result["outputs"][0]
 
     @staticmethod
-    def download(url, path):
-        urllib.request.urlretrieve(url, path)
+    def download(url, path, timeout=120):
+        with urllib.request.urlopen(url, timeout=timeout) as resp, open(path, "wb") as f:
+            while True:
+                chunk = resp.read(65536)
+                if not chunk:
+                    break
+                f.write(chunk)
         return path
 
     @staticmethod
     def _lock_path(output_dir):
         return os.path.join(output_dir, ".batch.lock")
+
+    LOCK_STALE_SECONDS = 10 * 60
 
     def _acquire_lock(self, output_dir):
         os.makedirs(output_dir, exist_ok=True)
@@ -129,10 +150,29 @@ class WaveSpeedClient:
             os.write(fd, str(time.time()).encode())
             os.close(fd)
         except FileExistsError:
-            raise WaveSpeedError(
-                f"batch_already_running: lock file exists at {path}",
-                code="batch_already_running",
-            )
+            try:
+                age = time.time() - os.path.getmtime(path)
+            except OSError:
+                age = float("inf")
+            if age > self.LOCK_STALE_SECONDS:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+                try:
+                    fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+                    os.write(fd, str(time.time()).encode())
+                    os.close(fd)
+                except FileExistsError:
+                    raise WaveSpeedError(
+                        f"batch_already_running: lock file exists at {path}",
+                        code="batch_already_running",
+                    )
+            else:
+                raise WaveSpeedError(
+                    f"batch_already_running: lock file exists at {path}",
+                    code="batch_already_running",
+                )
         return path
 
     def _release_lock(self, lock_path):
@@ -142,6 +182,7 @@ class WaveSpeedClient:
     def batch_generate(self, jobs, avatar_url, output_dir, resolution="1k",
                        output_format="png", aspect_ratio="9:16", enhance=False,
                        max_concurrent=5, progress_callback=None,
+                       status_callback=None,
                        checkpoint_path=None):
         lock_path = self._acquire_lock(output_dir)
         done_ids = set()
@@ -163,6 +204,7 @@ class WaveSpeedClient:
 
         success_list = []
         failed_list = []
+        explicit_hit = False
 
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=max_concurrent) as pool:
@@ -171,6 +213,7 @@ class WaveSpeedClient:
                     fut = pool.submit(
                         self._generate_one, job, avatar_url, output_dir,
                         resolution, output_format, aspect_ratio, enhance,
+                        status_callback,
                     )
                     fut_map[fut] = job
 
@@ -187,6 +230,10 @@ class WaveSpeedClient:
                         failed_list.append({"filename": job["filename"], "error": str(e)})
                         n_failed += 1
                         last = f"{job['filename']} FAILED: {e}"
+                        if _is_explicit_flag(str(e)):
+                            explicit_hit = True
+                            for f in fut_map:
+                                f.cancel()
                     if progress_callback:
                         progress_callback(n_success + n_failed, n_total, last)
         finally:
@@ -200,17 +247,19 @@ class WaveSpeedClient:
             "n_total": n_total,
             "n_success": n_success,
             "n_failed": n_failed,
+            "explicit_hit": explicit_hit,
         }
 
     def _generate_one(self, job, avatar_url, output_dir, resolution, output_format,
-                       aspect_ratio, enhance):
+                       aspect_ratio, enhance, status_callback=None):
         prompt = job["prompt"]
         filename = job["filename"]
         os.makedirs(output_dir, exist_ok=True)
 
         self.logger.info("generating %s", filename)
         result_url = self.generate(prompt, avatar_url, resolution=resolution,
-                                    output_format=output_format, aspect_ratio=aspect_ratio)
+                                    output_format=output_format, aspect_ratio=aspect_ratio,
+                                    status_callback=status_callback)
 
         if enhance:
             self.logger.info("enhancing %s", filename)

@@ -69,7 +69,7 @@ HAIR = [
 OUTFIT_TOPS_POOLS = {
     "sexy": [
         "black fitted micro tank top with ultra-thin straps, distressed edges, subtle faded gothic print text",
-        "black strappy bandeau micro top with multiple thin intersecting straps, layered construction with irregular cut panels, raw hems and distressed stitching, faint washed gothic symbol print across chest",
+        "black strappy bandeau crop top with multiple thin intersecting straps, layered construction with irregular cut panels, raw hems and distressed stitching, faint washed gothic symbol print across chest",
         "black fitted micro cami with ultra-thin straps, soft matte cotton blend, subtle lace trim along neckline, delicate seam shaping and slight stretch tension",
         "charcoal asymmetrical cut-out crop top with single-shoulder strap design, double-layer matte fabric with visible seam lines and subtle ribbed texture",
         "black soft crop top with one thin strap and lightly draped neckline, smooth stretch fabric with minimal seams",
@@ -90,15 +90,15 @@ OUTFIT_TOPS_POOLS = {
         "charcoal knit cardigan over white fitted blouse, structured layering",
     ],
     "night_club": [
-        "black mesh long-sleeve top with strategic opaque panels, high neck, sheer sleeves",
+        "black lace long-sleeve top with strategic opaque panels, high neck",
         "black corset-style top with visible boning, lace-up back, sweetheart neckline",
         "black sequin crop top with halter neck, open back, cropped to underbust",
-        "charcoal cut-out bodysuit with geometric cutouts at waist, thong back, snap closure",
+        "charcoal cut-out bodysuit with geometric cutouts at waist, snap closure",
         "black velvet crop top with square neck, long fitted sleeves, cropped hem",
         "black leather-look fitted top with zip front, stand collar",
         "silver metallic halter top with ruched fabric, thin neck strap",
         "black fringe crop top with layered fringe hem, fitted bandeau base",
-        "black see-through mesh top with opaque bra layer, long sheer sleeves",
+        "black sheer top with lined bodice, long sleeves",
     ],
     "baggy": [
         "oversized black graphic tee with faded vintage band print, worn collar, boxy relaxed fit hanging loose off one shoulder",
@@ -113,14 +113,14 @@ OUTFIT_TOPS_POOLS = {
     ],
     "lounge_sexy": [
         "black silk robe with kimono sleeves, self-tie belt, mid-thigh length",
-        "white sheer mesh bralette with delicate floral embroidery, thin straps",
+        "white cotton bralette with delicate floral embroidery, thin straps",
         "oversized men's white dress shirt unbuttoned, worn off one shoulder",
-        "black lace camisole with adjustable straps, scalloped hem, semi-sheer",
+        "black lace camisole with adjustable straps, scalloped hem",
         "charcoal ribbed knit bralette with square neck, wide straps, cropped",
         "black satin camisole with thin straps, smooth drape, lace trim",
         "white cotton bralette with delicate stitching, soft stretch fabric",
-        "black mesh slip top over skin, deep v-neck, thin straps",
-        "cream knit crop cardigan open over bare chest, loose fit",
+        "black satin slip top, deep v-neck, thin straps",
+        "cream knit crop cardigan open, loose fit",
     ],
 }
 
@@ -130,7 +130,7 @@ OUTFIT_TOPS_POOLS = {
 
 OUTFIT_BOTTOMS_POOLS = {
     "sexy": [
-        "high-waisted black micro shorts with smooth finish and subtle contour seams",
+        "high-waisted black short shorts with smooth finish and subtle contour seams",
         "high-waisted black tight shorts with contour stitching and slight shaping seams",
         "black high-waisted micro shorts with raw hem and minimal seams",
         "structured black cargo shorts with oversized flap pockets, reinforced side seams and subtle strap details",
@@ -158,7 +158,7 @@ OUTFIT_BOTTOMS_POOLS = {
         "black fitted midi skirt with thigh-high slit, hidden side zip",
         "black cargo pants with chain details, oversized pockets, tapered ankle",
         "black sequin mini skirt, high waist, short length",
-        "black micro skirt in patent leather, straight silhouette",
+        "black mini skirt in patent leather, straight silhouette",
         "black skinny trousers with side stripe detail, ankle length",
         "black cut-out shorts with side zip, high-waisted, structured fit",
     ],
@@ -176,11 +176,11 @@ OUTFIT_BOTTOMS_POOLS = {
     "lounge_sexy": [
         "black lace-trim short shorts, high-waisted, elastic waist",
         "black satin high-waisted shorts with side slit, relaxed fit",
-        "black micro bikini bottom, high-cut, minimal coverage",
+        "black high-cut briefs, minimal coverage",
         "black boy-short lounge pants, elastic waist, mid-calf length",
         "black silk pajama shorts with drawstring waist, contrast piping",
         "white lace-trim cotton shorts, elastic waist, relaxed",
-        "black high-waisted lace shorts, sheer panels, minimal coverage",
+        "black high-waisted lace shorts, delicate panels",
         "black satin boxer shorts, elastic waist, loose fit",
         "black lounge shorts with ruched side seams, high-waisted, soft fabric",
     ],

@@ -9,6 +9,7 @@ import concurrent.futures
 import http.server
 import json
 import os
+import queue
 import re
 import subprocess
 import sys
@@ -39,6 +40,25 @@ sys.path.insert(0, str(API_DIR))
 from wavespeed_client import WaveSpeedClient
 
 _balance_cache = {"time": 0, "value": None}
+
+LOCK_STALE_SECONDS = 10 * 60
+
+
+def _clean_stale_locks():
+    """Remove orphaned .batch.lock files older than LOCK_STALE_SECONDS."""
+    if not OUTPUTS.is_dir():
+        return 0
+    now = time.time()
+    removed = 0
+    for lock in OUTPUTS.rglob("*.batch.lock"):
+        try:
+            if now - lock.stat().st_mtime > LOCK_STALE_SECONDS:
+                lock.unlink()
+                removed += 1
+        except OSError:
+            pass
+    return removed
+
 
 def _get_balance(account_label=None):
     now = time.time()
@@ -187,17 +207,25 @@ def _prune_pipeline_runs(max_keep=50):
 
 
 def _update_progress(run_id, line):
-    """Parse a single stdout line into _pipeline_runs state."""
+    """Parse a single stdout/stderr line into _pipeline_runs state."""
     with _state_lock:
         state = _pipeline_runs.get(run_id)
         if state is None:
             return
         state["updated_at"] = time.time()
         if line.startswith("@P "):
-            parts = line[3:].split("|", 1)
+            parts = line[3:].split("|", 2)
+            state["stage"] = parts[0]
             if len(parts) == 2:
-                state["stage"] = parts[0]
                 state["detail"] = parts[1]
+            elif len(parts) == 3:
+                state["error_type"] = parts[1]
+                state["detail"] = parts[2]
+            if parts[0] == "failed":
+                state["done"] = True
+                state["ok"] = False
+        elif line.strip():
+            state["detail"] = line.strip()
         m = re.match(r"^\[(\d+)/(\d+)\]\s+(.*)", line)
         if m:
             state["current"] = int(m.group(1))
@@ -219,6 +247,7 @@ def _start_pipeline(mode, prompts, with_text=False):
             "stage": "starting", "detail": "",
             "current": 0, "total": 0,
             "done": False, "ok": None, "duration_s": 0,
+            "error_type": "",
             "updated_at": time.time(),
         }
 
@@ -229,13 +258,35 @@ def _start_pipeline(mode, prompts, with_text=False):
                 cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 text=True
             )
+            stderr_q = queue.Queue()
+
+            def _read_stderr():
+                try:
+                    for line in proc.stderr:
+                        stderr_q.put(line)
+                        _update_progress(run_id, line.rstrip())
+                except Exception:
+                    pass
+                finally:
+                    stderr_q.put(None)
+
+            stderr_t = threading.Thread(target=_read_stderr, daemon=True)
+            stderr_t.start()
+
             for line in proc.stdout:
                 _update_progress(run_id, line.rstrip())
             proc.wait()
+
+            stderr_lines = []
+            while True:
+                item = stderr_q.get()
+                if item is None:
+                    break
+                stderr_lines.append(item.rstrip())
+
             duration = round(time.time() - t0, 1)
             ok = proc.returncode == 0
-            stderr = proc.stderr.read().strip()
-            msg = "Done" if ok else ((stderr.split("\n")[-1] if stderr else "") or f"Exit code {proc.returncode}")
+            msg = "Done" if ok else ((stderr_lines[-1] if stderr_lines else "") or f"Exit code {proc.returncode}")
             with _state_lock:
                 _pipeline_runs[run_id].update(
                     stage="done" if ok else "failed", detail=msg,
@@ -615,6 +666,7 @@ HOMEPAGE_HTML = _load_homepage()
 # â”€â”€ Run â”€â”€
 if __name__ == "__main__":
     port = 8000
+    _clean_stale_locks()
     # Free port if stale
     import subprocess, sys
     try:
