@@ -715,7 +715,7 @@ body::after {
 }
 .photo-slider::-webkit-slider-thumb:hover { background: var(--accent-hover); }
 
-.gen-layout .card.controls-locked { opacity: 0.55; }
+.gen-layout .card.controls-locked { opacity: 0.95; }
 .gen-layout .card.controls-locked .pill,
 .gen-layout .card.controls-locked .photo-slider,
 .gen-layout .card.controls-locked .btn { pointer-events: none; }

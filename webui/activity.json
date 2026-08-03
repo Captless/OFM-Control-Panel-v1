@@ -1,5 +1,17 @@
 [
   {
+    "time": "22:26",
+    "message": "Prompt bank: promptbank_outdoor_handheld_warm_day_sexy_1.json (1 jobs, vibe=outdoor, camera=handheld, light=warm, time=day, outfit=sexy)"
+  },
+  {
+    "time": "22:17",
+    "message": "Prompt bank: promptbank_indoor_handheld_warm_day_sexy_1.json (1 jobs, vibe=indoor, camera=handheld, light=warm, time=day, outfit=sexy)"
+  },
+  {
+    "time": "22:16",
+    "message": "Prompt bank: promptbank_indoor_handheld_warm_day_sexy_1.json (1 jobs, vibe=indoor, camera=handheld, light=warm, time=day, outfit=sexy)"
+  },
+  {
     "time": "21:58",
     "message": "Photo pack started: C:\\Users\\User\\Desktop\\OFM\\pipeline\\edited_prompts_f9fe4db5.json [fe66aeaf]"
   },
@@ -186,17 +198,5 @@
   {
     "time": "14:45",
     "message": "WaveSpeed account saved: captlessgaming wsk_****Lamc"
-  },
-  {
-    "time": "14:44",
-    "message": "WaveSpeed account saved: alinaskyfp wsk_****hxhI"
-  },
-  {
-    "time": "14:44",
-    "message": "Active WaveSpeed account set to: smileypvp4"
-  },
-  {
-    "time": "14:44",
-    "message": "Active WaveSpeed account set to: eduardtojong8"
   }
 ]
