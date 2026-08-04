@@ -31,10 +31,10 @@ PORT = 8000
 
 sys.path.insert(0, str(BASE))
 from core.config import PHOTO_PRICE, SETTINGS_PATH, list_wavespeed_accounts, set_wavespeed_account, remove_wavespeed_account, rename_wavespeed_account, get_active_wavespeed_key, set_active_wavespeed_account, test_wavespeed_account, get_identity, set_identity
-from core.prompt_banks import list_banks, get_bank, create_bank, update_bank, delete_bank, list_presets as list_saved_presets, create_preset, delete_preset, get_active_bank_id, set_active_bank_id
+from core.prompt_banks import list_banks, get_bank, create_bank, update_bank, delete_bank, clone_bank, get_active_bank_id, set_active_bank_id
 
 sys.path.insert(0, str(PIPELINE_DIR))
-from prompt_bank import list_presets, build_jobs, build_jobs_multi
+from prompt_bank import list_presets, build_jobs, build_jobs_multi, get_builtin_pools
 
 API_DIR = BASE / "api"
 sys.path.insert(0, str(API_DIR))
@@ -497,7 +497,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._json({"ok": True, "identity": get_identity()})
 
         elif path == "/api/settings/banks":
-            self._json({"ok": True, "banks": list_banks()})
+            banks = dict(list_banks())
+            banks.setdefault("builtin", {"id": "builtin", "name": "Built-in", "description": "", "pools": {}})
+            self._json({"ok": True, "banks": banks})
 
         elif path == "/api/settings/banks/view":
             bank_id = parse_qs(parsed.query).get("id", [None])[0]
@@ -513,8 +515,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
         elif path == "/api/settings/banks/active":
             self._json({"ok": True, "active": get_active_bank_id()})
 
-        elif path == "/api/settings/presets":
-            self._json({"ok": True, "presets": list_saved_presets()})
+        elif path == "/api/settings/banks/pools/defaults":
+            self._json({"ok": True, "pools": get_builtin_pools()})
+
+        elif path == "/api/settings/banks/active/pools":
+            pools = dict(get_builtin_pools())
+            bank_id = get_active_bank_id()
+            bank = get_bank(bank_id) if bank_id else None
+            if bank:
+                for k, v in (bank.get("pools") or {}).items():
+                    pools[k] = v
+            self._json({"ok": True, "pools": pools, "bank_id": bank_id, "bank_name": (bank or {}).get("name", "")})
 
         elif path == "/api/settings/wavespeed/accounts":
             raw = SETTINGS_PATH.read_text(encoding="utf-8") if SETTINGS_PATH.exists() else "{}"
@@ -769,6 +780,23 @@ class Handler(http.server.BaseHTTPRequestHandler):
             else:
                 self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
 
+        elif parsed.path == "/api/settings/banks/clone":
+            source_id = (body.get("source_id") or "").strip()
+            new_name = (body.get("name") or "").strip()
+            if not new_name:
+                self._json({"ok": False, "error": "missing bank name"}, 400)
+            elif source_id and not get_bank(source_id):
+                self._json({"ok": False, "error": f"bank '{source_id}' not found"}, 400)
+            else:
+                if not source_id:
+                    source_id = get_active_bank_id()
+                result = clone_bank(source_id, new_name)
+                if result.get("ok"):
+                    _log_activity(f"Prompt bank cloned: {result['bank']['name']} (from {source_id or 'builtin'})")
+                    self._json(result)
+                else:
+                    self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
+
         elif parsed.path == "/api/settings/banks/delete":
             bank_id = (body.get("id") or "").strip()
             if not bank_id:
@@ -777,26 +805,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 result = delete_bank(bank_id)
                 if result.get("ok"):
                     _log_activity(f"Prompt bank deleted: {bank_id}")
-                    self._json(result)
-                else:
-                    self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
-
-        elif parsed.path == "/api/settings/presets/create":
-            result = create_preset(body)
-            if result.get("ok"):
-                _log_activity(f"Preset saved: {result['preset']['name']}")
-                self._json(result)
-            else:
-                self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
-
-        elif parsed.path == "/api/settings/presets/delete":
-            preset_id = (body.get("id") or "").strip()
-            if not preset_id:
-                self._json({"ok": False, "error": "missing id"}, 400)
-            else:
-                result = delete_preset(preset_id)
-                if result.get("ok"):
-                    _log_activity(f"Preset deleted: {preset_id}")
                     self._json(result)
                 else:
                     self._json({"ok": False, "error": result.get("error", "unknown")}, 400)

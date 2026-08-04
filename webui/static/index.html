@@ -119,70 +119,135 @@
     </button>
     <div class="modal-header">
       <h4>Settings</h4>
-      <p>Identity, prompt banks, presets</p>
+      <p>Identity &amp; prompt banks</p>
     </div>
-    <div class="settings-tabs" role="tablist">
-      <button class="settings-tab active" data-settings-tab="identity" onclick="switchSettingsTab('identity')">Identity</button>
-      <button class="settings-tab" data-settings-tab="banks" onclick="switchSettingsTab('banks')">Prompt Banks</button>
-          </div>
     <div class="settings-body">
-      <div class="settings-pane" id="settings-pane-identity">
-      <div class="settings-identity">
-        <img id="settings-avatar-preview" class="settings-avatar-preview" alt="Current identity avatar" title="Current identity image">
-        <div class="settings-identity-meta">
-          <div class="settings-identity-name" id="settings-identity-name">Loading&hellip;</div>
-          <div class="settings-hint">Used as the model reference for every photo generation.</div>
-        </div>
-      </div>
 
-      <div class="field">
-        <label>Avatar URL</label>
-        <div class="settings-url-row">
-          <input type="text" id="settings-avatar-url" placeholder="Paste image URL..." autocomplete="off" spellcheck="false">
-          <button class="btn btn-sm btn-outline" id="settings-url-load" onclick="loadAvatarUrl()">Load</button>
-        </div>
-      </div>
+      <div class="settings-pane">
 
-      <div class="field">
-        <label>Or upload image file</label>
-        <div class="settings-upload-zone" id="settings-upload-zone" role="button" tabindex="0" aria-label="Upload identity image">
-          <div class="settings-upload-icon">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <!-- ── Identity Section ── -->
+        <section class="settings-section identity-section">
+          <div class="section-header">
+            <h4>Identity</h4>
+            <span class="settings-hint">Model reference for generation</span>
           </div>
-          <div>Drop image or click to browse</div>
-          <div class="settings-hint">PNG, JPG, WebP, GIF &middot; max 5MB &middot; auto-published via WaveSpeed for generation</div>
-        </div>
-        <input type="file" id="settings-file-input" accept="image/*" style="display:none">
-      </div>
+          <div class="settings-card identity-card">
+            <div class="identity-avatar-stack">
+              <img id="settings-avatar-preview" class="identity-avatar" alt="" aria-hidden="true">
+              <div id="settings-identity-name" class="identity-name">Loading&hellip;</div>
+            </div>
+            <hr class="identity-divider">
+            <div class="identity-fields">
+              <div class="field">
+                <label for="settings-avatar-url">Avatar URL</label>
+                <div class="input-with-btn">
+                  <input type="url" id="settings-avatar-url" placeholder="https://&hellip;" autocomplete="off" spellcheck="false">
+                  <button type="button" class="btn btn-sm btn-outline" id="settings-url-load" onclick="loadAvatarUrl()">Load</button>
+                </div>
+              </div>
+              <div class="field">
+                <label>Upload Image</label>
+                <button type="button" class="upload-zone" id="settings-upload-zone" aria-label="Upload identity image">
+                  <span class="upload-zone-icon">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  </span>
+                  <span>Drop image or click to browse</span>
+                </button>
+                <input type="file" id="settings-file-input" accept="image/*" hidden>
+              </div>
+              <img id="settings-new-preview" class="identity-new-preview" alt="New identity preview" hidden>
+              <div id="settings-status" class="settings-status" role="status" aria-live="polite"></div>
+              <button type="button" class="btn btn-sm" onclick="saveIdentity()">Save Identity</button>
+            </div>
+          </div>
+        </section>
 
-      <img id="settings-new-preview" class="settings-new-preview" alt="New identity preview" title="New identity preview" style="display:none">
+        <!-- ── Prompt Banks Section ── -->
+        <section class="settings-section banks-section">
+          <div class="section-header">
+            <h4>Prompt Banks</h4>
+            <span class="settings-hint">Override built-in pools</span>
+          </div>
 
-      <div class="settings-status" id="settings-status"></div>
-      </div>
+          <div class="settings-card banks-card">
+            <div class="banks-list-header">
+              <h5>Saved Banks</h5>
+              <button type="button" class="btn btn-sm" onclick="event.stopPropagation(); openNewBankModalFromDefault()">Create New Bank</button>
+            </div>
+            <div id="settings-bank-list" class="banks-list"></div>
+          </div>
 
-      <div class="settings-pane" id="settings-pane-banks" style="display:none">
-        <div class="field">
-          <label>Create prompt bank</label>
-          <input type="text" id="settings-bank-name" placeholder="Bank name..." autocomplete="off" spellcheck="false">
-          <textarea id="settings-bank-pools" rows="6" placeholder='Pools JSON, e.g. {"HAIR": ["wet bun with loose strands", "slick low pony"]} — overrides built-in pools (HAIR, POSES, SCENES, OUTFIT_TOPS_POOLS, OUTFIT_BOTTOMS_POOLS, LIGHTING_POOLS, FRAMING, QUALITY, DEFAULT_NEGATIVE, MIRROR_NEGATIVE, IDENTITY_LOCK)' style="width:100%;margin-top:8px;padding:8px 10px;font-family:var(--font-mono);font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);color:var(--fg);"></textarea>
-          <button class="btn btn-sm" onclick="createBankFromSettings()" style="margin-top:8px">Create Bank</button>
-        </div>
-        <div id="settings-bank-list" class="settings-list"></div>
-        <div class="settings-status" id="settings-bank-status"></div>
+          <div class="active-bank-header open" id="active-bank-header" role="button" tabindex="0" aria-expanded="true" onclick="toggleActiveBankEditor()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleActiveBankEditor();}">
+            <span class="active-bank-chevron">&#9656;</span>
+            <span class="active-bank-label">Active: <strong id="active-bank-name">Default</strong></span>
+          </div>
 
-        <div class="settings-subhead" style="margin-top:16px">Save current generation as preset</div>
-        <div class="settings-url-row">
-          <input type="text" id="settings-preset-name" placeholder="Preset name..." autocomplete="off" spellcheck="false">
-          <button class="btn btn-sm" onclick="savePresetFromSettings()">Save</button>
-        </div>
-        <div class="settings-subhead">Saved presets</div>
-        <div id="settings-preset-list" class="settings-list"></div>
-        <div class="settings-status" id="settings-preset-status"></div>
+          <div id="pool-editor-wrapper" class="pool-editor-wrapper">
+            <div id="pool-editor-list" class="pool-editor-list">
+              <div class="settings-hint">Loading pools&hellip;</div>
+            </div>
+            <div class="pool-editor-actions">
+              <button type="button" class="btn btn-sm" onclick="saveAllPoolChanges()">Save Changes</button>
+              <button type="button" class="btn btn-sm btn-outline" onclick="resetAllPoolsToBuiltin()">Reset All</button>
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
     <div style="display:flex;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border);">
-      <button class="btn btn-sm" onclick="saveIdentity()">Save</button>
-      <button class="btn btn-sm btn-outline" style="margin-left:8px" onclick="closeSettingsModal()">Done</button>
+      <button class="btn btn-sm btn-outline" onclick="closeSettingsModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── New Bank Modal ── -->
+<div id="new-bank-modal" role="dialog" aria-modal="true" aria-label="New prompt bank">
+  <div id="new-bank-modal-box">
+    <button class="modal-close" onclick="closeNewBankModal()" title="Close">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header">
+      <h4>New Prompt Bank</h4>
+      <p>Copy current pools into a new bank</p>
+    </div>
+    <div class="new-bank-body">
+      <div class="field">
+        <label for="new-bank-name">Bank name</label>
+        <input type="text" id="new-bank-name" class="bank-input" placeholder="e.g. Summer Shoot" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();submitNewBank()}">
+      </div>
+      <div id="new-bank-status" class="new-bank-status" role="status" aria-live="polite"></div>
+    </div>
+    <div class="new-bank-footer">
+      <button type="button" class="btn btn-sm btn-outline" onclick="closeNewBankModal()">Cancel</button>
+      <button type="button" class="btn btn-sm" onclick="submitNewBank()">Create Bank</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Delete Bank Modal ── -->
+<div id="delete-bank-modal" role="dialog" aria-modal="true" aria-label="Delete prompt bank">
+  <div id="delete-bank-modal-box">
+    <button class="modal-close" onclick="closeDeleteBankModal()" title="Close">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header">
+      <h4>Delete Prompt Bank</h4>
+      <p>This action cannot be undone</p>
+    </div>
+    <div class="delete-bank-body">
+      <p>Delete <strong class="delete-bank-name"></strong>? Its custom pools will be lost.</p>
+      <p class="delete-bank-warning">This action cannot be undone.</p>
+    </div>
+    <div class="new-bank-footer">
+      <button type="button" class="btn btn-sm btn-outline" onclick="closeDeleteBankModal()">Cancel</button>
+      <button type="button" class="btn btn-sm btn-danger" onclick="executeDeleteBank()">Delete</button>
     </div>
   </div>
 </div>

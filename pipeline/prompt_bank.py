@@ -427,6 +427,42 @@ def save_promptbank(jobs, vibe=None, lighting_label=None, suffix=""):
 # BACKWARDS-COMPAT EXPORTS FOR SERVER
 # ---------------------------------------------------------------------------
 
+OVERRIDABLE_POOLS = (
+    "INDOOR_SCENES",
+    "MIRROR_SCENES",
+    "OUTDOOR_SCENES",
+    "FRAMING",
+    "HAIR",
+    "POSES",
+    "QUALITY",
+    "OUTFIT_TOPS_POOLS",
+    "OUTFIT_BOTTOMS_POOLS",
+    "LIGHTING_POOLS",
+    "DEFAULT_NEGATIVE",
+    "MIRROR_NEGATIVE",
+    "IDENTITY_LOCK",
+)
+
+
+def get_builtin_pools() -> dict:
+    """Return every overridable pool with its built-in default value."""
+    return {
+        "INDOOR_SCENES": INDOOR_SCENES,
+        "MIRROR_SCENES": MIRROR_SCENES,
+        "OUTDOOR_SCENES": OUTDOOR_SCENES,
+        "FRAMING": FRAMING,
+        "HAIR": HAIR,
+        "POSES": POSES,
+        "QUALITY": QUALITY,
+        "OUTFIT_TOPS_POOLS": OUTFIT_TOPS_POOLS,
+        "OUTFIT_BOTTOMS_POOLS": OUTFIT_BOTTOMS_POOLS,
+        "LIGHTING_POOLS": LIGHTING_POOLS,
+        "DEFAULT_NEGATIVE": DEFAULT_NEGATIVE,
+        "MIRROR_NEGATIVE": MIRROR_NEGATIVE,
+        "IDENTITY_LOCK": IDENTITY_LOCK,
+    }
+
+
 def list_presets():
     return {
         "vibes": ["indoor", "outdoor"],

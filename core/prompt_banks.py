@@ -1,12 +1,8 @@
-"""Custom prompt bank + preset persistence for the OFM settings tab.
+"""Custom prompt bank persistence for the OFM settings tab.
 
 Banks are stored under settings.json["prompt_banks"] as {bank_id: bank}.
 A bank is a partial override of prompt_bank.py pool names, so it composes
 with the built-in bank without breaking existing generation.
-
-Presets are stored under settings.json["presets"] as a list of
-{id, name, created, config:{vibe, camera_style, lighting, outfit_style,
-time_of_day, count, bank_id}}.
 """
 
 import json
@@ -46,6 +42,34 @@ def list_banks() -> dict:
 def get_bank(bank_id: str):
     """Return a single bank dict or None."""
     return list_banks().get(bank_id)
+
+
+def clone_bank(source_id: str, new_name: str) -> dict:
+    """Copy an existing bank into a new bank. When source_id is empty/not a
+    saved bank, the new bank starts empty (edits to built-in pools only).
+
+    Returns {'ok': True, 'bank': bank} or {'ok': False, 'error'}.
+    """
+    new_name = str(new_name or "").strip()
+    if not new_name:
+        return {"ok": False, "error": "missing bank name"}
+    source = get_bank(source_id) if source_id else None
+    if source_id and source is None:
+        return {"ok": False, "error": f"bank '{source_id}' not found"}
+    bank = {
+        "id": uuid.uuid4().hex[:12],
+        "name": new_name,
+        "description": str(source.get("description", "")) if source else "",
+        "created": _now(),
+        "updated": _now(),
+        "pools": dict(source.get("pools", {})) if source else {},
+    }
+    settings = _load_settings()
+    if "prompt_banks" not in settings or not isinstance(settings["prompt_banks"], dict):
+        settings["prompt_banks"] = {}
+    settings["prompt_banks"][bank["id"]] = bank
+    _save_settings(settings)
+    return {"ok": True, "bank": bank}
 
 
 def _sanitize_bank(data) -> dict:
@@ -132,7 +156,6 @@ def set_active_bank_id(bank_id: str) -> dict:
 
 
 def delete_bank(bank_id: str) -> dict:
-    """Delete a bank. Also drops any preset referencing it. Returns {'ok': bool}."""
     settings = _load_settings()
     banks = settings.get("prompt_banks", {})
     if isinstance(banks, dict) and bank_id in banks:
@@ -140,61 +163,7 @@ def delete_bank(bank_id: str) -> dict:
         settings["prompt_banks"] = banks
         if settings.get("active_bank") == bank_id:
             settings["active_bank"] = ""
-        presets = settings.get("presets", [])
-        if isinstance(presets, list):
-            settings["presets"] = [p for p in presets if p.get("config", {}).get("bank_id") != bank_id]
         _save_settings(settings)
         return {"ok": True}
     return {"ok": False, "error": f"bank '{bank_id}' not found"}
 
-
-def list_presets() -> list:
-    """Return the presets list."""
-    settings = _load_settings()
-    presets = settings.get("presets", [])
-    return presets if isinstance(presets, list) else []
-
-
-def create_preset(data) -> dict:
-    """Save current generation config as a named preset."""
-    name = str(data.get("name", "")).strip()
-    if not name:
-        return {"ok": False, "error": "missing preset name"}
-    config = data.get("config", {})
-    if not isinstance(config, dict) or not config:
-        return {"ok": False, "error": "missing preset config"}
-    preset = {
-        "id": uuid.uuid4().hex[:12],
-        "name": name,
-        "created": _now(),
-        "config": {
-            "vibe": str(config.get("vibe", "indoor")),
-            "camera_style": str(config.get("camera_style", "handheld")),
-            "lighting": str(config.get("lighting", "warm")),
-            "outfit_style": str(config.get("outfit_style", "sexy")),
-            "time_of_day": str(config.get("time_of_day", "day")),
-            "count": int(config.get("count", 6) or 6),
-            "bank_id": config.get("bank_id", ""),
-        },
-    }
-    settings = _load_settings()
-    presets = settings.get("presets", [])
-    if not isinstance(presets, list):
-        presets = []
-    presets.append(preset)
-    settings["presets"] = presets
-    _save_settings(settings)
-    return {"ok": True, "preset": preset}
-
-
-def delete_preset(preset_id: str) -> dict:
-    settings = _load_settings()
-    presets = settings.get("presets", [])
-    if not isinstance(presets, list):
-        return {"ok": False, "error": "preset not found"}
-    new_presets = [p for p in presets if p.get("id") != preset_id]
-    if len(new_presets) == len(presets):
-        return {"ok": False, "error": "preset not found"}
-    settings["presets"] = new_presets
-    _save_settings(settings)
-    return {"ok": True}
