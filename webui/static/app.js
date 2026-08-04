@@ -134,6 +134,399 @@ document.addEventListener('click', function(e) {
     }
 });
 
+// ── Settings Modal ──
+var _pendingAvatarUrl = '';
+
+function _setSettingsExpanded(open) {
+    var t = document.getElementById('settings-nav-trigger');
+    if (t) {
+        t.setAttribute('aria-expanded', open ? 'true' : 'false');
+        t.classList.toggle('open', open);
+    }
+}
+
+function _setSettingsStatus(msg, type) {
+    var el = document.getElementById('settings-status');
+    if (!el) return;
+    if (!msg) { el.textContent = ''; el.className = 'settings-status'; return; }
+    el.textContent = msg;
+    el.className = 'settings-status' + (type ? ' ' + type : '');
+}
+
+function toggleSettingsModal() {
+    var modal = document.getElementById('settings-modal');
+    if (!modal) return;
+    if (modal.classList.contains('show')) {
+        closeSettingsModal();
+    } else {
+        modal.classList.add('show');
+        _setSettingsExpanded(true);
+        _setSettingsStatus('');
+        loadSettings();
+        setTimeout(function() {
+            var input = document.getElementById('settings-avatar-url');
+            if (input) input.focus();
+        }, 50);
+    }
+}
+
+function closeSettingsModal() {
+    var modal = document.getElementById('settings-modal');
+    if (modal) modal.classList.remove('show');
+    _setSettingsExpanded(false);
+    var newPreview = document.getElementById('settings-new-preview');
+    if (newPreview) { newPreview.style.display = 'none'; newPreview.removeAttribute('src'); }
+    var input = document.getElementById('settings-file-input');
+    if (input) input.value = '';
+    _pendingAvatarUrl = '';
+    _setSettingsStatus('');
+}
+
+async function loadSettings() {
+    var r = await api('/api/settings/identity');
+    if (!r || !r.ok) { _setSettingsStatus('Failed to load settings', 'error'); return; }
+    var identity = r.identity || {};
+    var name = document.getElementById('settings-identity-name');
+    if (name) name.textContent = identity.name || 'Unnamed identity';
+    var preview = document.getElementById('settings-avatar-preview');
+    if (preview) {
+        if (identity.avatar_url) {
+            preview.src = identity.avatar_url;
+            preview.style.display = 'block';
+        } else {
+            preview.removeAttribute('src');
+            preview.style.display = 'none';
+        }
+    }
+    var urlInput = document.getElementById('settings-avatar-url');
+    if (urlInput) {
+        urlInput.value = identity.avatar_url || '';
+        urlInput.placeholder = identity.avatar_url ? '' : 'Paste image URL...';
+    }
+}
+
+// ── Settings tabs ──
+
+function switchSettingsTab(name) {
+    var tabs = document.querySelectorAll('.settings-tab');
+    for (var i = 0; i < tabs.length; i++) {
+        tabs[i].classList.toggle('active', tabs[i].getAttribute('data-settings-tab') === name);
+    }
+    var panes = ['identity', 'banks'];
+    for (var j = 0; j < panes.length; j++) {
+        var pane = document.getElementById('settings-pane-' + panes[j]);
+        if (pane) pane.style.display = (panes[j] === name) ? 'block' : 'none';
+    }
+    if (name === 'banks') {
+        loadActiveBank().then(renderBankList);
+    }
+}
+
+function _settingsPaneStatus(paneId, msg, type) {
+    var el = document.getElementById(paneId);
+    if (!el) return;
+    if (!msg) { el.textContent = ''; el.className = 'settings-status'; return; }
+    el.textContent = msg;
+    el.className = 'settings-status' + (type ? ' ' + type : '');
+}
+
+async function createBankFromSettings() {
+    var nameEl = document.getElementById('settings-bank-name');
+    var poolsEl = document.getElementById('settings-bank-pools');
+    var name = (nameEl.value || '').trim();
+    if (!name) { _settingsPaneStatus('settings-bank-status', 'Enter a bank name', 'error'); return; }
+    var pools = {};
+    var raw = (poolsEl.value || '').trim();
+    if (raw) {
+        try {
+            pools = JSON.parse(raw);
+        } catch(e) {
+            _settingsPaneStatus('settings-bank-status', 'Invalid JSON: ' + e.message, 'error');
+            return;
+        }
+        if (typeof pools !== 'object' || Array.isArray(pools)) {
+            _settingsPaneStatus('settings-bank-status', 'Pools must be a JSON object', 'error');
+            return;
+        }
+    }
+    if (Object.keys(pools).length === 0) {
+        _settingsPaneStatus('settings-bank-status', 'Enter at least one pool override', 'error');
+        return;
+    }
+    var r = await api('/api/settings/banks/create', {name: name, pools: pools});
+    if (r && r.ok) {
+        _settingsPaneStatus('settings-bank-status', 'Bank created', 'ok');
+        nameEl.value = '';
+        poolsEl.value = '';
+        renderBankList();
+    } else {
+        _settingsPaneStatus('settings-bank-status', (r && (r.error || r.output)) || 'Create failed', 'error');
+    }
+}
+
+async function renderBankList() {
+    var list = document.getElementById('settings-bank-list');
+    if (list) {
+        var data = await api('/api/settings/banks');
+        var banks = (data && data.banks) ? data.banks : {};
+        var ids = Object.keys(banks);
+        if (ids.length === 0) {
+            list.innerHTML = '';
+        } else {
+            var html = '';
+            for (var i = 0; i < ids.length; i++) {
+                var b = banks[ids[i]] || {};
+                var poolCount = Object.keys(b.pools || {}).length;
+                var isActive = (ids[i] === _activeBankId);
+                html += '<div class="settings-list-item">';
+                html += '<div class="settings-list-meta"><strong>' + esc(b.name || ids[i]) + '</strong>';
+                html += '<span class="settings-hint">' + poolCount + ' pool override(s) ' + (b.description ? '&middot; ' + esc(b.description) : '') + '</span></div>';
+                html += '<div class="settings-list-actions">';
+                if (isActive) {
+                    html += '<span class="settings-hint" style="color:var(--accent)">Active</span>';
+                } else {
+                    html += '<button class="btn btn-sm btn-outline" onclick="setActiveBankFromSettings(\'' + esc(ids[i]) + '\')">Set Active</button>';
+                }
+                html += '<button class="btn btn-sm btn-outline" onclick="deleteBankFromSettings(\'' + esc(ids[i]) + '\')">Delete</button>';
+                html += '</div></div>';
+            }
+            list.innerHTML = html;
+        }
+    }
+    renderPresetList();
+}
+
+async function deleteBankFromSettings(id) {
+    if (!confirm('Delete this prompt bank?')) return;
+    var r = await api('/api/settings/banks/delete', {id: id});
+    if (r && r.ok) {
+        _settingsPaneStatus('settings-bank-status', 'Bank deleted', 'ok');
+        if (_activeBankId === id) _activeBankId = '';
+        renderBankList();
+    } else {
+        _settingsPaneStatus('settings-bank-status', (r && (r.error || r.output)) || 'Delete failed', 'error');
+    }
+}
+
+async function renderPresetList() {
+    var list = document.getElementById('settings-preset-list');
+    if (!list) return;
+    var data = await api('/api/settings/presets');
+    var presets = (data && data.presets) ? data.presets : [];
+    if (presets.length === 0) {
+        list.innerHTML = '<div class="settings-hint">No presets saved. Pick generation options, then save the current settings as a preset.</div>';
+        return;
+    }
+    var html = '';
+    for (var i = 0; i < presets.length; i++) {
+        var p = presets[i];
+        var cfg = p.config || {};
+        var summary = [cfg.vibe, cfg.camera_style, cfg.lighting, cfg.outfit_style, cfg.time_of_day].join(' · ') + ' · ' + (parseInt(cfg.count) || '?') + ' photos' + (cfg.bank_id ? ' · bank' : '');
+        html += '<div class="settings-list-item">';
+        html += '<div class="settings-list-meta"><strong>' + esc(p.name) + '</strong>';
+        html += '<span class="settings-hint">' + esc(summary) + '</span></div>';
+        html += '<div class="settings-list-actions">';
+        html += '<button class="btn btn-sm btn-outline" onclick="loadPresetFromSettings(\'' + esc(p.id) + '\')">Load</button>';
+        html += '<button class="btn btn-sm btn-outline" onclick="deletePresetFromSettings(\'' + esc(p.id) + '\')">Delete</button>';
+        html += '</div></div>';
+    }
+    list.innerHTML = html;
+}
+
+function savePresetFromSettings() {
+    var nameEl = document.getElementById('settings-preset-name');
+    var name = (nameEl.value || '').trim();
+    if (!name) { _settingsPaneStatus('settings-preset-status', 'Enter a preset name', 'error'); return; }
+    api('/api/settings/presets/create', {name: name, config: _getCurrentConfig()}).then(function(r) {
+        if (r && r.ok) {
+            _settingsPaneStatus('settings-preset-status', 'Preset saved', 'ok');
+            nameEl.value = '';
+            renderPresetList();
+        } else {
+            _settingsPaneStatus('settings-preset-status', (r && (r.error || r.output)) || 'Save failed', 'error');
+        }
+    });
+}
+
+async function deletePresetFromSettings(id) {
+    if (!confirm('Delete this preset?')) return;
+    var r = await api('/api/settings/presets/delete', {id: id});
+    if (r && r.ok) {
+        _settingsPaneStatus('settings-preset-status', 'Preset deleted', 'ok');
+        renderPresetList();
+    } else {
+        _settingsPaneStatus('settings-preset-status', (r && (r.error || r.output)) || 'Delete failed', 'error');
+    }
+}
+
+function loadPresetFromSettings(id) {
+    api('/api/settings/presets').then(function(data) {
+        var presets = (data && data.presets) ? data.presets : [];
+        var cfg = null;
+        for (var i = 0; i < presets.length; i++) {
+            if (presets[i].id === id) { cfg = presets[i].config || {}; break; }
+        }
+        if (!cfg) { _settingsPaneStatus('settings-preset-status', 'Preset not found', 'error'); return; }
+        function setRadio(name, val) {
+            var inputs = document.querySelectorAll('input[name="' + name + '"]');
+            for (var j = 0; j < inputs.length; j++) {
+                inputs[j].checked = (inputs[j].value === val);
+            }
+        }
+        setRadio('vibe', cfg.vibe);
+        setRadio('camera_style', cfg.camera_style);
+        setRadio('lighting', cfg.lighting);
+        setRadio('outfit_style', cfg.outfit_style);
+        setRadio('time_of_day', cfg.time_of_day);
+        var slider = document.getElementById('photo-count');
+        if (slider) {
+            var n = parseInt(cfg.count) || 6;
+            if (n > parseInt(slider.max)) n = parseInt(slider.max);
+            slider.value = n;
+            var label = document.getElementById('photo-count-label');
+            if (label) label.textContent = n;
+        }
+        var bankId = cfg.bank_id || '';
+        if (bankId) {
+            api('/api/settings/banks/active', {id: bankId}).then(function(r) {
+                if (r && r.ok) _activeBankId = bankId;
+            });
+        } else {
+            _activeBankId = '';
+        }
+        onCameraChange();
+        _settingsPaneStatus('settings-preset-status', 'Preset loaded - ready to generate', 'ok');
+    });
+}
+
+function loadAvatarUrl() {
+    var input = document.getElementById('settings-avatar-url');
+    var url = (input.value || '').trim();
+    if (!url) { _setSettingsStatus('Enter an image URL first', 'error'); return; }
+    if (!/^https?:\/\//i.test(url)) {
+        _setSettingsStatus('Must be a public http(s) URL (local paths won\u2019t reach WaveSpeed)', 'error');
+        return;
+    }
+    _pendingAvatarUrl = url;
+    var preview = document.getElementById('settings-new-preview');
+    preview.onerror = function() {
+        _setSettingsStatus('Could not load image from that URL', 'error');
+        preview.style.display = 'none';
+    };
+    preview.onload = function() {
+        preview.style.display = 'block';
+        _setSettingsStatus('Ready to save', 'ok');
+    };
+    preview.style.display = 'block';
+    _setSettingsStatus('Loading image\u2026', '');
+    preview.src = url + (url.indexOf('?') === -1 ? '?' : '&') + '_t=' + Date.now();
+}
+
+async function handleAvatarFile(file) {
+    if (!file) return;
+    if (!file.type || file.type.indexOf('image/') !== 0) {
+        _setSettingsStatus('Invalid file type: images only', 'error');
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        _setSettingsStatus('File too large: max 5MB', 'error');
+        return;
+    }
+    var zone = document.getElementById('settings-upload-zone');
+    if (zone) zone.classList.remove('drag-over');
+    _setSettingsStatus('Uploading\u2026', '');
+    var fd = new FormData();
+    fd.append('file', file);
+    try {
+        var resp = await fetch('/api/settings/identity/upload', { method: 'POST', body: fd });
+        var data = await resp.json();
+        if (!data.ok) {
+            _setSettingsStatus(data.error || 'Upload failed', 'error');
+            return;
+        }
+        _pendingAvatarUrl = data.avatar_url || data.url;
+        var preview = document.getElementById('settings-new-preview');
+        preview.onerror = null;
+        preview.onload = function() { preview.style.display = 'block'; };
+        preview.style.display = 'block';
+        preview.src = data.url + (data.url.indexOf('?') === -1 ? '?' : '&') + '_t=' + Date.now();
+        if (data.uploaded) {
+            _setSettingsStatus('Uploaded \u2014 public WaveSpeed URL ready. Save to apply.', 'ok');
+        } else {
+            _setSettingsStatus('Saved locally. ' + (data.warning || 'Paste a public URL for generation.'), 'error');
+        }
+    } catch(e) {
+        _setSettingsStatus('Upload error: ' + e.message, 'error');
+    }
+}
+
+async function saveIdentity() {
+    if (!_pendingAvatarUrl) { closeSettingsModal(); return; }
+    var r = await api('/api/settings/identity', { avatar_url: _pendingAvatarUrl });
+    if (r && r.ok) {
+        closeSettingsModal();
+        showSuccess('Identity saved');
+        loadSettings();
+    } else {
+        _setSettingsStatus((r && (r.error || r.output)) || 'Failed to save identity', 'error');
+    }
+}
+
+// ESC closes settings modal
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var modal = document.getElementById('settings-modal');
+        if (modal && modal.classList.contains('show')) {
+            closeSettingsModal();
+        }
+    }
+});
+
+// Outside click closes settings modal
+document.addEventListener('click', function(e) {
+    var modal = document.getElementById('settings-modal');
+    var trigger = document.getElementById('settings-nav-trigger');
+    if (modal && modal.classList.contains('show') && !e.target.closest('#settings-modal-box') && !e.target.closest('#settings-nav-trigger')) {
+        closeSettingsModal();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    var modal = document.getElementById('settings-modal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeSettingsModal();
+        });
+    }
+    var fileInput = document.getElementById('settings-file-input');
+    var zone = document.getElementById('settings-upload-zone');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            handleAvatarFile(fileInput.files[0]);
+        });
+    }
+    if (zone) {
+        zone.addEventListener('click', function() { if (fileInput) fileInput.click(); });
+        zone.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (fileInput) fileInput.click(); }
+        });
+        zone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            zone.classList.add('drag-over');
+        });
+        zone.addEventListener('dragleave', function() {
+            zone.classList.remove('drag-over');
+        });
+        zone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+                handleAvatarFile(e.dataTransfer.files[0]);
+            }
+        });
+    }
+});
+
 // ── Reduced motion listener ──
 var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 function handleMotionChange(e) {
@@ -307,6 +700,43 @@ function setControlsLocked(locked) {
     }
 }
 
+// ── Prompt Banks ──
+
+var _activeBankId = '';
+
+async function loadActiveBank() {
+    var data = await api('/api/settings/banks/active');
+    _activeBankId = (data && data.active) || '';
+}
+
+function getSelectedBankId() {
+    return _activeBankId;
+}
+
+function _getCurrentConfig() {
+    return {
+        vibe: getSelectedVibe(),
+        camera_style: getSelectedCamera(),
+        lighting: getSelectedLighting(),
+        outfit_style: getSelectedOutfitStyle(),
+        time_of_day: getSelectedTime(),
+        count: parseInt(document.getElementById('photo-count').value) || 6,
+        bank_id: getSelectedBankId(),
+    };
+}
+
+async function setActiveBankFromSettings(id) {
+    var r = await api('/api/settings/banks/active', {id: id || ''});
+    if (r && r.ok) {
+        _activeBankId = (r.active || '');
+        renderBankList();
+        showSuccess(id ? 'Active prompt bank set' : 'Using built-in prompt bank');
+    } else {
+        _settingsPaneStatus('settings-bank-status', (r && r.error) || 'Failed to set active bank', 'error');
+    }
+}
+
+
 // ── Toast notifications ──
 
 var _toastContainer = null;
@@ -361,7 +791,7 @@ async function startPromptGeneration() {
     setControlsLocked(true);
     btn.disabled = true;
     btn.classList.add('loading'); _btnTxt('Generating prompts\u2026');
-    var r = await api('/api/prompts/generate', {vibe: vibe, camera_style: camera_style, lighting: lighting, time_of_day: time_of_day, outfit_style: outfit_style, count: count});
+    var r = await api('/api/prompts/generate', {vibe: vibe, camera_style: camera_style, lighting: lighting, time_of_day: time_of_day, outfit_style: outfit_style, count: count, bank_id: getSelectedBankId()});
     if (!r.ok) {
         _btnTxt('FAIL: ' + (r.error || 'error'));
         showError('Prompt build failed: ' + (r.error || 'error'));
@@ -1577,9 +2007,10 @@ document.addEventListener('DOMContentLoaded', function() {
         checkApiStatus();
         preloadAccounts();
         preloadValidation();
+        loadActiveBank();
         setInterval(checkApiStatus, 30000);
         setInterval(fetchBalance, 60000);
-        
+
         // Close modal on backdrop click
         var apiModal = document.getElementById('api-modal');
         if (apiModal) {

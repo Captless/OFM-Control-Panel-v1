@@ -30,7 +30,8 @@ ACTIVITY_LOG = WEBUI_DIR / "activity.json"
 PORT = 8000
 
 sys.path.insert(0, str(BASE))
-from core.config import PHOTO_PRICE, SETTINGS_PATH, list_wavespeed_accounts, set_wavespeed_account, remove_wavespeed_account, rename_wavespeed_account, get_active_wavespeed_key, set_active_wavespeed_account, test_wavespeed_account
+from core.config import PHOTO_PRICE, SETTINGS_PATH, list_wavespeed_accounts, set_wavespeed_account, remove_wavespeed_account, rename_wavespeed_account, get_active_wavespeed_key, set_active_wavespeed_account, test_wavespeed_account, get_identity, set_identity
+from core.prompt_banks import list_banks, get_bank, create_bank, update_bank, delete_bank, list_presets as list_saved_presets, create_preset, delete_preset, get_active_bank_id, set_active_bank_id
 
 sys.path.insert(0, str(PIPELINE_DIR))
 from prompt_bank import list_presets, build_jobs, build_jobs_multi
@@ -42,6 +43,87 @@ from wavespeed_client import WaveSpeedClient
 _balance_cache = {"time": 0, "value": None}
 
 LOCK_STALE_SECONDS = 10 * 60
+
+IDENTITY_UPLOAD_MAX = 5 * 1024 * 1024
+
+_IDENTITY_MIME_EXT = {
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/webp": "webp",
+    "image/gif": "gif",
+    "image/bmp": "png",
+}
+
+
+def _extract_file_part(raw, boundary):
+    """Pull the first multipart file part (name=file). Returns (bytes, content_type)."""
+    parts = raw.split(b"--" + boundary)
+    for part in parts:
+        if part in (b"", b"--", b"--\r\n"):
+            continue
+        if part.startswith(b"\r\n"):
+            part = part[2:]
+        header_end = part.find(b"\r\n\r\n")
+        if header_end == -1:
+            continue
+        headers = part[:header_end].decode("utf-8", "ignore")
+        body = part[header_end + 4:]
+        if body.endswith(b"\r\n"):
+            body = body[:-2]
+        if 'name="file"' not in headers:
+            continue
+        ct = "application/octet-stream"
+        for line in headers.split("\r\n"):
+            if line.lower().startswith("content-type:"):
+                ct = line.split(":", 1)[1].strip()
+        return body, ct
+    return None, ""
+
+
+def _handle_identity_upload(raw, content_type):
+    """Validate + persist an uploaded identity image under outputs/identity/.
+    Auto-uploads to WaveSpeed to obtain a public URL (required for generation
+    reference). Returns {'ok', 'url', 'avatar_url', 'uploaded', 'warning'}."""
+    m = re.match(r"multipart/form-data;\s*boundary=(.+)", content_type or "")
+    if not m:
+        return {"ok": False, "error": "expected multipart/form-data"}
+    boundary = m.group(1).strip().strip('"')
+    if not boundary:
+        return {"ok": False, "error": "missing boundary"}
+    file_bytes, file_ct = _extract_file_part(raw, boundary.encode("utf-8"))
+    if file_bytes is None:
+        return {"ok": False, "error": "no file part found"}
+    if len(file_bytes) > IDENTITY_UPLOAD_MAX:
+        return {"ok": False, "error": "file too large (max 5MB)"}
+    if not file_ct.startswith("image/"):
+        return {"ok": False, "error": "invalid file type: images only"}
+    ext = _IDENTITY_MIME_EXT.get(file_ct.split(";")[0].strip().lower(), "png")
+    out_dir = OUTPUTS / "identity"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    filename = uuid.uuid4().hex[:12] + "." + ext
+    local_path = out_dir / filename
+    local_path.write_bytes(file_bytes)
+    local_url = "identity/" + filename
+
+    avatar_url = local_url
+    uploaded = False
+    warning = ""
+    key = get_active_wavespeed_key()
+    if key:
+        try:
+            client = WaveSpeedClient(key)
+            avatar_url = client.upload_file(str(local_path))
+            uploaded = True
+        except Exception as e:
+            warning = f"WaveSpeed upload failed ({e}); saved locally only. Paste a public URL for generation."
+    set_identity(avatar_url=avatar_url)
+    return {
+        "ok": True,
+        "url": local_url,
+        "avatar_url": avatar_url,
+        "uploaded": uploaded,
+        "warning": warning,
+    }
 
 
 def _clean_stale_locks():
@@ -411,6 +493,29 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 "count": len(accounts),
             })
 
+        elif path == "/api/settings/identity":
+            self._json({"ok": True, "identity": get_identity()})
+
+        elif path == "/api/settings/banks":
+            self._json({"ok": True, "banks": list_banks()})
+
+        elif path == "/api/settings/banks/view":
+            bank_id = parse_qs(parsed.query).get("id", [None])[0]
+            if not bank_id:
+                self._json({"ok": False, "error": "missing id"}, 400)
+                return
+            bank = get_bank(bank_id)
+            if bank is None:
+                self._json({"ok": False, "error": "bank not found"}, 404)
+                return
+            self._json({"ok": True, "bank": bank})
+
+        elif path == "/api/settings/banks/active":
+            self._json({"ok": True, "active": get_active_bank_id()})
+
+        elif path == "/api/settings/presets":
+            self._json({"ok": True, "presets": list_saved_presets()})
+
         elif path == "/api/settings/wavespeed/accounts":
             raw = SETTINGS_PATH.read_text(encoding="utf-8") if SETTINGS_PATH.exists() else "{}"
             settings = json.loads(raw)
@@ -461,9 +566,30 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urlparse(self.path)
+        if parsed.path == "/api/settings/identity/upload":
+            length = int(self.headers.get("Content-Length", 0) or 0)
+            raw = self.rfile.read(length)
+            try:
+                result = _handle_identity_upload(raw, self.headers.get("Content-Type", ""))
+            except Exception as e:
+                self._json({"ok": False, "error": str(e)}, 500)
+                return
+            if result.get("ok"):
+                _log_activity(f"Identity avatar uploaded: {result.get('url')} (wavespeed_public={bool(result.get('uploaded'))})")
+            self._json(result)
+            return
         body = self._read_body()
 
-        if parsed.path == "/api/run/photo":
+        if parsed.path == "/api/settings/identity":
+            avatar_url = (body.get("avatar_url") or "").strip()
+            if not avatar_url:
+                self._json({"ok": False, "error": "missing avatar_url"}, 400)
+            else:
+                set_identity(avatar_url=avatar_url)
+                _log_activity("Identity avatar URL updated")
+                self._json({"ok": True, "identity": get_identity()})
+
+        elif parsed.path == "/api/run/photo":
             prompts_data = body.get("prompts", "prompts_alina_b1.json")
             if isinstance(prompts_data, list):
                 stem = f"edited_prompts_{uuid.uuid4().hex[:8]}"
@@ -487,19 +613,30 @@ class Handler(http.server.BaseHTTPRequestHandler):
             time_of_day = body.get("time_of_day", "day")
             outfit_style = body.get("outfit_style", "sexy")
             count = int(body.get("count", 6))
+            bank_id = (body.get("bank_id") or "").strip()
+            if not bank_id:
+                bank_id = get_active_bank_id()
+            bank = None
+            if bank_id:
+                found = get_bank(bank_id)
+                if found:
+                    bank = found.get("pools") or {}
             try:
                 jobs = build_jobs_multi(
                     count=count, vibe=vibe,
                     camera_style=camera_style, lighting=lighting,
                     time_of_day=time_of_day,
                     outfit_style=outfit_style,
+                    bank=bank,
                 )
                 stem = f"promptbank_{vibe}_{camera_style}_{lighting}_{time_of_day}_{outfit_style}_{count}"
+                if bank_id:
+                    stem += f"_{bank_id}"
                 prompts_path = PIPELINE_DIR / f"{stem}.json"
                 prompts_path.write_text(json.dumps(jobs, indent=2), encoding="utf-8")
                 _log_activity(
                     f"Prompt bank: {stem}.json ({len(jobs)} jobs, vibe={vibe}, "
-                    f"camera={camera_style}, light={lighting}, time={time_of_day}, outfit={outfit_style})"
+                    f"camera={camera_style}, light={lighting}, time={time_of_day}, outfit={outfit_style}, bank={bank_id or 'builtin'})"
                 )
                 self._json({"ok": True, "jobs": jobs, "file": str(prompts_path.name), "count": len(jobs)})
             except Exception as e:
@@ -603,6 +740,67 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 else:
                     self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
 
+        elif parsed.path == "/api/settings/banks/create":
+            result = create_bank(body)
+            if result.get("ok"):
+                _log_activity(f"Prompt bank created: {result['bank']['name']}")
+                self._json(result)
+            else:
+                self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
+
+        elif parsed.path == "/api/settings/banks/update":
+            bank_id = (body.get("id") or "").strip()
+            if not bank_id:
+                self._json({"ok": False, "error": "missing id"}, 400)
+            else:
+                result = update_bank(bank_id, body)
+                if result.get("ok"):
+                    _log_activity(f"Prompt bank updated: {result['bank']['name']}")
+                    self._json(result)
+                else:
+                    self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
+
+        elif parsed.path == "/api/settings/banks/active":
+            bank_id = (body.get("id") or "").strip()
+            result = set_active_bank_id(bank_id)
+            if result.get("ok"):
+                _log_activity(f"Active prompt bank set to: {bank_id or 'builtin'}")
+                self._json(result)
+            else:
+                self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
+
+        elif parsed.path == "/api/settings/banks/delete":
+            bank_id = (body.get("id") or "").strip()
+            if not bank_id:
+                self._json({"ok": False, "error": "missing id"}, 400)
+            else:
+                result = delete_bank(bank_id)
+                if result.get("ok"):
+                    _log_activity(f"Prompt bank deleted: {bank_id}")
+                    self._json(result)
+                else:
+                    self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
+
+        elif parsed.path == "/api/settings/presets/create":
+            result = create_preset(body)
+            if result.get("ok"):
+                _log_activity(f"Preset saved: {result['preset']['name']}")
+                self._json(result)
+            else:
+                self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
+
+        elif parsed.path == "/api/settings/presets/delete":
+            preset_id = (body.get("id") or "").strip()
+            if not preset_id:
+                self._json({"ok": False, "error": "missing id"}, 400)
+            else:
+                result = delete_preset(preset_id)
+                if result.get("ok"):
+                    _log_activity(f"Preset deleted: {preset_id}")
+                    self._json(result)
+                else:
+                    self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
+
         else:
             self._json({"error": "not found"}, 404)
 
@@ -634,6 +832,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         mime = {
             ".html": "text/html", ".css": "text/css", ".js": "application/javascript",
             ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+            ".webp": "image/webp", ".gif": "image/gif",
             ".mp4": "video/mp4", ".json": "application/json", ".txt": "text/plain",
         }.get(ext, "application/octet-stream")
         self.send_response(200)

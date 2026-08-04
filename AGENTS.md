@@ -157,6 +157,16 @@ This keeps AGENTS.md in sync with reality without re-running `/init-deep`.
 
 ## Recent Changes
 
+### 2026-08-04 — Settings tab: identity management + prompt banks + presets
+
+**identity in settings** ✓ — `core/config.py`: `get_identity()`/`set_identity()` read/write `settings.json["identity"] = {name, avatar_url}` (auto-migrates from `docs/wavespeed_identity_alina.md`). `pipeline/pipeline.py` `_load_avatar_url()` reads identity first. `webui/server.py`: GET/POST `/api/settings/identity`, POST `/api/settings/identity/upload` (multipart, 5MB max, image/* only; parse BEFORE `_read_body()`). Toolbar gains `.settings-nav-trigger` (rightmost); `#settings-modal` with avatar preview, URL input, drag-drop upload zone, Save/Done. `style.css` `.settings-*` styles at EOF.
+
+**local upload → public URL** ✓ — `_handle_identity_upload()` saves local copy to `outputs/identity/` AND auto-publishes via `WaveSpeedClient.upload_file()` → public cloudfront URL stored as `avatar_url` (required — WaveSpeed API needs public reference image, local paths fail). Graceful fallback + warning if publish fails. Frontend rejects non-http(s) URLs in URL field.
+
+**custom prompt banks** ✓ — `core/prompt_banks.py`: banks `{id, name, description, pools}` + presets `{id, name, config}` persisted under `settings.json["prompt_banks"]`/`["presets"]`. `pipeline/prompt_bank.py` `build_jobs_multi(..., bank=None)` overrides pools via `_resolve_pool()` (lists + string pools: IDENTITY_LOCK, negatives). `webui/server.py`: `/api/settings/banks/{create,update,delete,view}`, `/api/settings/presets/{create,delete}`; `/api/prompts/generate` accepts `bank_id`, unwraps `found.get("pools")`. Generation panel gains `#bank-select` + preset row (save/load/delete) in index.html/app.js; `.bank-select`/`.preset-row` CSS.
+
+**verified** ✓ — py_compile + node --check clean; live server: bank CRUD, preset CRUD, gen-with-bank uses custom pool, upload returns public cloudfront URL, mocked e2e confirmed avatar_url flows `get_identity()` → `_load_avatar_url()` → `mode_photo` → `batch_generate(avatar_url)` → WaveSpeed `"images":[url]`. Test artifacts cleaned; settings.json identity restored to real ibb.co URL.
+
 ### 2026-08-01 — Repo reorganization: github-ready layout
 
 **restructured** ✓ — Applied approved 10-step reorg, preserving local behavior:

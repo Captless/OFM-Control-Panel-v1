@@ -6,5 +6,26 @@
     "captlessgaming": "wsk_live_nZG1QvVUFjIpayr48AyqAyqr6vm7O7iYMmkn9TeLamc",
     "motivationalaltruist": "wsk_live__BuD-iVjtRdRxtgH2dycQW0pYq_92EWNoG4bElyY1Kk"
   },
-  "active_wavespeed_account": "captlessgaming"
+  "active_wavespeed_account": "captlessgaming",
+  "identity": {
+    "name": "Alina Sky",
+    "avatar_url": "https://i.ibb.co/WNM2nJ5Z/EMXN1y8q-TQo-Gd-XBsb2-Fk-Eg55b-GFi-LXN0d-W50-LXNnc-Boz-YWlfc-G9yd-GFs-Lz-E3-Njgz-MDUz-MDAvc-Whi-S3-Jx-Wm.jpg"
+  },
+  "prompt_banks": {},
+  "presets": [
+    {
+      "id": "6bd359c139dd",
+      "name": "Indoor Mirror Warm Day Baggy",
+      "created": "2026-08-04T01:46:18",
+      "config": {
+        "vibe": "indoor",
+        "camera_style": "mirror",
+        "lighting": "warm",
+        "outfit_style": "baggy",
+        "time_of_day": "day",
+        "count": 1,
+        "bank_id": ""
+      }
+    }
+  ]
 }

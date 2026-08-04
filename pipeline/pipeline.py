@@ -37,12 +37,15 @@ def _load_active_key():
 
 
 def _load_avatar_url():
-    """Load avatar URL from identity file."""
+    """Load avatar URL from settings.json identity; fallback to markdown identity file."""
     import sys as _sys
     _sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "core"))
-    from core.config import _parse_identity_file  # noqa: E402
-    identity = _parse_identity_file()
-    return identity.get("avatar_url", "")
+    from core.config import get_identity, _parse_identity_file  # noqa: E402
+    identity = get_identity()
+    url = identity.get("avatar_url", "")
+    if url:
+        return url
+    return _parse_identity_file().get("avatar_url", "")
 
 
 def _build_meta(jobs):

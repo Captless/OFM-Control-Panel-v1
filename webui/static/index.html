@@ -47,6 +47,10 @@
       <span class="theme-nav-name" id="theme-nav-name">Terminal</span>
       <span class="theme-nav-caret">▾</span>
     </span>
+   <span class="settings-nav-trigger" id="settings-nav-trigger" onclick="toggleSettingsModal()" role="button" tabindex="0" aria-haspopup="dialog" aria-expanded="false" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="settings-nav-name">Settings</span>
+    </span>
 </div>
 </header>
 
@@ -100,6 +104,85 @@
     </div>
     <div style="display:flex;justify-content:flex-end;padding:12px 24px;border-top:1px solid var(--border);">
       <button class="btn btn-sm btn-outline" onclick="closeThemeModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Settings Modal (centered popup) ── -->
+<div id="settings-modal" role="dialog" aria-modal="true" aria-label="Settings">
+  <div id="settings-modal-box">
+    <button class="modal-close" onclick="closeSettingsModal()" title="Close">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="modal-header">
+      <h4>Settings</h4>
+      <p>Identity, prompt banks, presets</p>
+    </div>
+    <div class="settings-tabs" role="tablist">
+      <button class="settings-tab active" data-settings-tab="identity" onclick="switchSettingsTab('identity')">Identity</button>
+      <button class="settings-tab" data-settings-tab="banks" onclick="switchSettingsTab('banks')">Prompt Banks</button>
+          </div>
+    <div class="settings-body">
+      <div class="settings-pane" id="settings-pane-identity">
+      <div class="settings-identity">
+        <img id="settings-avatar-preview" class="settings-avatar-preview" alt="Current identity avatar" title="Current identity image">
+        <div class="settings-identity-meta">
+          <div class="settings-identity-name" id="settings-identity-name">Loading&hellip;</div>
+          <div class="settings-hint">Used as the model reference for every photo generation.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Avatar URL</label>
+        <div class="settings-url-row">
+          <input type="text" id="settings-avatar-url" placeholder="Paste image URL..." autocomplete="off" spellcheck="false">
+          <button class="btn btn-sm btn-outline" id="settings-url-load" onclick="loadAvatarUrl()">Load</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Or upload image file</label>
+        <div class="settings-upload-zone" id="settings-upload-zone" role="button" tabindex="0" aria-label="Upload identity image">
+          <div class="settings-upload-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div>Drop image or click to browse</div>
+          <div class="settings-hint">PNG, JPG, WebP, GIF &middot; max 5MB &middot; auto-published via WaveSpeed for generation</div>
+        </div>
+        <input type="file" id="settings-file-input" accept="image/*" style="display:none">
+      </div>
+
+      <img id="settings-new-preview" class="settings-new-preview" alt="New identity preview" title="New identity preview" style="display:none">
+
+      <div class="settings-status" id="settings-status"></div>
+      </div>
+
+      <div class="settings-pane" id="settings-pane-banks" style="display:none">
+        <div class="field">
+          <label>Create prompt bank</label>
+          <input type="text" id="settings-bank-name" placeholder="Bank name..." autocomplete="off" spellcheck="false">
+          <textarea id="settings-bank-pools" rows="6" placeholder='Pools JSON, e.g. {"HAIR": ["wet bun with loose strands", "slick low pony"]} — overrides built-in pools (HAIR, POSES, SCENES, OUTFIT_TOPS_POOLS, OUTFIT_BOTTOMS_POOLS, LIGHTING_POOLS, FRAMING, QUALITY, DEFAULT_NEGATIVE, MIRROR_NEGATIVE, IDENTITY_LOCK)' style="width:100%;margin-top:8px;padding:8px 10px;font-family:var(--font-mono);font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);color:var(--fg);"></textarea>
+          <button class="btn btn-sm" onclick="createBankFromSettings()" style="margin-top:8px">Create Bank</button>
+        </div>
+        <div id="settings-bank-list" class="settings-list"></div>
+        <div class="settings-status" id="settings-bank-status"></div>
+
+        <div class="settings-subhead" style="margin-top:16px">Save current generation as preset</div>
+        <div class="settings-url-row">
+          <input type="text" id="settings-preset-name" placeholder="Preset name..." autocomplete="off" spellcheck="false">
+          <button class="btn btn-sm" onclick="savePresetFromSettings()">Save</button>
+        </div>
+        <div class="settings-subhead">Saved presets</div>
+        <div id="settings-preset-list" class="settings-list"></div>
+        <div class="settings-status" id="settings-preset-status"></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--border);">
+      <button class="btn btn-sm" onclick="saveIdentity()">Save</button>
+      <button class="btn btn-sm btn-outline" style="margin-left:8px" onclick="closeSettingsModal()">Done</button>
     </div>
   </div>
 </div>
