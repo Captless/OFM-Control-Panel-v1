@@ -771,6 +771,41 @@ body::after {
 }
 .btn.loading .spinner { display: inline-block; }
 
+.gen-status-strip {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gs-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card-inner);
+  color: var(--fg2);
+}
+.gs-file { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg); }
+.gs-badge {
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.gs-elapsed { color: var(--fg3); white-space: nowrap; }
+.gs-detail { color: var(--fg3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 40%; }
+.gs-failed .gs-detail, .gs-cancelled .gs-detail, .gs-timeout .gs-detail { max-width: none; white-space: normal; }
+.gs-processing .gs-badge, .gs-enhancing .gs-badge { background: var(--amber-bg); color: var(--amber); animation: pulse 1.2s infinite; }
+.gs-completed .gs-badge, .gs-saved .gs-badge { background: var(--accent-bg); color: var(--accent); }
+.gs-submitting .gs-badge, .gs-created .gs-badge, .gs-queued .gs-badge { background: var(--accent-dim); color: var(--fg3); }
+.gs-failed .gs-badge, .gs-cancelled .gs-badge, .gs-timeout .gs-badge { background: var(--error-bg); color: var(--error); }
+
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 

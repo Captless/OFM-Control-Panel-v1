@@ -11,6 +11,8 @@ import argparse
 import json
 import os
 import sys
+import threading
+import time
 from pathlib import Path
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -91,17 +93,62 @@ def mode_photo(jobs, enhance=False, stream=True):
     if checkpoint.exists():
         checkpoint.unlink()
 
-    def _on_event(event):
+    _image_lock = threading.Lock()
+    _image_states = {}
+    _image_t0 = {}
+    _last_emit = {}
+
+    def _emit_image(job, status, elapsed, detail=""):
+        fn = job["filename"]
+        now = time.time()
+        with _image_lock:
+            if fn not in _image_t0:
+                _image_t0[fn] = now
+            if not elapsed:
+                elapsed = int(now - _image_t0[fn])
+            prev_status = _image_states.get(fn, {}).get("status")
+            is_terminal = status in ("completed", "saved", "failed", "cancelled", "timeout")
+            if status == prev_status and not is_terminal and now - _last_emit.get(fn, 0) < 5:
+                return
+            _last_emit[fn] = now
+            _image_states[fn] = {"status": status, "elapsed": elapsed, "detail": detail}
+            detail_str = f"|{detail}" if detail else ""
+            print(f"@P image|{fn}|{status}|{elapsed}s{detail_str}", flush=True)
+
+    def _on_status(job, status, elapsed, data=None):
+        if status == "completed":
+            inference = ""
+            timings = (data or {}).get("timings") or {}
+            if timings.get("inference"):
+                inference = f"inference={timings['inference']}ms"
+            _emit_image(job, "completed", elapsed, inference or "ok")
+        elif status == "failed":
+            err = (data or {}).get("error") or "unknown error"
+            _emit_image(job, "failed", elapsed, err)
+        elif status == "saved":
+            _emit_image(job, "saved", elapsed, "saved to disk")
+        elif status == "submitting":
+            _emit_image(job, "submitting", elapsed, "submitting to WaveSpeed")
+        elif status == "enhancing":
+            _emit_image(job, "enhancing", elapsed, "enhancing image")
+        else:
+            _emit_image(job, status, elapsed, f"WaveSpeed {status}")
+
+    def _on_event(job, event):
         status = event.get("status", "")
-        progress = event.get("progress")
-        err = event.get("error")
-        if status:
-            line = f"@P processing|WaveSpeed {status}"
+        if not status:
+            return
+        if status == "completed":
+            _emit_image(job, "completed", 0, "ok")
+        elif status == "failed":
+            err = event.get("error") or "stream generation failed"
+            _emit_image(job, "failed", 0, err)
+        else:
+            progress = event.get("progress")
+            detail = f"WaveSpeed {status}"
             if progress is not None:
-                line += f" {int(progress * 100)}%"
-            if err:
-                line += f" | {err}"
-            print(line, flush=True)
+                detail += f" {int(progress * 100)}%"
+            _emit_image(job, status, 0, detail)
 
     result = client.batch_generate(
         jobs=jobs,
@@ -114,7 +161,7 @@ def mode_photo(jobs, enhance=False, stream=True):
         stream=stream,
         max_concurrent=3,
         progress_callback=lambda d, t, last: print(f"[{d}/{t}] {last}", flush=True),
-        status_callback=lambda status, elapsed: print(f"@P processing|WaveSpeed {status} {elapsed}s", flush=True),
+        status_callback=_on_status,
         on_event=_on_event,
         checkpoint_path=str(checkpoint),
     )
@@ -127,7 +174,7 @@ def mode_photo(jobs, enhance=False, stream=True):
                 if _is_explicit_flag(str(f['error'])):
                     first_err = f['error']
                     break
-            msg = f"explicit_content_flagged: {first_err}"
+            msg = f"explicit_content_flagged: {first_err}" if not str(first_err).startswith("explicit_content_flagged") else first_err
             print(f"@P failed|explicit_content|{msg}", flush=True)
             print(f"@P failed|explicit_content|{msg}", file=sys.stderr, flush=True)
             sys.exit(1)

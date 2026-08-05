@@ -76,16 +76,20 @@ class WaveSpeedClient:
         while time.time() < deadline:
             data = self._request("GET", f"/predictions/{task_id}/result")
             status = data.get("status")
+            elapsed = int(time.time() - t0)
             if status == "completed":
+                if status_callback:
+                    status_callback(status, elapsed, data)
                 return data
             if status == "failed":
+                if status_callback:
+                    status_callback(status, elapsed, data)
                 err = data.get("error") or "unknown error"
                 if _is_explicit_flag(err):
                     raise WaveSpeedError(f"explicit_content_flagged: {err}", code="explicit_content_flagged")
                 raise WaveSpeedError(f"generation_failed: {err}", code="generation_failed")
-            elapsed = int(time.time() - t0)
             if status_callback:
-                status_callback(status, elapsed)
+                status_callback(status, elapsed, data)
             time.sleep(interval)
         raise WaveSpeedError("polling_timeout", code="polling_timeout")
 
@@ -179,8 +183,10 @@ class WaveSpeedClient:
                  on_event=None):
         """Generate an image. Uses SSE streaming when stream=True, else polls.
 
-        - status_callback(status, elapsed): called during polling fallback.
+        - status_callback(status, elapsed, data): called during polling fallback.
         - on_event(event): called for each raw SSE event during streaming.
+        In batch_generate, both callbacks are job-bound: the first arg becomes
+        the job dict (status_callback(job, status, elapsed, data), on_event(job, event)).
         Falls back to polling automatically if the stream endpoint fails.
         """
         if stream:
@@ -298,6 +304,22 @@ class WaveSpeedClient:
         failed_list = []
         explicit_hit = False
 
+        def _wrap_status(job):
+            if not status_callback:
+                return None
+
+            def _cb(status, elapsed, data=None):
+                status_callback(job, status, elapsed, data)
+            return _cb
+
+        def _wrap_event(job):
+            if not on_event:
+                return None
+
+            def _cb(event):
+                on_event(job, event)
+            return _cb
+
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=max_concurrent) as pool:
                 fut_map = {}
@@ -305,7 +327,7 @@ class WaveSpeedClient:
                     fut = pool.submit(
                         self._generate_one, job, avatar_url, output_dir,
                         resolution, output_format, aspect_ratio, enhance,
-                        stream, status_callback, on_event,
+                        stream, _wrap_status(job), _wrap_event(job),
                     )
                     fut_map[fut] = job
 
@@ -348,8 +370,11 @@ class WaveSpeedClient:
         prompt = job["prompt"]
         filename = job["filename"]
         os.makedirs(output_dir, exist_ok=True)
+        t0 = time.time()
 
         self.logger.info("generating %s", filename)
+        if status_callback:
+            status_callback("submitting", 0, None)
         result_url = self.generate(prompt, avatar_url, resolution=resolution,
                                    output_format=output_format, aspect_ratio=aspect_ratio,
                                    stream=stream, status_callback=status_callback,
@@ -357,9 +382,13 @@ class WaveSpeedClient:
 
         if enhance:
             self.logger.info("enhancing %s", filename)
+            if status_callback:
+                status_callback("enhancing", int(time.time() - t0), None)
             result_url = self.enhance(result_url, scale=4, output_format=output_format)
 
         self.logger.info("downloading %s", filename)
         path = os.path.join(output_dir, filename)
         self.download(result_url, path)
+        if status_callback:
+            status_callback("saved", int(time.time() - t0), None)
         return path

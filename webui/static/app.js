@@ -908,8 +908,28 @@ function updateCost() {
 }
 
 function _btnTxt(t) { var e = document.querySelector('#btn-photo .btn-text'); if (e) e.textContent = t; }
-
-function _resetBtn() { var btn = document.getElementById('btn-photo'); if (btn) { btn.classList.remove('loading'); btn.disabled = false; } _btnTxt('Generate'); setControlsLocked(false); }
+var _statusBadge = {
+    'submitting': 'Queued', 'created': 'Queued', 'queued': 'Queued',
+    'processing': 'Processing', 'completed': 'Done', 'saved': 'Saved',
+    'enhancing': 'Enhancing', 'failed': 'Error', 'cancelled': 'Cancelled',
+    'timeout': 'Timed out'
+};
+function _renderGenStatus(images) {
+    var strip = document.getElementById('gen-status-strip');
+    if (!strip) return;
+    if (!images || !Object.keys(images).length) { strip.style.display = 'none'; strip.innerHTML = ''; return; }
+    strip.style.display = 'block';
+    var html = '';
+    Object.keys(images).forEach(function(k) {
+        var im = images[k];
+        var cls = 'gs-' + (im.status || 'processing');
+        var label = _statusBadge[im.status] || im.status;
+        var detail = im.detail ? ' <span class="gs-detail">' + esc(im.detail) + '</span>' : '';
+        html += '<div class="gs-row ' + cls + '"><span class="gs-file">' + esc(im.filename) + '</span><span class="gs-badge">' + esc(label) + '</span><span class="gs-elapsed">' + im.elapsed + 's</span>' + detail + '</div>';
+    });
+    strip.innerHTML = html;
+}
+function _resetBtn() { var btn = document.getElementById('btn-photo'); if (btn) { btn.classList.remove('loading'); btn.disabled = false; } _btnTxt('Generate'); setControlsLocked(false); var strip = document.getElementById('gen-status-strip'); if (strip) { strip.style.display = 'none'; strip.innerHTML = ''; } }
 
 function setControlsLocked(locked) {
     var card = document.querySelector('.gen-layout .card');
@@ -1073,10 +1093,18 @@ var _fail = function(msg) {
     while (Date.now() < _deadline) {
         var p = await api('/api/progress?run_id=' + runId);
         if (p && p.done === true) {
+            _renderGenStatus(p.images);
             if (p.error_type === 'explicit_content') {
+                var flagMsg = '';
+                if (p.images) {
+                    Object.keys(p.images).forEach(function(k) {
+                        var im = p.images[k];
+                        if (im.status === 'failed' && im.detail) { flagMsg = im.detail; }
+                    });
+                }
                 _btnTxt('FAIL: content flagged');
                 btn.classList.remove('loading');
-                showWarning('Generation blocked \u2014 WaveSpeed flagged content as sensitive. Try different prompts or outfit style.', 8000);
+                showWarning('Generation blocked \u2014 WaveSpeed flagged content as sensitive' + (flagMsg ? ': ' + flagMsg : '') + '. Try different prompts or outfit style.', 8000);
             } else if (p.ok) {
                 _btnTxt('OK (' + p.duration_s + 's)');
                 btn.classList.remove('loading');
@@ -1130,7 +1158,8 @@ var _fail = function(msg) {
             _resetPromptList();
             break;
         }
-        _btnTxt(stage + ' ' + (p.total > 0 ? p.current + '/' + p.total + ' \u00b7 ' : '') + Math.floor((Date.now() - _startTs) / 1000) + 's');
+        _renderGenStatus(p.images);
+        _btnTxt(stage + ' ' + (p.total > 0 ? p.current + '/' + p.total + ' \u00b7 ' : '') + (typeof p.elapsed === 'number' ? p.elapsed : Math.floor((Date.now() - _startTs) / 1000)) + 's');
         await new Promise(r3 => setTimeout(r3, 1000));
     }
     if (Date.now() >= _deadline) {

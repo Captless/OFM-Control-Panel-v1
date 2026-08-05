@@ -295,7 +295,19 @@ def _update_progress(run_id, line):
         if state is None:
             return
         state["updated_at"] = time.time()
-        if line.startswith("@P "):
+        state["elapsed"] = int(time.time() - state.get("started_at", time.time()))
+        if line.startswith("@P image|"):
+            parts = line[len("@P image|"):].split("|", 4)
+            if len(parts) >= 3:
+                fn, status, elapsed_raw = parts[0], parts[1], parts[2]
+                detail = parts[3] if len(parts) == 4 else ""
+                try:
+                    elapsed = int(elapsed_raw.rstrip("s"))
+                except ValueError:
+                    elapsed = 0
+                images = state.setdefault("images", {})
+                images[fn] = {"filename": fn, "status": status, "elapsed": elapsed, "detail": detail}
+        elif line.startswith("@P "):
             parts = line[3:].split("|", 2)
             state["stage"] = parts[0]
             if len(parts) == 2:
@@ -330,6 +342,9 @@ def _start_pipeline(mode, prompts, with_text=False):
             "current": 0, "total": 0,
             "done": False, "ok": None, "duration_s": 0,
             "error_type": "",
+            "images": {},
+            "elapsed": 0,
+            "started_at": time.time(),
             "updated_at": time.time(),
         }
 
@@ -373,6 +388,7 @@ def _start_pipeline(mode, prompts, with_text=False):
                 _pipeline_runs[run_id].update(
                     stage="done" if ok else "failed", detail=msg,
                     done=True, ok=ok, duration_s=duration,
+                    elapsed=int(duration),
                     updated_at=time.time(),
                 )
                 _prune_pipeline_runs()
@@ -381,6 +397,7 @@ def _start_pipeline(mode, prompts, with_text=False):
                 _pipeline_runs[run_id].update(
                     stage="failed", detail=str(e),
                     done=True, ok=False, duration_s=round(time.time() - t0, 1),
+                    elapsed=int(round(time.time() - t0, 1)),
                     updated_at=time.time(),
                 )
                 _prune_pipeline_runs()

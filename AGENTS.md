@@ -157,7 +157,10 @@ This keeps AGENTS.md in sync with reality without re-running `/init-deep`.
 
 ## Recent Changes
 
-### 2026-08-04 — Settings tab: identity management + prompt banks + presets
+### 2026-08-05 — Real WaveSpeed API progress tracking
+
+**real API progress on Generate button** ✓ — `api/wavespeed_client.py`: `poll()` now reports `status_callback(status, elapsed, data)` on every tick incl. terminal (real status, server-measured elapsed, `timings.inference`, verbatim `error`); `batch_generate` wraps `status_callback`/`on_event` job-bound (`(job, ...)`); `_generate_one` emits `submitting`/`enhancing`/`saved` milestones. `pipeline/pipeline.py`: thread-safe per-image state; emits `@P image|<file>|<status>|<elapsed>s|<detail>` (5s throttle on identical non-terminal status); flagged error verbatim (double-prefix dedup). `webui/server.py`: parses `@P image|` → `state["images"]` dict; adds server-measured run `elapsed` (from `started_at`); `/api/progress` returns `images` + `elapsed`. `index.html`: `#gen-status-strip` under Generate button. `app.js`: `_renderGenStatus()` per-image strip (filename · Queued/Processing/Done/Error badge · server elapsed · detail); button shows server `p.elapsed` not local timer; flagged warning includes verbatim API error (pulled from failed image detail). `style.css`: `.gen-status-strip`/`.gs-row`/`.gs-badge` theme-var styles (processing = pulsing amber, done = accent, error = red, detail wraps for errors). Phase 2 video = deferred/hidden (not planned); video code stays orphaned.
+
 
 **identity in settings** ✓ — `core/config.py`: `get_identity()`/`set_identity()` read/write `settings.json["identity"] = {name, avatar_url}` (auto-migrates from `docs/wavespeed_identity_alina.md`). `pipeline/pipeline.py` `_load_avatar_url()` reads identity first. `webui/server.py`: GET/POST `/api/settings/identity`, POST `/api/settings/identity/upload` (multipart, 5MB max, image/* only; parse BEFORE `_read_body()`). Toolbar gains `.settings-nav-trigger` (rightmost); `#settings-modal` with avatar preview, URL input, drag-drop upload zone, Save/Done. `style.css` `.settings-*` styles at EOF.
 
