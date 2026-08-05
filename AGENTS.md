@@ -157,6 +157,19 @@ This keeps AGENTS.md in sync with reality without re-running `/init-deep`.
 
 ## Recent Changes
 
+### 2026-08-05 — Real WaveSpeed API progress tracking
+
+**real API progress on Generate button** ✓ — `api/wavespeed_client.py`: `poll()` now reports `status_callback(status, elapsed, data)` on every tick incl. terminal (real status, server-measured elapsed, `timings.inference`, verbatim `error`); `batch_generate` wraps `status_callback`/`on_event` job-bound (`(job, ...)`); `_generate_one` emits `submitting`/`enhancing`/`saved` milestones. `pipeline/pipeline.py`: thread-safe per-image state; emits `@P image|<file>|<status>|<elapsed>s|<detail>` (5s throttle on identical non-terminal status); flagged error verbatim (double-prefix dedup). `webui/server.py`: parses `@P image|` → `state["images"]` dict; adds server-measured run `elapsed` (from `started_at`); `/api/progress` returns `images` + `elapsed`. `index.html`: `#gen-status-strip` under Generate button. `app.js`: `_renderGenStatus()` per-image strip (filename · Queued/Processing/Done/Error badge · server elapsed · detail); button shows server `p.elapsed` not local timer; flagged warning includes verbatim API error (pulled from failed image detail). `style.css`: `.gen-status-strip`/`.gs-row`/`.gs-badge` theme-var styles (processing = pulsing amber, done = accent, error = red, detail wraps for errors). Phase 2 video = deferred/hidden (not planned); video code stays orphaned.
+
+
+**identity in settings** ✓ — `core/config.py`: `get_identity()`/`set_identity()` read/write `settings.json["identity"] = {name, avatar_url}` (auto-migrates from `docs/wavespeed_identity_alina.md`). `pipeline/pipeline.py` `_load_avatar_url()` reads identity first. `webui/server.py`: GET/POST `/api/settings/identity`, POST `/api/settings/identity/upload` (multipart, 5MB max, image/* only; parse BEFORE `_read_body()`). Toolbar gains `.settings-nav-trigger` (rightmost); `#settings-modal` with avatar preview, URL input, drag-drop upload zone, Save/Done. `style.css` `.settings-*` styles at EOF.
+
+**local upload → public URL** ✓ — `_handle_identity_upload()` saves local copy to `outputs/identity/` AND auto-publishes via `WaveSpeedClient.upload_file()` → public cloudfront URL stored as `avatar_url` (required — WaveSpeed API needs public reference image, local paths fail). Graceful fallback + warning if publish fails. Frontend rejects non-http(s) URLs in URL field.
+
+**custom prompt banks** ✓ — `core/prompt_banks.py`: banks `{id, name, description, pools}` + presets `{id, name, config}` persisted under `settings.json["prompt_banks"]`/`["presets"]`. `pipeline/prompt_bank.py` `build_jobs_multi(..., bank=None)` overrides pools via `_resolve_pool()` (lists + string pools: IDENTITY_LOCK, negatives). `webui/server.py`: `/api/settings/banks/{create,update,delete,view}`, `/api/settings/presets/{create,delete}`; `/api/prompts/generate` accepts `bank_id`, unwraps `found.get("pools")`. Generation panel gains `#bank-select` + preset row (save/load/delete) in index.html/app.js; `.bank-select`/`.preset-row` CSS.
+
+**verified** ✓ — py_compile + node --check clean; live server: bank CRUD, preset CRUD, gen-with-bank uses custom pool, upload returns public cloudfront URL, mocked e2e confirmed avatar_url flows `get_identity()` → `_load_avatar_url()` → `mode_photo` → `batch_generate(avatar_url)` → WaveSpeed `"images":[url]`. Test artifacts cleaned; settings.json identity restored to real ibb.co URL.
+
 ### 2026-08-01 — Repo reorganization: github-ready layout
 
 **restructured** ✓ — Applied approved 10-step reorg, preserving local behavior:

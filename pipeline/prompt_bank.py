@@ -269,7 +269,7 @@ IDENTITY_LOCK = "keep model identity, hair/lip color consistent/accurate/similar
 # BUILD PROMPT
 # ---------------------------------------------------------------------------
 
-def _build_prompt(camera_mode, scene, framing, hair, top, bottom, pose, lighting, quality, time_of_day=None):
+def _build_prompt(camera_mode, scene, framing, hair, top, bottom, pose, lighting, quality, time_of_day=None, identity_lock=None):
     camera_intro = "Front-facing handheld selfie"
 
     if camera_mode == "mirror":
@@ -306,7 +306,7 @@ def _build_prompt(camera_mode, scene, framing, hair, top, bottom, pose, lighting
     if camera_mode == "mirror":
         result += "black iPhone\n"
     result += f"\nnegative prompt: {negative}\n"
-    result += IDENTITY_LOCK
+    result += identity_lock if identity_lock else IDENTITY_LOCK
     return result
 
 
@@ -314,54 +314,76 @@ def _build_prompt(camera_mode, scene, framing, hair, top, bottom, pose, lighting
 # JOB BUILDER
 # ---------------------------------------------------------------------------
 
-def build_jobs_multi(count=1, vibe=None, outfit_style=None, camera_style=None, lighting=None, time_of_day=None):
-    if vibe == "indoor":
-        if camera_style == "mirror":
-            scene_pool = MIRROR_SCENES
-        else:
-            scene_pool = INDOOR_SCENES
-    elif vibe == "outdoor":
-        scene_pool = OUTDOOR_SCENES
+def _resolve_pool(name, default, bank=None):
+    """Return a custom bank override for a pool, else the built-in default."""
+    if bank and isinstance(bank, dict) and name in bank:
+        val = bank[name]
+        if isinstance(val, list) and val:
+            return val
+        if isinstance(val, str) and val:
+            return val
+    return default
+
+
+def build_jobs_multi(count=1, vibe=None, outfit_style=None, camera_style=None, lighting=None, time_of_day=None, bank=None):
+    bank = bank or {}
+    scenes_map = {
+        "indoor": _resolve_pool("INDOOR_SCENES", INDOOR_SCENES, bank),
+        "outdoor": _resolve_pool("OUTDOOR_SCENES", OUTDOOR_SCENES, bank),
+        "mirror": _resolve_pool("MIRROR_SCENES", MIRROR_SCENES, bank),
+    }
+    framing_pool = _resolve_pool("FRAMING", FRAMING, bank)
+    hair_pool = _resolve_pool("HAIR", HAIR, bank)
+    pose_pool = _resolve_pool("POSES", POSES, bank)
+    quality_pool = _resolve_pool("QUALITY", QUALITY, bank)
+    tops_pools = _resolve_pool("OUTFIT_TOPS_POOLS", OUTFIT_TOPS_POOLS, bank)
+    bottoms_pools = _resolve_pool("OUTFIT_BOTTOMS_POOLS", OUTFIT_BOTTOMS_POOLS, bank)
+    lighting_pools = _resolve_pool("LIGHTING_POOLS", LIGHTING_POOLS, bank)
+    default_negative = _resolve_pool("DEFAULT_NEGATIVE", DEFAULT_NEGATIVE, bank)
+    mirror_negative = _resolve_pool("MIRROR_NEGATIVE", MIRROR_NEGATIVE, bank)
+
+    if vibe == "outdoor":
+        scene_pool = scenes_map["outdoor"]
+    elif camera_style == "mirror":
+        scene_pool = scenes_map["mirror"]
     else:
-        if camera_style == "mirror":
-            scene_pool = MIRROR_SCENES
-        else:
-            scene_pool = INDOOR_SCENES
+        scene_pool = scenes_map["indoor"]
 
     # Lighting pool selection
-    if lighting in LIGHTING_POOLS:
-        light_pool = LIGHTING_POOLS[lighting]
+    if lighting in lighting_pools:
+        light_pool = lighting_pools[lighting]
     else:
         light_pool = []
-        for v in LIGHTING_POOLS.values():
+        for v in lighting_pools.values():
             light_pool.extend(v)
 
     # Outfit pool selection
-    if outfit_style in OUTFIT_TOPS_POOLS:
-        top_pool = OUTFIT_TOPS_POOLS[outfit_style]
-        bottom_pool = OUTFIT_BOTTOMS_POOLS.get(outfit_style, [])
+    if outfit_style in tops_pools:
+        top_pool = tops_pools[outfit_style]
+        bottom_pool = bottoms_pools.get(outfit_style, [])
     else:
         top_pool = []
-        for v in OUTFIT_TOPS_POOLS.values():
+        for v in tops_pools.values():
             top_pool.extend(v)
         bottom_pool = []
-        for v in OUTFIT_BOTTOMS_POOLS.values():
+        for v in bottoms_pools.values():
             bottom_pool.extend(v)
 
     jobs = []
     for _ in range(count):
         scene = random.choice(scene_pool)
-        framing = random.choice(FRAMING)
-        hair = random.choice(HAIR)
+        framing = random.choice(framing_pool)
+        hair = random.choice(hair_pool)
         top = random.choice(top_pool)
         bottom = random.choice(bottom_pool)
-        pose = random.choice(POSES)
+        pose = random.choice(pose_pool)
         light = random.choice(light_pool)
-        quality = random.choice(QUALITY)
+        quality = random.choice(quality_pool)
 
         camera_mode = "mirror" if camera_style == "mirror" else "handheld"
-        negative = MIRROR_NEGATIVE if camera_mode == "mirror" else DEFAULT_NEGATIVE
-        prompt = _build_prompt(camera_mode, scene, framing, hair, top, bottom, pose, light, quality, time_of_day)
+        negative = mirror_negative if camera_mode == "mirror" else default_negative
+        identity_lock = _resolve_pool("IDENTITY_LOCK", IDENTITY_LOCK, bank)
+        prompt = _build_prompt(camera_mode, scene, framing, hair, top, bottom, pose, light, quality, time_of_day, identity_lock)
 
         short_id = hashlib.md5((str(len(jobs)) + str(time.time())).encode()).hexdigest()[:6]
         filename = f"{len(jobs)+1:03d}_{short_id}.png"
@@ -404,6 +426,42 @@ def save_promptbank(jobs, vibe=None, lighting_label=None, suffix=""):
 # ---------------------------------------------------------------------------
 # BACKWARDS-COMPAT EXPORTS FOR SERVER
 # ---------------------------------------------------------------------------
+
+OVERRIDABLE_POOLS = (
+    "INDOOR_SCENES",
+    "MIRROR_SCENES",
+    "OUTDOOR_SCENES",
+    "FRAMING",
+    "HAIR",
+    "POSES",
+    "QUALITY",
+    "OUTFIT_TOPS_POOLS",
+    "OUTFIT_BOTTOMS_POOLS",
+    "LIGHTING_POOLS",
+    "DEFAULT_NEGATIVE",
+    "MIRROR_NEGATIVE",
+    "IDENTITY_LOCK",
+)
+
+
+def get_builtin_pools() -> dict:
+    """Return every overridable pool with its built-in default value."""
+    return {
+        "INDOOR_SCENES": INDOOR_SCENES,
+        "MIRROR_SCENES": MIRROR_SCENES,
+        "OUTDOOR_SCENES": OUTDOOR_SCENES,
+        "FRAMING": FRAMING,
+        "HAIR": HAIR,
+        "POSES": POSES,
+        "QUALITY": QUALITY,
+        "OUTFIT_TOPS_POOLS": OUTFIT_TOPS_POOLS,
+        "OUTFIT_BOTTOMS_POOLS": OUTFIT_BOTTOMS_POOLS,
+        "LIGHTING_POOLS": LIGHTING_POOLS,
+        "DEFAULT_NEGATIVE": DEFAULT_NEGATIVE,
+        "MIRROR_NEGATIVE": MIRROR_NEGATIVE,
+        "IDENTITY_LOCK": IDENTITY_LOCK,
+    }
+
 
 def list_presets():
     return {

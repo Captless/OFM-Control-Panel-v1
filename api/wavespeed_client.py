@@ -12,6 +12,8 @@ import urllib.request
 import urllib.error
 import logging
 
+import requests  # noqa: E402
+
 BASE_URL = "https://api.wavespeed.ai/api/v3"
 IMAGE_MODEL = "google/nano-banana-2/edit"
 ENHANCE_MODEL = "wavespeed-ai/image-enhancer"
@@ -74,18 +76,93 @@ class WaveSpeedClient:
         while time.time() < deadline:
             data = self._request("GET", f"/predictions/{task_id}/result")
             status = data.get("status")
+            elapsed = int(time.time() - t0)
             if status == "completed":
+                if status_callback:
+                    status_callback(status, elapsed, data)
                 return data
             if status == "failed":
+                if status_callback:
+                    status_callback(status, elapsed, data)
                 err = data.get("error") or "unknown error"
                 if _is_explicit_flag(err):
                     raise WaveSpeedError(f"explicit_content_flagged: {err}", code="explicit_content_flagged")
                 raise WaveSpeedError(f"generation_failed: {err}", code="generation_failed")
-            elapsed = int(time.time() - t0)
             if status_callback:
-                status_callback(status, elapsed)
+                status_callback(status, elapsed, data)
             time.sleep(interval)
         raise WaveSpeedError("polling_timeout", code="polling_timeout")
+
+    def _parse_sse_stream(self, response):
+        """Parse an SSE (text/event-stream) response into a sequence of event dicts.
+
+        Handles incomplete lines split across network chunks. Each `data:` line is
+        parsed as JSON; non-JSON payloads are passed through as {"raw": text}.
+        """
+        buffer = ""
+        for raw_line in response.iter_lines(decode_unicode=True):
+            if raw_line is None:
+                continue
+            line = raw_line.rstrip("\r")
+            if not line.startswith("data:"):
+                continue
+            payload = line[5:].lstrip()
+            if not payload:
+                continue
+            try:
+                event = json.loads(payload)
+            except (ValueError, TypeError):
+                event = {"raw": payload}
+            yield event
+
+    def generate_stream(self, prompt, image_url, resolution="1k", output_format="png",
+                        aspect_ratio="9:16", timeout=600, on_event=None):
+        """Stream generation over SSE, yielding real-time API events.
+
+        Events are model-specific. Typical fields: status, progress, error.
+        Returns the final output URL when the stream completes.
+        """
+        payload = {
+            "prompt": prompt,
+            "images": [image_url],
+            "resolution": resolution,
+            "output_format": output_format,
+            "aspect_ratio": aspect_ratio,
+        }
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        stream_url = f"{BASE_URL}/{IMAGE_MODEL}/stream"
+        self.logger.debug("stream %s", stream_url)
+        with requests.post(
+            stream_url, headers=headers, json=payload, stream=True,
+            timeout=(10, timeout),
+        ) as resp:
+            if resp.status_code != 200:
+                raise WaveSpeedError(
+                    f"HTTP {resp.status_code}: {resp.text[:500]}",
+                    status=resp.status_code,
+                )
+            final_output = None
+            for event in self._parse_sse_stream(resp):
+                if on_event:
+                    on_event(event)
+                status = event.get("status")
+                if status == "completed" and event.get("outputs"):
+                    final_output = event["outputs"][0]
+                if status == "failed":
+                    err = event.get("error") or "stream generation failed"
+                    if _is_explicit_flag(str(err)):
+                        raise WaveSpeedError(
+                            f"explicit_content_flagged: {err}",
+                            code="explicit_content_flagged",
+                        )
+                    raise WaveSpeedError(f"generation_failed: {err}", code="generation_failed")
+            if final_output:
+                return final_output
+            raise WaveSpeedError("stream_no_output", code="stream_no_output")
+
 
     def upload_file(self, file_path):
         import requests
@@ -102,7 +179,28 @@ class WaveSpeedClient:
         return body["data"]["download_url"]
 
     def generate(self, prompt, image_url, resolution="1k", output_format="png",
-                 aspect_ratio="9:16", status_callback=None):
+                 aspect_ratio="9:16", stream=False, status_callback=None,
+                 on_event=None):
+        """Generate an image. Uses SSE streaming when stream=True, else polls.
+
+        - status_callback(status, elapsed, data): called during polling fallback.
+        - on_event(event): called for each raw SSE event during streaming.
+        In batch_generate, both callbacks are job-bound: the first arg becomes
+        the job dict (status_callback(job, status, elapsed, data), on_event(job, event)).
+        Falls back to polling automatically if the stream endpoint fails.
+        """
+        if stream:
+            try:
+                return self.generate_stream(
+                    prompt, image_url, resolution=resolution,
+                    output_format=output_format, aspect_ratio=aspect_ratio,
+                    on_event=on_event,
+                )
+            except WaveSpeedError as e:
+                if e.code in ("stream_no_output", "stream_generation_failed"):
+                    self.logger.warning("stream failed (%s); falling back to polling", e.code)
+                else:
+                    raise
         payload = {
             "prompt": prompt,
             "images": [image_url],
@@ -181,8 +279,8 @@ class WaveSpeedClient:
 
     def batch_generate(self, jobs, avatar_url, output_dir, resolution="1k",
                        output_format="png", aspect_ratio="9:16", enhance=False,
-                       max_concurrent=5, progress_callback=None,
-                       status_callback=None,
+                       stream=False, max_concurrent=5, progress_callback=None,
+                       status_callback=None, on_event=None,
                        checkpoint_path=None):
         lock_path = self._acquire_lock(output_dir)
         done_ids = set()
@@ -206,6 +304,22 @@ class WaveSpeedClient:
         failed_list = []
         explicit_hit = False
 
+        def _wrap_status(job):
+            if not status_callback:
+                return None
+
+            def _cb(status, elapsed, data=None):
+                status_callback(job, status, elapsed, data)
+            return _cb
+
+        def _wrap_event(job):
+            if not on_event:
+                return None
+
+            def _cb(event):
+                on_event(job, event)
+            return _cb
+
         try:
             with concurrent.futures.ThreadPoolExecutor(max_workers=max_concurrent) as pool:
                 fut_map = {}
@@ -213,7 +327,7 @@ class WaveSpeedClient:
                     fut = pool.submit(
                         self._generate_one, job, avatar_url, output_dir,
                         resolution, output_format, aspect_ratio, enhance,
-                        status_callback,
+                        stream, _wrap_status(job), _wrap_event(job),
                     )
                     fut_map[fut] = job
 
@@ -251,21 +365,30 @@ class WaveSpeedClient:
         }
 
     def _generate_one(self, job, avatar_url, output_dir, resolution, output_format,
-                       aspect_ratio, enhance, status_callback=None):
+                      aspect_ratio, enhance, stream, status_callback=None,
+                      on_event=None):
         prompt = job["prompt"]
         filename = job["filename"]
         os.makedirs(output_dir, exist_ok=True)
+        t0 = time.time()
 
         self.logger.info("generating %s", filename)
+        if status_callback:
+            status_callback("submitting", 0, None)
         result_url = self.generate(prompt, avatar_url, resolution=resolution,
-                                    output_format=output_format, aspect_ratio=aspect_ratio,
-                                    status_callback=status_callback)
+                                   output_format=output_format, aspect_ratio=aspect_ratio,
+                                   stream=stream, status_callback=status_callback,
+                                   on_event=on_event)
 
         if enhance:
             self.logger.info("enhancing %s", filename)
+            if status_callback:
+                status_callback("enhancing", int(time.time() - t0), None)
             result_url = self.enhance(result_url, scale=4, output_format=output_format)
 
         self.logger.info("downloading %s", filename)
         path = os.path.join(output_dir, filename)
         self.download(result_url, path)
+        if status_callback:
+            status_callback("saved", int(time.time() - t0), None)
         return path

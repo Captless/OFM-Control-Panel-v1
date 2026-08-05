@@ -134,6 +134,620 @@ document.addEventListener('click', function(e) {
     }
 });
 
+// ── Settings Modal ──
+var _pendingAvatarUrl = '';
+
+function _setSettingsExpanded(open) {
+    var t = document.getElementById('settings-nav-trigger');
+    if (t) {
+        t.setAttribute('aria-expanded', open ? 'true' : 'false');
+        t.classList.toggle('open', open);
+    }
+}
+
+function _setSettingsStatus(msg, type) {
+    var el = document.getElementById('settings-status');
+    if (!el) return;
+    if (!msg) { el.textContent = ''; el.className = 'settings-status'; return; }
+    el.textContent = msg;
+    el.className = 'settings-status' + (type ? ' ' + type : '');
+}
+
+function toggleSettingsModal() {
+    var modal = document.getElementById('settings-modal');
+    if (!modal) return;
+    if (modal.classList.contains('show')) {
+        closeSettingsModal();
+    } else {
+        modal.classList.add('show');
+        _setSettingsExpanded(true);
+        _setSettingsStatus('');
+        loadSettings();
+        setTimeout(function() {
+            var input = document.getElementById('settings-avatar-url');
+            if (input) input.focus();
+        }, 50);
+    }
+}
+
+function closeSettingsModal() {
+    var nb = document.getElementById('new-bank-modal');
+    var db = document.getElementById('delete-bank-modal');
+    if ((nb && nb.classList.contains('show')) || (db && db.classList.contains('show'))) return;
+    var modal = document.getElementById('settings-modal');
+    if (modal) modal.classList.remove('show');
+    _setSettingsExpanded(false);
+    var newPreview = document.getElementById('settings-new-preview');
+    if (newPreview) { newPreview.style.display = 'none'; newPreview.removeAttribute('src'); }
+    var input = document.getElementById('settings-file-input');
+    if (input) input.value = '';
+    _pendingAvatarUrl = '';
+    _setSettingsStatus('');
+}
+
+async function loadSettings() {
+    var r = await api('/api/settings/identity');
+    if (!r || !r.ok) { _setSettingsStatus('Failed to load settings', 'error'); return; }
+    var identity = r.identity || {};
+    var name = document.getElementById('settings-identity-name');
+    if (name) name.textContent = identity.name || 'Unnamed identity';
+    var preview = document.getElementById('settings-avatar-preview');
+    if (preview) {
+        if (identity.avatar_url) {
+            preview.src = identity.avatar_url;
+            preview.style.display = 'block';
+        } else {
+            preview.removeAttribute('src');
+            preview.style.display = 'none';
+        }
+    }
+    var urlInput = document.getElementById('settings-avatar-url');
+    if (urlInput) {
+        urlInput.value = identity.avatar_url || '';
+        urlInput.placeholder = identity.avatar_url ? '' : 'https://\u2026';
+    }
+    await loadBankEditor();
+}
+
+// ── Prompt bank editor (single pane, collapsed pool cards) ──
+
+var _activeBankId = '';
+var _savedBanks = {};
+var _poolDefaults = {};
+var _poolActive = {};
+var _newBankSource = 'builtin';
+var _pendingDeleteId = null;
+
+var _POOL_LABELS = {
+    'INDOOR_SCENES': 'Indoor Scenes',
+    'MIRROR_SCENES': 'Mirror Scenes',
+    'OUTDOOR_SCENES': 'Outdoor Scenes',
+    'FRAMING': 'Framing',
+    'HAIR': 'Hair',
+    'POSES': 'Poses',
+    'QUALITY': 'Quality',
+    'OUTFIT_TOPS_POOLS': 'Outfit Tops',
+    'OUTFIT_BOTTOMS_POOLS': 'Outfit Bottoms',
+    'LIGHTING_POOLS': 'Lighting',
+    'DEFAULT_NEGATIVE': 'Default Negative',
+    'MIRROR_NEGATIVE': 'Mirror Negative',
+    'IDENTITY_LOCK': 'Identity Lock'
+};
+
+function _isDictPool(name) {
+    return name === 'OUTFIT_TOPS_POOLS' || name === 'OUTFIT_BOTTOMS_POOLS' || name === 'LIGHTING_POOLS';
+}
+
+function _isStrPool(name) {
+    return name === 'DEFAULT_NEGATIVE' || name === 'MIRROR_NEGATIVE' || name === 'IDENTITY_LOCK';
+}
+
+function _poolLabel(name) {
+    return _POOL_LABELS[name] || name;
+}
+
+function _poolTypeBadge(name) {
+    if (_isDictPool(name)) return 'styles';
+    if (_isStrPool(name)) return 'text';
+    return 'list';
+}
+
+function _poolSummary(name, val) {
+    if (val == null) return 'empty';
+    if (_isDictPool(name)) return Object.keys(val).length + ' style' + (Object.keys(val).length !== 1 ? 's' : '');
+    if (_isStrPool(name)) {
+        var s = String(val).trim();
+        return s.length > 42 ? s.substring(0, 42) + '\u2026' : (s || 'empty');
+    }
+    return (Array.isArray(val) ? val.length : 0) + ' item' + ((Array.isArray(val) && val.length !== 1) ? 's' : '');
+}
+
+function _poolToText(name, val) {
+    if (_isDictPool(name)) {
+        var obj = val || {};
+        var lines = [];
+        Object.keys(obj).forEach(function(k) {
+            var items = (Array.isArray(obj[k]) ? obj[k] : []).join(', ');
+            lines.push(k + ': ' + items);
+        });
+        return lines.join('\n');
+    }
+    if (_isStrPool(name)) return String(val == null ? '' : val);
+    return (Array.isArray(val) ? val : []).join('\n');
+}
+
+function _poolValToString(name, val) {
+    if (val == null) return '';
+    if (_isDictPool(name)) return JSON.stringify(val || {});
+    if (_isStrPool(name)) return String(val);
+    return JSON.stringify(val || []);
+}
+
+async function loadActiveBank() {
+    var data = await api('/api/settings/banks/active');
+    _activeBankId = (data && data.active) || '';
+}
+
+function getSelectedBankId() {
+    return _activeBankId;
+}
+
+function toggleActiveBankEditor() {
+    var header = document.getElementById('active-bank-header');
+    var wrap = document.getElementById('pool-editor-wrapper');
+    if (!header || !wrap) return;
+    var closed = wrap.classList.toggle('closed');
+    header.classList.toggle('open', !closed);
+    header.setAttribute('aria-expanded', closed ? 'false' : 'true');
+}
+
+function updateActiveBankHeader() {
+    var nameEl = document.getElementById('active-bank-name');
+    if (!nameEl) return;
+    nameEl.textContent = _activeBankId ? ((_savedBanks[_activeBankId] && _savedBanks[_activeBankId].name) || _activeBankId) : 'Default';
+}
+
+function setActiveBankFromRadio(el) {
+    var id = (el.dataset && el.dataset.bankId) || '';
+    if (id === 'builtin') id = '';
+    if (id === _activeBankId) return;
+    api('/api/settings/banks/active', {id: id}).then(function(r) {
+        if (r && r.ok) {
+            _activeBankId = (r.active || '');
+            showSuccess(id ? 'Active prompt bank set' : 'Using Default prompt bank');
+            loadPoolEditor();
+            renderBankList();
+        } else {
+            showError((r && (r.error || r.output)) || 'Failed to set active bank');
+            renderBankList();
+        }
+    });
+}
+
+async function loadPoolEditor() {
+    var defRes = await api('/api/settings/banks/pools/defaults');
+    var actRes = await api('/api/settings/banks/active/pools');
+    _poolDefaults = (defRes && defRes.pools) ? defRes.pools : {};
+    _poolActive = (actRes && actRes.pools) ? actRes.pools : {};
+    renderPoolEditor();
+}
+
+function renderPoolEditor() {
+    var list = document.getElementById('pool-editor-list');
+    if (!list) return;
+    var names = Object.keys(_poolDefaults);
+    if (!names.length) { list.innerHTML = '<div class="settings-hint">No pools available</div>'; return; }
+    var readOnly = !_activeBankId;
+    var html = '';
+    if (readOnly) {
+        html += '<div id="pool-editor-note" class="pool-editor-note">Default (read-only) \u2014 create a new bank to edit pools.</div>';
+    }
+    for (var i = 0; i < names.length; i++) {
+        var name = names[i];
+        var val = (_poolActive && _poolActive[name] !== undefined) ? _poolActive[name] : _poolDefaults[name];
+        var text = _poolToText(name, val);
+        html += '<div class="pool-card" data-pool="' + name + '">';
+        html += '<div class="pool-card-header">';
+        html += '<span class="pool-name">' + _poolLabel(name) + '</span>';
+        html += '<span class="pool-badge">' + _poolTypeBadge(name) + '</span>';
+        html += '<span class="pool-summary">' + esc(_poolSummary(name, val)) + '</span>';
+        html += '</div>';
+        html += '<div class="pool-card-body">';
+        html += '<div class="settings-hint">' + (_isDictPool(name) ? 'One style per line: style_name: item1, item2' : (_isStrPool(name) ? 'Single text line (wraps in editor)' : 'One item per line')) + '</div>';
+        if (_isStrPool(name)) {
+            html += '<textarea class="pool-input pool-input-str" data-pool="' + name + '" spellcheck="false" rows="3"' + (readOnly ? ' readonly' : '') + '>' + esc(text) + '</textarea>';
+        } else {
+            html += '<textarea class="pool-input" data-pool="' + name + '" spellcheck="false" rows="5"' + (readOnly ? ' readonly' : '') + '>' + esc(text) + '</textarea>';
+        }
+        html += '</div>';
+        html += '</div>';
+    }
+    list.innerHTML = html;
+    setPoolEditorVisible();
+}
+
+function resetPoolToBuiltin(name) {
+    var card = document.querySelector('.pool-card[data-pool="' + name + '"]');
+    var input = card ? card.querySelector('.pool-input') : null;
+    if (input) input.value = _poolToText(name, _poolDefaults[name]);
+}
+
+function resetAllPoolsToBuiltin() {
+    var cards = document.querySelectorAll('.pool-card');
+    for (var i = 0; i < cards.length; i++) {
+        var name = cards[i].dataset.pool;
+        var input = cards[i].querySelector('.pool-input');
+        if (input) input.value = _poolToText(name, _poolDefaults[name]);
+    }
+    showInfo('Pools reset \u2014 remember to Save Changes');
+}
+
+function collectPoolChanges() {
+    var pools = {};
+    var cards = document.querySelectorAll('.pool-card');
+    for (var i = 0; i < cards.length; i++) {
+        var name = cards[i].dataset.pool;
+        var input = cards[i].querySelector('.pool-input');
+        if (!input) continue;
+        var val;
+        try {
+            val = _textToPool(name, input.value);
+        } catch (e) {
+            return {error: name + ': ' + e.message};
+        }
+        if (_poolValToString(name, val) !== _poolValToString(name, _poolDefaults[name])) {
+            pools[name] = val;
+        }
+    }
+    return pools;
+}
+
+function _textToPool(name, text) {
+    if (_isDictPool(name)) {
+        var obj = {};
+        (text || '').split('\n').forEach(function(line) {
+            line = line.trim();
+            if (!line) return;
+            var idx = line.indexOf(':');
+            if (idx === -1) throw new Error('expected "style_name: item1, item2" per line');
+            var key = line.substring(0, idx).trim();
+            if (!key) throw new Error('missing style name');
+            obj[key] = line.substring(idx + 1).split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+        });
+        return obj;
+    }
+    if (_isStrPool(name)) return text.trim().split(/\s+/).join(' ');
+    return text.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
+}
+
+async function saveAllPoolChanges() {
+    var pools = collectPoolChanges();
+    if (pools.error) { showError('Invalid ' + pools.error); return; }
+    var keys = Object.keys(pools);
+    if (!keys.length) { showInfo('No changes to save'); return; }
+    if (_activeBankId) {
+        var r = await api('/api/settings/banks/update', {id: _activeBankId, pools: pools});
+        if (r && r.ok) { showSuccess('Changes saved'); await loadPoolEditor(); renderBankList(); }
+        else { showError((r && (r.error || r.output)) || 'Save failed'); }
+    } else {
+        openNewBankModalFromDefault();
+    }
+}
+
+async function createBankFromCurrent() {
+    openNewBankModalFromDefault();
+}
+
+function openNewBankModalFromDefault() {
+    _newBankSource = 'builtin';
+    var modal = document.getElementById('new-bank-modal');
+    if (!modal) return;
+    var h4 = modal.querySelector('.modal-header h4');
+    var p = modal.querySelector('.modal-header p');
+    if (h4) h4.textContent = 'Create Prompt Bank';
+    if (p) p.textContent = 'Starts with default pools \u2014 customize from there';
+    var input = document.getElementById('new-bank-name');
+    if (input) input.value = '';
+    var st = document.getElementById('new-bank-status');
+    if (st) { st.textContent = ''; st.className = 'new-bank-status'; }
+    modal.classList.add('show');
+    setTimeout(function() { if (input) input.focus(); }, 30);
+}
+
+function closeNewBankModal() {
+    var modal = document.getElementById('new-bank-modal');
+    if (modal) modal.classList.remove('show');
+}
+
+function _createBankWithName(name) {
+    if (_newBankSource === 'builtin') {
+        return api('/api/settings/banks/create', {name: name, pools: _poolDefaults});
+    }
+    if (_activeBankId) {
+        return api('/api/settings/banks/clone', {source_id: _activeBankId, name: name});
+    }
+    return api('/api/settings/banks/create', {name: name, pools: _poolDefaults});
+}
+
+async function submitNewBank() {
+    var input = document.getElementById('new-bank-name');
+    var st = document.getElementById('new-bank-status');
+    var name = (input.value || '').trim();
+    if (!name) {
+        if (st) { st.textContent = 'Enter a bank name'; st.className = 'new-bank-status error'; }
+        if (input) input.focus();
+        return;
+    }
+    var r = await _createBankWithName(name);
+    if (r && r.ok) {
+        _activeBankId = r.bank.id;
+        closeNewBankModal();
+        showSuccess('Bank created: ' + name);
+        await loadPoolEditor(); renderBankList();
+    } else {
+        if (st) { st.textContent = (r && (r.error || r.output)) || 'Create failed'; st.className = 'new-bank-status error'; }
+    }
+}
+
+function setPoolEditorVisible() {
+    var wrap = document.getElementById('pool-editor-wrapper');
+    if (!wrap) return;
+    var readOnly = !_activeBankId;
+    wrap.classList.toggle('readonly', readOnly);
+    var actions = document.querySelector('.pool-editor-actions');
+    if (actions) actions.classList.toggle('hidden', readOnly);
+    var note = document.getElementById('pool-editor-note');
+    if (note) note.classList.toggle('hidden', !readOnly);
+}
+
+async function loadBankEditor() {
+    await loadActiveBank();
+    await Promise.all([loadPoolEditor(), renderBankList()]);
+}
+
+async function renderBankList() {
+    var list = document.getElementById('settings-bank-list');
+    if (!list) return;
+    var data = await api('/api/settings/banks');
+    var banks = (data && data.banks) ? data.banks : {};
+    _savedBanks = banks;
+    var ids = Object.keys(banks);
+    var html = '';
+    for (var i = 0; i < ids.length; i++) {
+        var b = banks[ids[i]] || {};
+        var poolCount = Object.keys(b.pools || {}).length;
+        var isBuiltin = (ids[i] === 'builtin');
+        var isActive = isBuiltin ? (!_activeBankId) : (ids[i] === _activeBankId);
+        html += '<div class="bank-row' + (isActive ? ' active' : '') + (isBuiltin ? ' is-builtin' : '') + '">';
+        html += '<div class="bank-row-main">';
+        html += '<div class="bank-name-wrap">';
+        html += '<button type="button" class="bank-name' + (isBuiltin ? ' is-builtin' : '') + '" onclick="startInlineRename(\'' + esc(ids[i]) + '\', this)"' + (isBuiltin ? '' : ' title="Click to rename"') + ' aria-label="Rename ' + esc(b.name || ids[i]) + '">' + esc(b.name || ids[i]) + '</button>';
+        html += '<input type="text" class="bank-rename-input" data-bank-id="' + esc(ids[i]) + '" hidden>';
+        html += '</div>';
+        html += '<span class="bank-count">' + (isBuiltin ? 'Default' : poolCount + ' override' + (poolCount !== 1 ? 's' : '')) + '</span>';
+        html += '</div>';
+        html += '<div class="bank-row-select">';
+        html += '<label class="provider-toggle" title="' + (isActive ? 'Active prompt bank' : 'Set as active') + '">';
+        html += '<input type="radio" name="active-bank" data-bank-id="' + esc(ids[i]) + '"' + (isActive ? ' checked' : '') + ' onchange="setActiveBankFromRadio(this)">';
+        html += '<span class="toggle-slider"></span>';
+        html += '</label>';
+        html += '</div>';
+        html += '<div class="bank-row-actions">';
+        if (!isBuiltin) {
+            html += '<button type="button" class="btn btn-sm btn-outline" onclick="event.stopPropagation(); confirmDeleteBank(\'' + esc(ids[i]) + '\')" aria-label="Delete ' + esc(b.name || ids[i]) + '">Delete</button>';
+        }
+        html += '</div></div>';
+    }
+    list.innerHTML = html || '<div class="settings-hint empty-state">No saved banks yet. <button type="button" class="btn-link" onclick="event.stopPropagation(); openNewBankModalFromDefault()">Create your first bank</button></div>';
+    updateActiveBankHeader();
+    setPoolEditorVisible();
+}
+
+function startInlineRename(id, btn) {
+    if (id === 'builtin') { showInfo('Default pools are read-only'); return; }
+    var wrap = btn.parentElement;
+    var input = wrap.querySelector('.bank-rename-input');
+    if (!input) return;
+    var old = btn.textContent.trim();
+    input.value = old;
+    input.hidden = false;
+    btn.style.display = 'none';
+    input.focus();
+    input.select();
+    var done = false;
+    var finish = function(save) {
+        if (done) return;
+        done = true;
+        var val = input.value.trim();
+        if (save && val && val !== old) {
+            api('/api/settings/banks/update', {id: id, name: val}).then(function(r) {
+                if (r && r.ok) { showSuccess('Bank renamed'); renderBankList(); }
+                else { showError((r && (r.error || r.output)) || 'Rename failed'); renderBankList(); }
+            });
+        } else {
+            input.hidden = true;
+            btn.style.display = '';
+        }
+    };
+    input.onkeydown = function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+        else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+    };
+    input.onblur = function() { finish(true); };
+}
+
+function confirmDeleteBank(id) {
+    _pendingDeleteId = id;
+    var b = _savedBanks[id] || {};
+    var nameEl = document.querySelector('#delete-bank-modal .delete-bank-name');
+    if (nameEl) nameEl.textContent = b.name || id;
+    var modal = document.getElementById('delete-bank-modal');
+    if (modal) modal.classList.add('show');
+}
+
+function closeDeleteBankModal() {
+    _pendingDeleteId = null;
+    var modal = document.getElementById('delete-bank-modal');
+    if (modal) modal.classList.remove('show');
+}
+
+async function executeDeleteBank() {
+    var id = _pendingDeleteId;
+    if (!id) return;
+    var r = await api('/api/settings/banks/delete', {id: id});
+    closeDeleteBankModal();
+    if (r && r.ok) {
+        if (_activeBankId === id) _activeBankId = '';
+        showSuccess('Bank deleted');
+        await loadActiveBank();
+        await loadPoolEditor(); renderBankList();
+    } else {
+        showError((r && (r.error || r.output)) || 'Delete failed');
+    }
+}
+
+function loadAvatarUrl() {
+    var input = document.getElementById('settings-avatar-url');
+    var url = (input.value || '').trim();
+    if (!url) { _setSettingsStatus('Enter an image URL first', 'error'); return; }
+    if (!/^https?:\/\//i.test(url)) {
+        _setSettingsStatus('Must be a public http(s) URL (local paths won\u2019t reach WaveSpeed)', 'error');
+        return;
+    }
+    _pendingAvatarUrl = url;
+    var preview = document.getElementById('settings-new-preview');
+    preview.onerror = function() {
+        _setSettingsStatus('Could not load image from that URL', 'error');
+        preview.style.display = 'none';
+    };
+    preview.onload = function() {
+        preview.style.display = 'block';
+        _setSettingsStatus('Ready to save', 'ok');
+    };
+    preview.style.display = 'block';
+    _setSettingsStatus('Loading image\u2026', '');
+    preview.src = url + (url.indexOf('?') === -1 ? '?' : '&') + '_t=' + Date.now();
+}
+
+async function handleAvatarFile(file) {
+    if (!file) return;
+    if (!file.type || file.type.indexOf('image/') !== 0) {
+        _setSettingsStatus('Invalid file type: images only', 'error');
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        _setSettingsStatus('File too large: max 5MB', 'error');
+        return;
+    }
+    var zone = document.getElementById('settings-upload-zone');
+    if (zone) zone.classList.remove('drag-over');
+    _setSettingsStatus('Uploading\u2026', '');
+    var fd = new FormData();
+    fd.append('file', file);
+    try {
+        var resp = await fetch('/api/settings/identity/upload', { method: 'POST', body: fd });
+        var data = await resp.json();
+        if (!data.ok) {
+            _setSettingsStatus(data.error || 'Upload failed', 'error');
+            return;
+        }
+        _pendingAvatarUrl = data.avatar_url || data.url;
+        var preview = document.getElementById('settings-new-preview');
+        preview.onerror = null;
+        preview.onload = function() { preview.style.display = 'block'; };
+        preview.style.display = 'block';
+        preview.src = data.url + (data.url.indexOf('?') === -1 ? '?' : '&') + '_t=' + Date.now();
+        if (data.uploaded) {
+            _setSettingsStatus('Uploaded \u2014 public WaveSpeed URL ready. Save to apply.', 'ok');
+        } else {
+            _setSettingsStatus('Saved locally. ' + (data.warning || 'Paste a public URL for generation.'), 'error');
+        }
+    } catch(e) {
+        _setSettingsStatus('Upload error: ' + e.message, 'error');
+    }
+}
+
+async function saveIdentity() {
+    if (!_pendingAvatarUrl) { closeSettingsModal(); return; }
+    var r = await api('/api/settings/identity', { avatar_url: _pendingAvatarUrl });
+    if (r && r.ok) {
+        closeSettingsModal();
+        showSuccess('Identity saved');
+        loadSettings();
+    } else {
+        _setSettingsStatus((r && (r.error || r.output)) || 'Failed to save identity', 'error');
+    }
+}
+
+// ESC closes settings modal
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var db = document.getElementById('delete-bank-modal');
+        if (db && db.classList.contains('show')) { closeDeleteBankModal(); return; }
+        var nb = document.getElementById('new-bank-modal');
+        if (nb && nb.classList.contains('show')) { closeNewBankModal(); return; }
+        var modal = document.getElementById('settings-modal');
+        if (modal && modal.classList.contains('show')) {
+            closeSettingsModal();
+        }
+    }
+});
+
+// Outside click closes settings modal
+document.addEventListener('click', function(e) {
+    var modal = document.getElementById('settings-modal');
+    var trigger = document.getElementById('settings-nav-trigger');
+    var nb = document.getElementById('new-bank-modal');
+    var db = document.getElementById('delete-bank-modal');
+    if (db && db.classList.contains('show') && !e.target.closest('#delete-bank-modal-box')) {
+        closeDeleteBankModal();
+        return;
+    }
+    if (nb && nb.classList.contains('show') && !e.target.closest('#new-bank-modal-box')) {
+        closeNewBankModal();
+        return;
+    }
+    if (modal && modal.classList.contains('show') && !e.target.closest('#settings-modal-box') && !e.target.closest('#settings-nav-trigger')) {
+        closeSettingsModal();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    var modal = document.getElementById('settings-modal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeSettingsModal();
+        });
+    }
+    var fileInput = document.getElementById('settings-file-input');
+    var zone = document.getElementById('settings-upload-zone');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            handleAvatarFile(fileInput.files[0]);
+        });
+    }
+    if (zone) {
+        zone.addEventListener('click', function() { if (fileInput) fileInput.click(); });
+        zone.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (fileInput) fileInput.click(); }
+        });
+        zone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            zone.classList.add('drag-over');
+        });
+        zone.addEventListener('dragleave', function() {
+            zone.classList.remove('drag-over');
+        });
+        zone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+                handleAvatarFile(e.dataTransfer.files[0]);
+            }
+        });
+    }
+});
+
 // ── Reduced motion listener ──
 var motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 function handleMotionChange(e) {
@@ -294,8 +908,28 @@ function updateCost() {
 }
 
 function _btnTxt(t) { var e = document.querySelector('#btn-photo .btn-text'); if (e) e.textContent = t; }
-
-function _resetBtn() { var btn = document.getElementById('btn-photo'); if (btn) { btn.classList.remove('loading'); btn.disabled = false; } _btnTxt('Generate'); setControlsLocked(false); }
+var _statusBadge = {
+    'submitting': 'Queued', 'created': 'Queued', 'queued': 'Queued',
+    'processing': 'Processing', 'completed': 'Done', 'saved': 'Saved',
+    'enhancing': 'Enhancing', 'failed': 'Error', 'cancelled': 'Cancelled',
+    'timeout': 'Timed out'
+};
+function _renderGenStatus(images) {
+    var strip = document.getElementById('gen-status-strip');
+    if (!strip) return;
+    if (!images || !Object.keys(images).length) { strip.style.display = 'none'; strip.innerHTML = ''; return; }
+    strip.style.display = 'block';
+    var html = '';
+    Object.keys(images).forEach(function(k) {
+        var im = images[k];
+        var cls = 'gs-' + (im.status || 'processing');
+        var label = _statusBadge[im.status] || im.status;
+        var detail = im.detail ? ' <span class="gs-detail">' + esc(im.detail) + '</span>' : '';
+        html += '<div class="gs-row ' + cls + '"><span class="gs-file">' + esc(im.filename) + '</span><span class="gs-badge">' + esc(label) + '</span><span class="gs-elapsed">' + im.elapsed + 's</span>' + detail + '</div>';
+    });
+    strip.innerHTML = html;
+}
+function _resetBtn() { var btn = document.getElementById('btn-photo'); if (btn) { btn.classList.remove('loading'); btn.disabled = false; } _btnTxt('Generate'); setControlsLocked(false); var strip = document.getElementById('gen-status-strip'); if (strip) { strip.style.display = 'none'; strip.innerHTML = ''; } }
 
 function setControlsLocked(locked) {
     var card = document.querySelector('.gen-layout .card');
@@ -361,7 +995,7 @@ async function startPromptGeneration() {
     setControlsLocked(true);
     btn.disabled = true;
     btn.classList.add('loading'); _btnTxt('Generating prompts\u2026');
-    var r = await api('/api/prompts/generate', {vibe: vibe, camera_style: camera_style, lighting: lighting, time_of_day: time_of_day, outfit_style: outfit_style, count: count});
+    var r = await api('/api/prompts/generate', {vibe: vibe, camera_style: camera_style, lighting: lighting, time_of_day: time_of_day, outfit_style: outfit_style, count: count, bank_id: getSelectedBankId()});
     if (!r.ok) {
         _btnTxt('FAIL: ' + (r.error || 'error'));
         showError('Prompt build failed: ' + (r.error || 'error'));
@@ -459,10 +1093,18 @@ var _fail = function(msg) {
     while (Date.now() < _deadline) {
         var p = await api('/api/progress?run_id=' + runId);
         if (p && p.done === true) {
+            _renderGenStatus(p.images);
             if (p.error_type === 'explicit_content') {
+                var flagMsg = '';
+                if (p.images) {
+                    Object.keys(p.images).forEach(function(k) {
+                        var im = p.images[k];
+                        if (im.status === 'failed' && im.detail) { flagMsg = im.detail; }
+                    });
+                }
                 _btnTxt('FAIL: content flagged');
                 btn.classList.remove('loading');
-                showWarning('Generation blocked \u2014 WaveSpeed flagged content as sensitive. Try different prompts or outfit style.', 8000);
+                showWarning('Generation blocked \u2014 WaveSpeed flagged content as sensitive' + (flagMsg ? ': ' + flagMsg : '') + '. Try different prompts or outfit style.', 8000);
             } else if (p.ok) {
                 _btnTxt('OK (' + p.duration_s + 's)');
                 btn.classList.remove('loading');
@@ -516,7 +1158,12 @@ var _fail = function(msg) {
             _resetPromptList();
             break;
         }
-        _btnTxt(stage + ' ' + (p.total > 0 ? p.current + '/' + p.total + ' \u00b7 ' : '') + Math.floor((Date.now() - _startTs) / 1000) + 's');
+        _renderGenStatus(p.images);
+        var btnStage = stage === 'Processing' ? 'Generating' : stage;
+        var btnText = btnStage;
+        if (p.total > 0) btnText += ' ' + p.current + '/' + p.total + ' \u00b7 ';
+        btnText += (typeof p.elapsed === 'number' ? p.elapsed : Math.floor((Date.now() - _startTs) / 1000)) + 's';
+        _btnTxt(btnText);
         await new Promise(r3 => setTimeout(r3, 1000));
     }
     if (Date.now() >= _deadline) {
@@ -1167,7 +1814,6 @@ document.addEventListener('click', function(e) {
     }
 });
 var _delSvg2 = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-var _checkSvg = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 
 var _validationCache = null;
 var _validationCacheTime = 0;
@@ -1577,9 +2223,10 @@ document.addEventListener('DOMContentLoaded', function() {
         checkApiStatus();
         preloadAccounts();
         preloadValidation();
+        loadActiveBank();
         setInterval(checkApiStatus, 30000);
         setInterval(fetchBalance, 60000);
-        
+
         // Close modal on backdrop click
         var apiModal = document.getElementById('api-modal');
         if (apiModal) {

@@ -30,7 +30,47 @@ def _parse_identity_file() -> dict[str, str]:
             result["api_key"] = line.split("**API Key:**")[1].strip()
         elif "**Avatar URL:**" in line:
             result["avatar_url"] = line.split("**Avatar URL:**")[1].strip()
+        elif "**Name:**" in line:
+            result["name"] = line.split("**Name:**")[1].strip()
     return result
+
+
+def get_identity() -> dict:
+    """Return identity from settings.json, migrating from the markdown identity file on first read."""
+    settings = _load_settings()
+    identity = settings.get("identity")
+    if isinstance(identity, dict):
+        return {
+            "name": str(identity.get("name", "")),
+            "avatar_url": str(identity.get("avatar_url", "")),
+        }
+    identity = _parse_identity_file()
+    migrated = {
+        "name": identity.get("name", ""),
+        "avatar_url": identity.get("avatar_url", ""),
+    }
+    if migrated["avatar_url"] or migrated["name"]:
+        settings["identity"] = migrated
+        _save_settings(settings)
+    return migrated
+
+
+def set_identity(name=None, avatar_url=None) -> dict:
+    """Merge name/avatar_url into settings.json identity key; persists unchanged fields."""
+    settings = _load_settings()
+    identity = settings.get("identity", {})
+    if not isinstance(identity, dict):
+        identity = {}
+    if name is not None:
+        identity["name"] = str(name)
+    if avatar_url is not None:
+        identity["avatar_url"] = str(avatar_url)
+    settings["identity"] = identity
+    _save_settings(settings)
+    return {
+        "name": identity.get("name", ""),
+        "avatar_url": identity.get("avatar_url", ""),
+    }
 
 
 def list_wavespeed_accounts() -> dict:
