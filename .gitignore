@@ -33,3 +33,9 @@ Thumbs.db
 
 # Deepwork state (git-local, OpenCode-readable)
 .slim/deepwork/
+
+# Local settings with live API keys (track settings.json.example instead)
+core/settings.json
+
+# Runtime run history (regenerated on every run)
+webui/activity.json
