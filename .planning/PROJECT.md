@@ -16,11 +16,10 @@ Reliably generate on-brand photo/video content at low cost through WaveSpeed's A
 - Web UI control panel (:8000) with generation controls, outputs table, captions, delete — working
 - Multi-account WaveSpeed key management in settings UI — working
 - Identity (name/avatar) + prompt banks + presets managed in settings — working
-- TikTok-style video generation pipeline — working
 
 ### Active
 
-- (None — baseline captured; new work routed via /gsd-progress --do or /gsd-quick)
+- Video generation (image-to-video, TikTok-style 9:16 MP4) — code files exist (`pipeline/wavespeed_i2v_client.py`, `scripts/run_tiktok.py`) but NOT wired to server/UI. Roadmap Phase 2.
 
 ### Out of Scope
 
@@ -33,7 +32,8 @@ Reliably generate on-brand photo/video content at low cost through WaveSpeed's A
 
 - Backend: Python 3, `ThreadingHTTPServer`, no framework. Frontend: vanilla HTML/CSS/JS single-page app. Zero build step, zero npm (except dev tooling), zero CDN.
 - WaveSpeed AI REST: `nano-banana-2/edit` images, `kling-v2.5-turbo-std` video. API base `https://api-ondemand.wavespeed.ai/api/v3`.
-- Photos: `pipeline/pipeline.py` + `pipeline/prompt_bank.py`; videos: `pipeline/wavespeed_i2v_client.py`; API client `api/wavespeed_client.py`; config `core/config.py` (keys in gitignored `core/settings.json`).
+- Photos: `pipeline/pipeline.py` + `pipeline/prompt_bank.py`; API client `api/wavespeed_client.py`; config `core/config.py` (keys in gitignored `core/settings.json`).
+- Video: `pipeline/wavespeed_i2v_client.py` + `scripts/run_tiktok.py` exist but are standalone/orphaned — not wired to server or UI yet (Phase 2).
 - Outputs grouped by day in `outputs/YYYY-MM-DD/photos|videos/`.
 - UI theme is retro-terminal phosphor green (`--accent:#00ff88` on `#0a0f0a`), themes `terminal`/`paper`.
 

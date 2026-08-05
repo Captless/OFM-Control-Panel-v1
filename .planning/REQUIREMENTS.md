@@ -15,11 +15,6 @@
 - [x] **PHOTO-05**: Prompt bank generates randomized prompts (scene, framing, hair, outfit, pose, lighting, quality)
 - [x] **PHOTO-06**: Companion `.prompt` file saved alongside each image
 
-### Video Generation
-
-- [x] **VIDEO-01**: Image-to-video generation via `kling-v2.5-turbo-std` (9:16 MP4)
-- [x] **VIDEO-02**: TikTok-style video pipeline with prompt style guide (`pipeline/alina_video_guide.md`)
-
 ### Web UI Control Panel
 
 - [x] **UI-01**: Generation panel with Vibe/Camera/Lighting/Outfit/Time/Count controls
@@ -39,7 +34,12 @@
 
 ## v2 Requirements (Deferred)
 
-### Not yet tracked — future features slot here as new implementations begin
+### Not yet implemented — video generation not wired (code files exist, no server/UI integration)
+
+- [ ] **VIDEO-01**: Image-to-video generation via `kling-v2.5-turbo-std` (9:16 MP4) — `pipeline/wavespeed_i2v_client.py` + `scripts/run_tiktok.py` exist but are not wired to server/UI; no video generation endpoint in `webui/server.py`
+- [ ] **VIDEO-02**: TikTok-style video pipeline with prompt style guide (`pipeline/alina_video_guide.md`)
+
+### Not yet tracked — future feature ideas slot here as new implementations begin
 
 - **FEAT-01**: TBD — pending feature ideas (use `/gsd-progress --do` or `/gsd-quick` to capture)
 - **FEAT-02**: TBD
@@ -57,14 +57,16 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PHOTO-01..06 | Baseline (shipped) | Done |
-| VIDEO-01..02 | Baseline (shipped) | Done |
-| UI-01..08 | Baseline (shipped) | Done |
-| SET-01..03 | Baseline (shipped) | Done |
+| PHOTO-01..06 | Phase 1 (Baseline) | Done |
+| VIDEO-01..02 | v2 (deferred, not implemented) | Pending |
+| UI-01..08 | Phase 1 (Baseline) | Done |
+| SET-01..03 | Phase 1 (Baseline) | Done |
+| FEAT-01..02 | Phase 2 (reserved, when defined) | Pending |
 
 **Coverage:**
-- v1 requirements: 19 total (all shipped baseline)
-- Mapped phases: Baseline
+- v1 requirements: 17 total (all shipped baseline)
+- Mapped phases: Phase 1 (Baseline) — 17/17 ✓
+- Reserved placeholders: Phase 2 (Next Feature), Phase 3 (Future Enhancements) — filled as requirements are captured
 - Unmapped: 0
 
 ---
