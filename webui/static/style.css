@@ -789,7 +789,6 @@ body::after {
   background: var(--card-inner);
   color: var(--fg2);
 }
-.gs-file { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fg); }
 .gs-badge {
   text-transform: uppercase;
   font-size: 9px;
