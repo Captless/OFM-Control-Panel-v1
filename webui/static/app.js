@@ -1159,7 +1159,11 @@ var _fail = function(msg) {
             break;
         }
         _renderGenStatus(p.images);
-        _btnTxt(stage + ' ' + (p.total > 0 ? p.current + '/' + p.total + ' \u00b7 ' : '') + (typeof p.elapsed === 'number' ? p.elapsed : Math.floor((Date.now() - _startTs) / 1000)) + 's');
+        var btnStage = stage === 'Processing' ? 'Generating' : stage;
+        var btnText = btnStage;
+        if (p.total > 0) btnText += ' ' + p.current + '/' + p.total + ' \u00b7 ';
+        btnText += (typeof p.elapsed === 'number' ? p.elapsed : Math.floor((Date.now() - _startTs) / 1000)) + 's';
+        _btnTxt(btnText);
         await new Promise(r3 => setTimeout(r3, 1000));
     }
     if (Date.now() >= _deadline) {
