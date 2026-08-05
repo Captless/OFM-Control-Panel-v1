@@ -77,7 +77,7 @@ def _merge_meta(existing_path, new_meta):
     print(f"meta.json: {len(meta)} entries")
 
 
-def mode_photo(jobs, enhance=False):
+def mode_photo(jobs, enhance=False, stream=True):
     print("@P starting|Initializing pipeline\u2026", flush=True)
     api_key = _load_active_key()
     if not api_key:
@@ -91,6 +91,18 @@ def mode_photo(jobs, enhance=False):
     if checkpoint.exists():
         checkpoint.unlink()
 
+    def _on_event(event):
+        status = event.get("status", "")
+        progress = event.get("progress")
+        err = event.get("error")
+        if status:
+            line = f"@P processing|WaveSpeed {status}"
+            if progress is not None:
+                line += f" {int(progress * 100)}%"
+            if err:
+                line += f" | {err}"
+            print(line, flush=True)
+
     result = client.batch_generate(
         jobs=jobs,
         avatar_url=avatar_url,
@@ -99,9 +111,11 @@ def mode_photo(jobs, enhance=False):
         output_format="png",
         aspect_ratio="9:16",
         enhance=enhance,
+        stream=stream,
         max_concurrent=3,
         progress_callback=lambda d, t, last: print(f"[{d}/{t}] {last}", flush=True),
         status_callback=lambda status, elapsed: print(f"@P processing|WaveSpeed {status} {elapsed}s", flush=True),
+        on_event=_on_event,
         checkpoint_path=str(checkpoint),
     )
     print(f"\nPhotos: {result['n_success']}/{result['n_total']} | Failed: {result['n_failed']} | {result['duration_s']:.0f}s")
