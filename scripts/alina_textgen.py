@@ -280,3 +280,67 @@ CLOSERS = {
         "and i am going to bed now. maybe.",
     ],
 }
+
+# ---------------------------------------------------------------------------
+# Per-platform CTA + hashtag config.
+# ---------------------------------------------------------------------------
+
+PLATFORM_CONFIG = {
+    "tiktok": {
+        "cta_pool": [
+            "follow for part two",
+            "which fit should i wear",
+            "drop a fire emoji if you relate",
+            "follow for more of my delusions",
+            "comment your favorite lyric",
+        ],
+        "hashtags": [
+            "#altgirl", "#altingirl", "#darkaesthetic", "#relatable",
+            "#softgirl", "#mentalhealth", "#altgirlproblems", "#fyp",
+        ],
+    },
+    "reels": {
+        "cta_pool": [
+            "follow for part two",
+            "save this for your 3am thoughts",
+            "comment if you get it",
+            "tag someone who needs to hear this",
+            "share this with your dark side",
+        ],
+        "hashtags": [
+            "#altgirl", "#aesthetic", "#darkaesthetic", "#relatable",
+            "#softgirl", "#altgirlproblems", "#reels", "#explore", "#foryou",
+        ],
+    },
+    "shorts": {
+        "cta_pool": [
+            "which fit should i wear",
+            "follow for daily chaos",
+            "comment your rating 1-10",
+            "like if you felt that",
+            "subscribe for part two",
+        ],
+        "hashtags": [
+            "#altgirl", "#darkaesthetic", "#relatable", "#softgirl",
+            "#shorts", "#fyp", "#youtubeshorts", "#alt",
+        ],
+    },
+    "x": {
+        "cta_pool": [
+            "quote tweet with your take",
+            "drop your thoughts below",
+            "retweet if you relate",
+            "tell me your 3am genre",
+        ],
+        "hashtags": ["#altgirl", "#darkaesthetic", "#relatable"],
+    },
+    "stories": {
+        "cta_pool": [
+            "answer the poll",
+            "slide into my dms with your take",
+            "use the music if you feel it",
+            "share this to your story",
+        ],
+        "hashtags": [],
+    },
+}
