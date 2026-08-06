@@ -9,7 +9,7 @@ Goal: identity-locked caption generator (`scripts/alina_textgen.py`) + web UI ca
 **Goal:** Standalone pool-based caption generator grounded in Alina Sky identity (5 hook types: vulnerable/confident/playful/aesthetic/relatable, platform CTA + hashtag configs). CLI: `python scripts/alina_textgen.py 10 [tiktok|reels|shorts|x|stories] [--seed N]`. Output to stdout only. Zero deps. 2x pools (~20 openers / 12 middles / 12 closers per hook type).
 **Requirements:** TBD
 **Depends on:** Phase 0
-**Plans:** 1/1 plans executed
+**Plans:** 1/1 plans complete
 Plans:
 
 - [x] 01-01-PLAN.md
