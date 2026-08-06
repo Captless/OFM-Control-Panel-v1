@@ -932,16 +932,9 @@ function _renderGenStatus(images) {
     strip.innerHTML = html;
 }
 function _startGenAnim() {
-    var dots = 1;
-    clearInterval(_genAnimTimer);
-    _genAnimTimer = setInterval(function() {
-        dots = (dots % 3) + 1;
-        _btnTxt('Generating' + new Array(dots + 1).join('.'));
-    }, 500);
-    _btnTxt('Generating.');
+    _btnTxt('Generating...');
 }
-
-function _resetBtn() { var btn = document.getElementById('btn-photo'); if (btn) { btn.classList.remove('loading'); btn.disabled = false; } _btnTxt('Generate'); setControlsLocked(false); clearInterval(_genAnimTimer); var strip = document.getElementById('gen-status-strip'); if (strip) { strip.style.display = 'none'; strip.innerHTML = ''; } }
+function _resetBtn() { var btn = document.getElementById('btn-photo'); if (btn) { btn.disabled = false; } _btnTxt('Generate'); setControlsLocked(false); var strip = document.getElementById('gen-status-strip'); if (strip) { strip.style.display = 'none'; strip.innerHTML = ''; } }
 
 function setControlsLocked(locked) {
     var card = document.querySelector('.gen-layout .card');
@@ -997,7 +990,6 @@ function showInfo(message, duration) { showToast(message, 'info', duration || 40
 function showWarning(message, duration) { showToast(message, 'warning', duration || 5000); }
 
 var _previewDebounce = null;
-var _genAnimTimer = null;
 var _previewFetching = false;
 
 async function fetchPromptPreview(silent) {
@@ -1040,7 +1032,6 @@ async function fetchPromptPreview(silent) {
 async function startPromptGeneration() {
     if (_previewFetching) return;
     _previewFetching = true;
-    _btnTxt('Generating prompts\u2026');
     await fetchPromptPreview(false);
     _previewFetching = false;
 }
@@ -1084,26 +1075,22 @@ async function confirmGeneration() {
     _resetPromptList();
     setControlsLocked(true);
     btn.disabled = true;
-    btn.classList.add('loading'); _startGenAnim();
+    _startGenAnim();
     var r2 = await api('/api/run/photo', {prompts: jobs});
     if (!r2.ok) {
         _btnTxt('FAIL: ' + (r2.output || 'error'));
-        clearInterval(_genAnimTimer);
         showError('Failed to start generation: ' + (r2.output || 'error'));
         fetchBalance();
         setTimeout(_resetBtn, 3000);
         return;
     }
     var runId = r2.run_id;
-    var _startTs = Date.now();
     var _lastDetail = '';
     var _lastChangeTime = Date.now();
     var _retryCount = 0;
     var _maxRetries = 3;
     var _deadline = Date.now() + 45 * 60 * 1000;
 var _fail = function(msg) {
-        btn.classList.remove('loading');
-        clearInterval(_genAnimTimer);
         _btnTxt(msg);
         fetchBalance();
         setTimeout(_resetBtn, 3000);
@@ -1134,24 +1121,19 @@ var _fail = function(msg) {
                     });
                 }
                 _btnTxt('FAIL: content flagged');
-                btn.classList.remove('loading');
                 showWarning('Generation blocked \u2014 WaveSpeed flagged content as sensitive' + (flagMsg ? ': ' + flagMsg : '') + '. Try different prompts or outfit style.', 8000);
             } else if (p.ok) {
                 _btnTxt('OK (' + p.duration_s + 's)');
-                btn.classList.remove('loading');
                 refreshOutputs(); showSuccess('Generation complete \u2014 ' + p.duration_s + 's');
             } else {
                 _btnTxt('FAIL: ' + (p.detail || 'error'));
-                btn.classList.remove('loading');
                 showError('Generation failed: ' + (p.detail || 'error'));
             }
-            clearInterval(_genAnimTimer);
             fetchBalance();
             setTimeout(_resetBtn, 3000);
             _pendingJobs = null;
             _resetPromptList();
-            break;
-        }
+            break;        }
         if (!p || p.error || typeof p.done !== 'boolean') {
             _fail('FAIL: run not found (server restarted?)');
             _pendingJobs = null;
@@ -1173,7 +1155,6 @@ var _fail = function(msg) {
             var r3 = await api('/api/run/photo', {prompts: jobs});
             if (r3.ok) {
                 runId = r3.run_id;
-                _startTs = Date.now();
                 _lastDetail = '';
                 _lastChangeTime = Date.now();
                 continue;
@@ -1191,10 +1172,8 @@ var _fail = function(msg) {
             break;
         }
         _renderGenStatus(p.images);
-        var btnStage = stage === 'Processing' ? 'Generating' : stage;
-        var btnText = btnStage;
-        if (p.total > 0) btnText += ' ' + p.current + '/' + p.total + ' \u00b7 ';
-        btnText += (typeof p.elapsed === 'number' ? p.elapsed : Math.floor((Date.now() - _startTs) / 1000)) + 's';
+        var btnText = 'Generating...';
+        if (p.total > 0) btnText = 'Generating ' + p.current + '/' + p.total;
         _btnTxt(btnText);
         await new Promise(r3 => setTimeout(r3, 1000));
     }
@@ -1446,10 +1425,7 @@ function toggleBatch(bid) {
 }
 
 async function refreshOutputs() {
-    var btn = document.getElementById('btn-refresh');
-    if (btn) btn.classList.add('loading');
     var r = await api('/api/dashboard/refresh');
-    if (btn) btn.classList.remove('loading');
     if (r.outputs) {
         _outputsData = r.outputs;
         renderOutputs();

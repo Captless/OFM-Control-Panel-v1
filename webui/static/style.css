@@ -761,16 +761,6 @@ body::after {
 .btn-outline:hover { background: var(--btn-hover); box-shadow: none; border-color: var(--accent-soft); color: var(--accent); }
 .btn-outline:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
 
-.btn .spinner {
-  display: none;
-  width: 16px; height: 16px;
-  border: 2.5px solid rgba(128, 128, 128, 0.25);
-  border-top-color: var(--accent-contrast);
-  border-radius: 50%;
-  animation: spin .7s cubic-bezier(.4,0,.2,1) infinite;
-}
-.btn.loading .spinner { display: inline-block; }
-
 .gen-status-strip {
   margin-top: 10px;
   display: flex;
