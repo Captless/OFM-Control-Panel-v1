@@ -1,6 +1,7 @@
 """
 Prompt bank for Alina Sky photo generation.
-v3 — two camera modes (handheld / mirror), no shake bank, torso-only poses.
+v5 — handheld keeps phone OUT of frame ("no phone visible", working-example style),
+concise dim/moody lighting + iPhone amateur quality, no quality-per-lighting pools.
 """
 
 import random
@@ -14,20 +15,23 @@ import time
 # ---------------------------------------------------------------------------
 
 INDOOR_SCENES = [
-    "standing casually near closet in a dim bedroom, facing camera",
-    "standing near bathroom sink area, facing camera",
-    "standing near couch in a dim living room, facing camera",
-    "standing near wardrobe with slightly messy background, facing camera",
-    "standing near sofa in dim living room, facing camera",
-    "standing casually in bathroom with tiled background, facing camera",
+    "standing casually in a dim bedroom near an open closet",
+    "standing casually in a dim bathroom, background slightly cluttered",
+    "standing in a dim living room, relaxed posture",
+    "sitting or leaning near a closet in a dim bedroom",
+    "standing near a wardrobe in a dim bedroom, clothes visible behind",
+    "standing in a cluttered bathroom, products on the counter, towel on the floor",
+    "standing in a lived-in living room, throw blankets and coffee cups on the table, cozy chaos",
+    "standing near a doorway, shoes and coats visible, everyday real-life clutter",
+    "sitting on the bedroom floor, laundry pile nearby, posters on the wall",
+    "leaning on a kitchen counter, appliances and fridge magnets behind, everyday morning mess",
 ]
 
 MIRROR_SCENES = [
-    "standing near bathroom sink area",
-    "standing near wardrobe",
-    "standing casually beside an open closet in a dim bedroom",
-    "standing casually near bathroom sink area with tiled background",
-
+    "standing at a bathroom mirror, tiled wall behind, phone covering part of the face",
+    "standing in front of a full-length mirror in a dim bedroom",
+    "standing near a wardrobe mirror, room dim behind",
+    "standing at a bathroom mirror, sink cluttered, phone held up covering the face",
 ]
 
 OUTDOOR_SCENES = [
@@ -36,6 +40,11 @@ OUTDOOR_SCENES = [
     "standing near a graffiti wall in a dim city corner",
     "standing on a rooftop with city lights blurred behind",
     "standing by a parked car on a dim street",
+    "standing on a sidewalk with trash bins and parked bikes, dusk",
+    "standing near a convenience store entrance, neon sign glow, evening",
+    "standing at a bus stop with posters and litter, night street lamps",
+    "standing on apartment stairs, graffiti and cigarette butts, dim",
+    "standing near a chain-link fence, overgrown weeds, golden hour",
 ]
 
 # ---------------------------------------------------------------------------
@@ -43,10 +52,12 @@ OUTDOOR_SCENES = [
 # ---------------------------------------------------------------------------
 
 FRAMING = [
-    "slight torso angle with uneven framing, head to waist composition, midshot",
-    "slightly off-center framing, head to waist shot, midshot",
-    "uneven framing with slight tilt, head to waist crop, midshot",
-    "uneven framing, head to waist shot, midshot",
+    "slightly tilted uneven framing, head-to-waist crop",
+    "uneven framing, head-to-waist crop",
+    "slight motion blur, uneven composition, head-to-waist crop",
+    "slightly low uneven angle, head-to-waist framing",
+    "off-center framing, head-to-waist crop",
+    "slightly tilted framing, head-to-waist crop, subtle camera shake",
 ]
 
 # ---------------------------------------------------------------------------
@@ -54,14 +65,21 @@ FRAMING = [
 # ---------------------------------------------------------------------------
 
 HAIR = [
+    "messy damp hair loosely tied, loose strands sticking to face and neck",
+    "wet slicked-back hair, dripping strands sticking to temples and cheeks",
+    "natural slightly messy air-dried hair, soft frizz and uneven strands framing the face",
+    "damp loose braid with strands falling out around the face, slightly messy texture",
+    "wet loose hair hanging straight, heavy strands clinging to face and collarbone",
     "damp half-up hairstyle with loose strands sticking flat to temples and neck",
     "wet side-parted hair clinging to one side of face and neck",
     "damp loose hair with strands falling across cheeks",
     "wet tousled hair sticking unevenly to neck and shoulders",
     "damp low bun with loose strands around face",
     "natural messy hair",
-    "damp messy twin buns with loose strands sticking to forehead and jawline",
-    "wet slick low bun with strands clinging to temples and neck",
+    "messy bedhead hair, strands sticking up randomly, flattened on one side from sleep",
+    "loose low ponytail with face-framing pieces escaped, slightly greasy roots",
+    "air-dried natural waves, frizzy ends, slightly uneven middle part, no product",
+    "messy bun falling apart, loose strands around face and neck, just rolled out of bed",
 ]
 
 # ---------------------------------------------------------------------------
@@ -189,22 +207,25 @@ OUTFIT_BOTTOMS_POOLS = {
 }
 
 # ---------------------------------------------------------------------------
-# POSES — torso/hip/general only, no arms/hands/lean
+# POSES — subtle torso/weight only, phone stays out of frame, no arm-in-frame
 # ---------------------------------------------------------------------------
 
 POSES = [
+    "subtle torso angle, candid and unposed",
+    "relaxed posture, torso angled slightly away",
     "natural fit-check posture, slight hip shift, relaxed stance",
-    "slight torso shift, comfortable relaxed posture",
-    "subtle weight shift, confident composed stance",
+    "slight weight shift, comfortable relaxed posture",
+    "subtle weight shift, confident relaxed stance",
     "slight body angle shift, natural hip position",
+    "relaxed stance, weight shifted to one side",
     "subtle hip tilt, comfortable mid-frame posture",
-    "relaxed stance, subtle shift in weight to one side",
-    "slight lean forward, weight balanced on one foot, natural candid pause mid-movement",
-    "subtle waist shift to one side, hip popped slightly higher, relaxed asymmetrical stance",
-    "soft angle turn of torso, shoulders naturally uneven, casual mid-frame posture",
-    "natural body weight rest with shoulders tilted slightly off-center, comfortable paused pose",
-    "slight shift in stance with one foot forward, head straight, relaxed fit position",
-    "subtle profile shift, body turned slightly sideways from the camera, natural frame direction",
+    "soft angle turn of torso, shoulders naturally uneven, casual",
+    "slight lean forward, weight on one foot, candid pause mid-movement",
+    "one hand resting lightly on the hip, soft shoulder tilt, natural",
+    "fingertips resting near collarbone, chin slightly lowered, quiet gaze",
+    "hand grazing through hair at the temple, slight head tilt, relaxed",
+    "natural body weight rest, shoulders tilted slightly off-center, comfortable pause",
+    "slight shift in stance with one foot forward, relaxed fit position",
 ]
 
 # ---------------------------------------------------------------------------
@@ -213,25 +234,34 @@ POSES = [
 
 LIGHTING_POOLS = {
     "warm": [
-        "dim subtle warm lamp indoor lighting, soft shadows",
-        "dim subtle warm lamp ambient light, soft natural shadows",
-        "dim warm low light, moody shadows with soft falloff",
-        "dim warm bathroom lighting, soft tile reflections",
-        "subtle dim warm lamp light, soft gentle shadows on face",
+        "subtle warm dim indoor lighting, soft shadows, deep blacks, moody atmosphere, slight yellow/orange warmth",
+        "dim warm lamp light, soft shadows, moody warm tones, imperfect exposure",
+        "dim warm indoor lighting, soft shadows, deep blacks, slight amber warmth, moody",
     ],
     "cool": [
-        "cool soft window light, pale blue white wash, delicate shadows across features",
-        "cool daylight bouncing off white walls, crisp clean natural tones, airy atmosphere",
-        "overcast cool ambient light, soft blue grey shadow split across one side of face",
-        "cool bathroom light, cold white tile bounce, sharp clean reflections on skin",
-        "cool evening light through window, muted blue undertones, quiet still mood",
+        "cool soft window light, pale blue-white wash, delicate shadows across features",
+        "cool daylight bouncing off white walls, crisp clean tones, airy atmosphere",
+        "overcast cool ambient light, soft blue-grey shadow across one side of face",
     ],
     "dimlit": [
         "very dim low light, deep shadows swallowing edges, barely lit, moody darkness",
         "single dim bulb overhead casting long shadows downward across features",
-        "pitch black room, curtain filtered sliver of light, dark film noir atmosphere",
-        "screen lit face, phone glow reflecting softly on skin, room nearly pitch black",
-        "deep shadow heavy mood, only ambient bounce lighting dark corners, intimate gloom",
+        "dim ambient light, deep shadows, intimate gloom, imperfect exposure",
+    ],
+    "flash": [
+        "harsh direct on-camera flash, blown highlights on forehead and nose, sharp falloff into darkness, authentic amateur night photo",
+        "direct phone flash straight on, overexposed forehead and cheekbones, hard shadow under chin, raw unedited night selfie",
+        "built-in phone flash, cool white blast, shiny nose highlight, dark background, authentic low-light phone photo",
+    ],
+    "screen": [
+        "illuminated only by phone screen glow, cool blue light on face, deep surrounding darkness, intimate night atmosphere",
+        "face lit by phone display, cyan-blue cast, dramatic soft shadows, pitch black room, raw amateur night shot",
+        "phone screen glow as the only light source, cool cast on face, high contrast, unposed night capture",
+    ],
+    "mixed": [
+        "mixed warm lamp and cool window light, conflicting color temperatures, skin tones split warm and cool, messy real-world lighting",
+        "warm bedside lamp plus cool phone screen glow, dual color cast, competing shadows, uneven lighting",
+        "dim neon or street glow mixing with indoor lamp, color contamination, urban night mood",
     ],
 }
 
@@ -240,9 +270,11 @@ LIGHTING_POOLS = {
 # ---------------------------------------------------------------------------
 
 QUALITY = [
-#    "imperfect composition, snapchat realism, deep dark tones, moody atmosphere, photorealistic skin texture, subtle grain, high detail, authentic lifestyle feel, shot on iPhone 15 Pro Max",
-#    "imperfect composition, authentic amateur snapchat-style quality, deep blacks, moody contrast, photorealistic skin texture, subtle film grain, high detail, non-AI aesthetic, shot on iPhone 15 Pro Max",
-    "imperfect composition, snapchat realism, photorealistic skin texture, subtle grain, high detail, instagram-style iphone photo quality, natural lighting falloff with soft shadows and warm tone balance, realistic dynamic range with muted highlights and deep blacks, authentic unfiltered look"
+    "imperfect composition, shaky handheld iPhone 15 Pro Max feel, natural skin texture, visible pores, slight under-eye darkness, authentic amateur snapchat-style photo, subtle film grain, non-AI aesthetic, photorealistic, hyperrealistic",
+    "shot on iPhone 15 Pro Max, amateur snapshot aesthetic, visible sensor noise, slight corner softness, unprocessed, natural skin pores, realistic imperfections, authentic everyday photo, no retouching",
+    "elevated ISO noise, grainy shadows, muted colors, slight edge softness, no editing, raw camera output, natural skin texture, non-AI aesthetic, photorealistic",
+    "slightly flat exposure, auto-HDR artifacts, uneven tone, casual crop, natural skin texture, visible pores, authentic unfiltered selfie, non-AI look",
+    "compressed social media look, slight oversharpening, mild banding in gradients, iPhone photo, natural skin, imperfect composition, authentic amateur quality",
 ]
 
 # ---------------------------------------------------------------------------
@@ -250,13 +282,13 @@ QUALITY = [
 # ---------------------------------------------------------------------------
 
 DEFAULT_NEGATIVE = (
-    "smiling, phone visible, mirror selfie, lamp object visible, "
-    "overly staged pose, studio lighting, perfect symmetry, unrealistic skin, CGI look, cleavage"
+    "phone visible, mirror selfie, lamp visible, smiling, overly posed, studio lighting, "
+    "symmetry, CGI skin, unrealistic texture, accessories, jewelry, necklaces, earrings, cleavage"
 )
 
 MIRROR_NEGATIVE = (
-    "smiling, lamp object visible, "
-    "overly staged pose, studio lighting, perfect symmetry, unrealistic skin, CGI look, cleavage"
+    "lamp visible, smiling, overly posed, studio lighting, symmetry, CGI skin, "
+    "unrealistic texture, accessories, jewelry, necklaces, earrings, cleavage"
 )
 
 # ---------------------------------------------------------------------------
@@ -270,19 +302,20 @@ IDENTITY_LOCK = "keep model identity, hair/lip color consistent/accurate/similar
 # ---------------------------------------------------------------------------
 
 def _build_prompt(camera_mode, scene, framing, hair, top, bottom, pose, lighting, quality, time_of_day=None, identity_lock=None):
-    camera_intro = "Front-facing handheld selfie"
-
     if camera_mode == "mirror":
-        phone_token = "mirror selfie"
         negative = MIRROR_NEGATIVE
+        parts = [
+            "Front-facing mirror selfie",
+            "vertical 9:16",
+            "black iPhone visible in hand",
+        ]
     else:
-        phone_token = "no phone visible"
         negative = DEFAULT_NEGATIVE
+        parts = [
+            "Front-facing handheld selfie, vertical 9:16, no phone visible",
+        ]
 
-    parts = [
-        camera_intro,
-        "vertical 9:16",
-        phone_token,
+    parts += [
         scene,
         framing,
         hair,
@@ -290,6 +323,7 @@ def _build_prompt(camera_mode, scene, framing, hair, top, bottom, pose, lighting
         bottom,
         "candid and unposed",
         pose,
+        "neutral expression, not smiling",
         lighting,
     ]
 
@@ -378,9 +412,15 @@ def build_jobs_multi(count=1, vibe=None, outfit_style=None, camera_style=None, l
         bottom = random.choice(bottom_pool)
         pose = random.choice(pose_pool)
         light = random.choice(light_pool)
-        quality = random.choice(quality_pool)
 
         camera_mode = "mirror" if camera_style == "mirror" else "handheld"
+
+        quality = random.choice(quality_pool)
+
+        # flash/screen lighting implies night — avoid "natural daylight" conflict
+        if lighting in ("flash", "screen") and time_of_day == "day":
+            time_of_day = "night"
+
         negative = mirror_negative if camera_mode == "mirror" else default_negative
         identity_lock = _resolve_pool("IDENTITY_LOCK", IDENTITY_LOCK, bank)
         prompt = _build_prompt(camera_mode, scene, framing, hair, top, bottom, pose, light, quality, time_of_day, identity_lock)
@@ -468,7 +508,7 @@ def list_presets():
         "vibes": ["indoor", "outdoor"],
         "camera_styles": ["handheld", "mirror"],
         "outfit_styles": ["sexy", "date_night", "night_club", "baggy", "lounge_sexy"],
-        "lighting": ["warm", "cool", "dimlit"],
+        "lighting": ["warm", "cool", "dimlit", "flash", "screen", "mixed"],
         "time_of_day": ["day", "night"],
     }
 

@@ -157,6 +157,48 @@ This keeps AGENTS.md in sync with reality without re-running `/init-deep`.
 
 ## Recent Changes
 
+### 2026-08-05 — Reactive prompt preview (non-locking Generate)
+
+**refactored** ✓ — `webui/static/app.js`: extracted `fetchPromptPreview(silent)` helper (fetch `/api/prompts/generate` + render `.prompt-item` list + show Confirm/Cancel/Edit). `startPromptGeneration()` no longer locks controls/button — shows `Generating prompts…`, renders preview, button → `Update Preview` (was `Review prompts → confirm`). Controls stay interactive after Generate.
+
+**reactive refresh** ✓ — new `schedulePreviewRefresh()` (300ms debounce) wired into `updateCost()` — fires on vibe/camera/lighting/outfit/time/count changes; re-renders preview with new selections, silent (no error UI). Skipped until first preview (`_pendingJobs` guard). `#bank-select` behavior unchanged (no refresh trigger). Double-click guard `_previewFetching`.
+
+**lock moved** ✓ — `confirmGeneration()` now calls `setControlsLocked(true)` + `btn.disabled/loading` at confirmation only. `cancelGeneration()` simplified (resets list + `_btnTxt('Generate')`, no `_resetBtn`).
+
+**animated button text** ✓ — `_startGenAnim()` cycles `Generating.` → `Generating..` → `Generating...` at 500ms; `_resetBtn()` + `_fail` + both terminal poll branches + start-fail branch `clearInterval(_genAnimTimer)` so OK/FAIL text isn't clobbered. Button states: `Generate` → `Update Preview` → animated → done `Generate`.
+
+**verified** ✓ — `node --check` clean; live server serves `/static/app.js` with `Update Preview` present. No restart needed (JS-only, served from disk).
+
+### 2026-08-06 — Output batch grouping fixed + prompt bank export/import
+
+**batch grouping bug fixed** ✓ — `webui/server.py` `_collect()` grouped output batches by directory **mtime** instead of directory **name**. After dirs `2026-07-27`…`2026-08-03` were bulk-touched (`mtime` 8/4 01:26), all collapsed into one mislabeled "August 04" batch (49 items, wrong dates). Fix: date_key parsed from `entry.name` (`%Y-%m-%d`), mtime fallback only for non-date-named dirs; batch label from date_key. Verified: 11 correct date batches (was 4 merged). `py_compile` clean.
+
+**prompt bank export/import** ✓ — `core/prompt_banks.py`: `export_banks()` → `{version, exported_at, active_bank, banks}`; `import_banks(data)` → merge (skip existing IDs + entries w/o valid name/pools), sanitize pools via `_sanitize_bank()`, set active_bank if present+valid, returns `{imported, skipped, active_bank_set}`. `webui/server.py`: `GET /api/settings/banks/export` (attachment `prompt_banks_YYYY-MM-DD.json`), `POST /api/settings/banks/import` (`{data: export}` body). `webui/static/index.html` Saved Banks header: Export button + Import label/file-input. `webui/static/app.js`: `exportBanks()` (blob download) + `importBanks()` (FileReader → POST → `renderBankList()` + toast counts). Verified: py_compile + node --check clean; unit test imported 1/skipped 2/active set; live round-trip import of own export → 0 imported, banks unchanged.
+
+### 2026-08-05 — Prompt bank v5: working-example handheld redesign (supersedes v4)
+
+**v4 rolled back** ✓ — `pipeline/prompt_bank.py` is now v5 (`# v5` docstring). Working-example formula (user-verified variations) proved phone/arm-in-frame tokens caused mirror-like composition. Removed `HANDHELD_SELFIE_CAMERA` pool + `QUALITY_POOLS` dict + all their logic (`handheld_token`/`quality_pools` refs). Handheld intro is now a fixed `"Front-facing handheld selfie, vertical 9:16, no phone visible"` (phone held out of frame). Added constant `"neutral expression, not smiling"` to positive. Mirror mode stays distinct (`Front-facing mirror selfie` + `black iPhone visible in hand` + `black iPhone` footer line; `MIRROR_NEGATIVE` has no "mirror selfie"/"phone visible").
+
+**pools rewritten** ✓ — FRAMING 6 example variants (slightly tilted/low/off-center uneven framing, motion blur, head-to-waist crop); POSES 15 subtle torso/weight-only (no phone-in-hand, no arm-in-frame); INDOOR_SCENES 10 example-style ("standing casually in a dim bedroom near an open closet", clutter kept); MIRROR_SCENES 4 (mirror + tiled/wardrobe context, phone covering face); OUTDOOR_SCENES 10 (dropped "facing camera" suffix, clutter kept); HAIR 15 (added wet slicked-back/damp braid/air-dried frizz example variants); LIGHTING_POOLS simplified (concise "dim warm indoor lighting, soft shadows, deep blacks, moody, imperfect exposure" style per key, no quality-scene duplication); QUALITY 5 tightened (iPhone 15 Pro Max, visible pores, film grain, amateur snapchat, non-AI, photorealistic); DEFAULT_NEGATIVE concise 176 chars: `phone visible, mirror selfie, lamp visible, smiling, overly posed, studio lighting, symmetry, CGI skin, unrealistic texture, accessories, jewelry, necklaces, earrings, cleavage`.
+
+**sync** ✓ — `core/prompt_banks.py` OVERRIDABLE_POOLS 15→13 (dropped HANDHELD_SELFIE_CAMERA, QUALITY_POOLS); `pipeline/prompt_bank.py` OVERRIDABLE_POOLS + `get_builtin_pools()` match (13, verified equal sets). `webui/static/app.js` `_POOL_LABELS` −2, `_isDictPool()` no longer includes QUALITY_POOLS. Saved bank `d0942bb05db6` (OUTFIT_TOPS/BOTTOMS/LIGHTING overrides) still valid — no migration. Server restarted to load v5.
+
+**verified** ✓ — py_compile (prompt_bank, prompt_banks) + node --check clean; CLI gen handheld shows no-phone-visible + not-smiling + concise negative; mirror isolated (black iPhone, no "no phone visible"); live `/api/prompts/generate`: 3/3 jobs no phone-in-frame tokens, not-smiling present, negative contains "phone visible"; bank_id generation composes overrides.
+
+### 2026-08-05 — Prompt bank v4 pools: nano-banana-2 realism overhaul ⚠️ SUPERSEDED by v5 (see above; v4 tokens caused mirror-like output)
+
+**pools expanded** ✓ — `pipeline/prompt_bank.py`: QUALITY 1→6 variants (iPhone snapshot/ISO-noise/compression realism); new `QUALITY_POOLS` dict (flash/screen lighting-keyed — specific variant per lighting, else random from QUALITY); new `HANDHELD_SELFIE_CAMERA` (6 authentic phone-in-hand tokens: arm angle, thumb/pinky grip, shake); POSES 12→20 (subtle hand-on-neck/hip/cheek, hair-graze, phone-at-chest — safe for one-hand grip); NEGATIVE added anti-AI terms (waxy/airbrushed/beauty filter/facetune/poreless/centered/professional/staged/3d render/cg) + removed "phone visible" from DEFAULT (handheld now shows phone); LIGHTING_POOLS +flash/screen/mixed (9 new); HAIR +5 bedhead; INDOOR_SCENES +6 cluttered/lived-in; OUTDOOR_SCENES +5 urban clutter. `_build_prompt()` takes `handheld_token` (mirror mode stays distinct: mirror intro + black iPhone line, no handheld token). `build_jobs_multi()` picks handheld token per job + quality-by-lighting. `list_presets()` lighting now 6 options.
+
+**settings sync** ✓ — `core/prompt_banks.py` OVERRIDABLE_POOLS tuple +2 (`HANDHELD_SELFIE_CAMERA`, `QUALITY_POOLS`); sanitizer drops unknown pool keys. `pipeline/prompt_bank.py` OVERRIDABLE_POOLS + `get_builtin_pools()` mirror both new pools.
+
+**UI** ✓ — `webui/static/index.html` lighting pills +Flash/Screen/Mixed (user-selectable). `webui/static/app.js` `_POOL_LABELS` +2, `_isDictPool()` includes QUALITY_POOLS.
+
+**verified** ✓ — py_compile all 5 files + node --check clean; live server: presets return 6 lighting, generate(flash)→flash quality + handheld token in prompt, generate(screen)→screen quality, mirror isolated (no handheld token, black iPhone line), `/api/settings/banks/pools/defaults` = 15 pools, `_sanitize_bank` accepts new keys / drops bogus. Note: bank `e99f325aeb11` ("wdasder") still carries old single-entry QUALITY list override → falls back to list (works, no new variants).
+
+### 2026-08-05 — settings.json data re-entered after merge loss
+
+**restored from git history** ✓ — After merge/pull wiped `core/settings.json`, recovered full data from pre-deindex commit `78a3c20` (via `git show 78a3c20:core/settings.json`): 5 WaveSpeed accounts (smileypvp4, eduardtojong8, alinaskyfp, captlessgaming [active], motivationalaltruist), 2 prompt banks (`d0942bb05db6` "test" = active, `e99f325aeb11` "wdasder") with all pools intact, `active_bank`. Preserved current avatar_url (newer ibb.co upload) over old. Re-merged with python keeping current identity. Verified live: `/api/settings/wavespeed/accounts` returns 5 masked keys, `/api/settings/banks` returns both banks, `/api/balance/total` = $1.82 live.
+
 ### 2026-08-05 — Real WaveSpeed API progress tracking
 
 **real API progress on Generate button** ✓ — `api/wavespeed_client.py`: `poll()` now reports `status_callback(status, elapsed, data)` on every tick incl. terminal (real status, server-measured elapsed, `timings.inference`, verbatim `error`); `batch_generate` wraps `status_callback`/`on_event` job-bound (`(job, ...)`); `_generate_one` emits `submitting`/`enhancing`/`saved` milestones. `pipeline/pipeline.py`: thread-safe per-image state; emits `@P image|<file>|<status>|<elapsed>s|<detail>` (5s throttle on identical non-terminal status); flagged error verbatim (double-prefix dedup). `webui/server.py`: parses `@P image|` → `state["images"]` dict; adds server-measured run `elapsed` (from `started_at`); `/api/progress` returns `images` + `elapsed`. `index.html`: `#gen-status-strip` under Generate button. `app.js`: `_renderGenStatus()` per-image strip (filename · Queued/Processing/Done/Error badge · server elapsed · detail); button shows server `p.elapsed` not local timer; flagged warning includes verbatim API error (pulled from failed image detail). `style.css`: `.gen-status-strip`/`.gs-row`/`.gs-badge` theme-var styles (processing = pulsing amber, done = accent, error = red, detail wraps for errors). Phase 2 video = deferred/hidden (not planned); video code stays orphaned.

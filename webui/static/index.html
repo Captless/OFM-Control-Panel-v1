@@ -172,6 +172,10 @@
           <div class="settings-card banks-card">
             <div class="banks-list-header">
               <h5>Saved Banks</h5>
+              <button type="button" class="btn btn-sm" onclick="exportBanks()" title="Download all banks as JSON">Export</button>
+              <label class="btn btn-sm" style="cursor:pointer">Import
+                <input type="file" accept=".json,application/json" style="display:none" onchange="importBanks(this.files[0]); this.value=''">
+              </label>
               <button type="button" class="btn btn-sm" onclick="event.stopPropagation(); openNewBankModalFromDefault()">Create New Bank</button>
             </div>
             <div id="settings-bank-list" class="banks-list"></div>
@@ -283,6 +287,9 @@
             <label class="pill"><input type="radio" name="lighting" value="warm" checked onchange="updateCost()"> Warm</label>
             <label class="pill"><input type="radio" name="lighting" value="cool" onchange="updateCost()"> Cool</label>
             <label class="pill"><input type="radio" name="lighting" value="dimlit" onchange="updateCost()"> Dimlit</label>
+            <label class="pill"><input type="radio" name="lighting" value="flash" onchange="updateCost()"> Flash</label>
+            <label class="pill"><input type="radio" name="lighting" value="screen" onchange="updateCost()"> Screen</label>
+            <label class="pill"><input type="radio" name="lighting" value="mixed" onchange="updateCost()"> Mixed</label>
           </div>
         </div>
 

@@ -905,6 +905,7 @@ function updateCost() {
     var el = document.getElementById('cost-tracker');
     if (!el) return;
     el.textContent = '$' + total + ' · $' + _balance.toFixed(2);
+    schedulePreviewRefresh();
 }
 
 function _btnTxt(t) { var e = document.querySelector('#btn-photo .btn-text'); if (e) e.textContent = t; }
@@ -924,12 +925,23 @@ function _renderGenStatus(images) {
         var im = images[k];
         var cls = 'gs-' + (im.status || 'processing');
         var label = _statusBadge[im.status] || im.status;
-        var detail = im.detail ? ' <span class="gs-detail">' + esc(im.detail) + '</span>' : '';
-        html += '<div class="gs-row ' + cls + '"><span class="gs-file">' + esc(im.filename) + '</span><span class="gs-badge">' + esc(label) + '</span><span class="gs-elapsed">' + im.elapsed + 's</span>' + detail + '</div>';
+        var showDetail = im.status === 'failed' || im.status === 'cancelled' || im.status === 'timeout';
+        var detail = (showDetail && im.detail) ? ' <span class="gs-detail">' + esc(im.detail) + '</span>' : '';
+        html += '<div class="gs-row ' + cls + '"><span class="gs-badge">' + esc(label) + '</span><span class="gs-elapsed">' + im.elapsed + 's</span>' + detail + '</div>';
     });
     strip.innerHTML = html;
 }
-function _resetBtn() { var btn = document.getElementById('btn-photo'); if (btn) { btn.classList.remove('loading'); btn.disabled = false; } _btnTxt('Generate'); setControlsLocked(false); var strip = document.getElementById('gen-status-strip'); if (strip) { strip.style.display = 'none'; strip.innerHTML = ''; } }
+function _startGenAnim() {
+    var dots = 1;
+    clearInterval(_genAnimTimer);
+    _genAnimTimer = setInterval(function() {
+        dots = (dots % 3) + 1;
+        _btnTxt('Generating' + new Array(dots + 1).join('.'));
+    }, 500);
+    _btnTxt('Generating.');
+}
+
+function _resetBtn() { var btn = document.getElementById('btn-photo'); if (btn) { btn.classList.remove('loading'); btn.disabled = false; } _btnTxt('Generate'); setControlsLocked(false); clearInterval(_genAnimTimer); var strip = document.getElementById('gen-status-strip'); if (strip) { strip.style.display = 'none'; strip.innerHTML = ''; } }
 
 function setControlsLocked(locked) {
     var card = document.querySelector('.gen-layout .card');
@@ -984,24 +996,25 @@ function showSuccess(message, duration) { showToast(message, 'success', duration
 function showInfo(message, duration) { showToast(message, 'info', duration || 4000); }
 function showWarning(message, duration) { showToast(message, 'warning', duration || 5000); }
 
-async function startPromptGeneration() {
-    var btn = document.getElementById('btn-photo');
+var _previewDebounce = null;
+var _genAnimTimer = null;
+var _previewFetching = false;
+
+async function fetchPromptPreview(silent) {
     var vibe = getSelectedVibe();
     var camera_style = getSelectedCamera();
     var lighting = getSelectedLighting();
     var time_of_day = getSelectedTime();
     var outfit_style = getSelectedOutfitStyle();
     var count = parseInt(document.getElementById('photo-count').value) || 6;
-    setControlsLocked(true);
-    btn.disabled = true;
-    btn.classList.add('loading'); _btnTxt('Generating prompts\u2026');
     var r = await api('/api/prompts/generate', {vibe: vibe, camera_style: camera_style, lighting: lighting, time_of_day: time_of_day, outfit_style: outfit_style, count: count, bank_id: getSelectedBankId()});
     if (!r.ok) {
-        _btnTxt('FAIL: ' + (r.error || 'error'));
-        showError('Prompt build failed: ' + (r.error || 'error'));
-        fetchBalance();
-        setTimeout(_resetBtn, 3000);
-        return;
+        if (!silent) {
+            _btnTxt('FAIL: ' + (r.error || 'error'));
+            showError('Prompt build failed: ' + (r.error || 'error'));
+            setTimeout(_resetBtn, 3000);
+        }
+        return null;
     }
     _pendingJobs = r.jobs;
     var list = document.getElementById('prompt-list');
@@ -1019,8 +1032,23 @@ async function startPromptGeneration() {
     document.getElementById('confirm-gen-btn').disabled = false;
     document.getElementById('cancel-gen-btn').style.display = 'inline-block';
     document.getElementById('edit-prompts-btn').style.display = 'inline-block';
-    _btnTxt('Review prompts \u2192 confirm');
+    _btnTxt('Update Preview');
     syncPanelHeights();
+    return r.jobs;
+}
+
+async function startPromptGeneration() {
+    if (_previewFetching) return;
+    _previewFetching = true;
+    _btnTxt('Generating prompts\u2026');
+    await fetchPromptPreview(false);
+    _previewFetching = false;
+}
+
+function schedulePreviewRefresh() {
+    if (!_pendingJobs) return;
+    clearTimeout(_previewDebounce);
+    _previewDebounce = setTimeout(function() { fetchPromptPreview(true); }, 300);
 }
 
 function _resetPromptList() {
@@ -1054,11 +1082,13 @@ async function confirmGeneration() {
     }
     if (!jobs.length) return;
     _resetPromptList();
+    setControlsLocked(true);
     btn.disabled = true;
-    btn.classList.add('loading'); _btnTxt('Generating ' + jobs.length + '\u2026');
+    btn.classList.add('loading'); _startGenAnim();
     var r2 = await api('/api/run/photo', {prompts: jobs});
     if (!r2.ok) {
         _btnTxt('FAIL: ' + (r2.output || 'error'));
+        clearInterval(_genAnimTimer);
         showError('Failed to start generation: ' + (r2.output || 'error'));
         fetchBalance();
         setTimeout(_resetBtn, 3000);
@@ -1073,6 +1103,7 @@ async function confirmGeneration() {
     var _deadline = Date.now() + 45 * 60 * 1000;
 var _fail = function(msg) {
         btn.classList.remove('loading');
+        clearInterval(_genAnimTimer);
         _btnTxt(msg);
         fetchBalance();
         setTimeout(_resetBtn, 3000);
@@ -1114,6 +1145,7 @@ var _fail = function(msg) {
                 btn.classList.remove('loading');
                 showError('Generation failed: ' + (p.detail || 'error'));
             }
+            clearInterval(_genAnimTimer);
             fetchBalance();
             setTimeout(_resetBtn, 3000);
             _pendingJobs = null;
@@ -1195,7 +1227,7 @@ function toggleEditPrompts() {
 function cancelGeneration() {
     _resetPromptList();
     _pendingJobs = null;
-    _resetBtn();
+    _btnTxt('Generate');
 }
 
 // ── Outputs table ──
@@ -2267,3 +2299,43 @@ if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(syncPanelHeights);
 }
 syncPanelHeights();
+
+// ── Prompt Bank Export / Import ──
+
+function exportBanks() {
+    api('/api/settings/banks/export').then(function(data) {
+        var blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'prompt_banks_' + new Date().toISOString().slice(0, 10) + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Exported ' + Object.keys(data.banks || {}).length + ' banks', 'success');
+    }).catch(function(e) { showToast('Export failed: ' + e.message, 'error'); });
+}
+
+function importBanks(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var parsed;
+        try { parsed = JSON.parse(e.target.result); }
+        catch (err) { showToast('Import failed: invalid JSON', 'error'); return; }
+        if (!parsed || typeof parsed !== 'object') { showToast('Import failed: invalid format', 'error'); return; }
+        api('/api/settings/banks/import', {data: parsed}).then(function(data) {
+            if (data && data.ok) {
+                var msg = 'Imported ' + data.imported + ' bank' + (data.imported !== 1 ? 's' : '');
+                if (data.skipped) msg += ', skipped ' + data.skipped;
+                showToast(msg, 'success');
+                renderBankList();
+            } else {
+                showToast('Import failed: ' + ((data && (data.error || data.output)) || 'unknown'), 'error');
+            }
+        }).catch(function(e) { showToast('Import failed: ' + e.message, 'error'); });
+    };
+    reader.onerror = function() { showToast('Import failed: could not read file', 'error'); };
+    reader.readAsText(file);
+}
