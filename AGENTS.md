@@ -169,6 +169,12 @@ This keeps AGENTS.md in sync with reality without re-running `/init-deep`.
 
 **verified** ✓ — `node --check` clean; live server serves `/static/app.js` with `Update Preview` present. No restart needed (JS-only, served from disk).
 
+### 2026-08-06 — Output batch grouping fixed + prompt bank export/import
+
+**batch grouping bug fixed** ✓ — `webui/server.py` `_collect()` grouped output batches by directory **mtime** instead of directory **name**. After dirs `2026-07-27`…`2026-08-03` were bulk-touched (`mtime` 8/4 01:26), all collapsed into one mislabeled "August 04" batch (49 items, wrong dates). Fix: date_key parsed from `entry.name` (`%Y-%m-%d`), mtime fallback only for non-date-named dirs; batch label from date_key. Verified: 11 correct date batches (was 4 merged). `py_compile` clean.
+
+**prompt bank export/import** ✓ — `core/prompt_banks.py`: `export_banks()` → `{version, exported_at, active_bank, banks}`; `import_banks(data)` → merge (skip existing IDs + entries w/o valid name/pools), sanitize pools via `_sanitize_bank()`, set active_bank if present+valid, returns `{imported, skipped, active_bank_set}`. `webui/server.py`: `GET /api/settings/banks/export` (attachment `prompt_banks_YYYY-MM-DD.json`), `POST /api/settings/banks/import` (`{data: export}` body). `webui/static/index.html` Saved Banks header: Export button + Import label/file-input. `webui/static/app.js`: `exportBanks()` (blob download) + `importBanks()` (FileReader → POST → `renderBankList()` + toast counts). Verified: py_compile + node --check clean; unit test imported 1/skipped 2/active set; live round-trip import of own export → 0 imported, banks unchanged.
+
 ### 2026-08-05 — Prompt bank v5: working-example handheld redesign (supersedes v4)
 
 **v4 rolled back** ✓ — `pipeline/prompt_bank.py` is now v5 (`# v5` docstring). Working-example formula (user-verified variations) proved phone/arm-in-frame tokens caused mirror-like composition. Removed `HANDHELD_SELFIE_CAMERA` pool + `QUALITY_POOLS` dict + all their logic (`handheld_token`/`quality_pools` refs). Handheld intro is now a fixed `"Front-facing handheld selfie, vertical 9:16, no phone visible"` (phone held out of frame). Added constant `"neutral expression, not smiling"` to positive. Mirror mode stays distinct (`Front-facing mirror selfie` + `black iPhone visible in hand` + `black iPhone` footer line; `MIRROR_NEGATIVE` has no "mirror selfie"/"phone visible").

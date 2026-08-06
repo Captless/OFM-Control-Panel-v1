@@ -2299,3 +2299,43 @@ if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(syncPanelHeights);
 }
 syncPanelHeights();
+
+// ── Prompt Bank Export / Import ──
+
+function exportBanks() {
+    api('/api/settings/banks/export').then(function(data) {
+        var blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'prompt_banks_' + new Date().toISOString().slice(0, 10) + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Exported ' + Object.keys(data.banks || {}).length + ' banks', 'success');
+    }).catch(function(e) { showToast('Export failed: ' + e.message, 'error'); });
+}
+
+function importBanks(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var parsed;
+        try { parsed = JSON.parse(e.target.result); }
+        catch (err) { showToast('Import failed: invalid JSON', 'error'); return; }
+        if (!parsed || typeof parsed !== 'object') { showToast('Import failed: invalid format', 'error'); return; }
+        api('/api/settings/banks/import', {data: parsed}).then(function(data) {
+            if (data && data.ok) {
+                var msg = 'Imported ' + data.imported + ' bank' + (data.imported !== 1 ? 's' : '');
+                if (data.skipped) msg += ', skipped ' + data.skipped;
+                showToast(msg, 'success');
+                renderBankList();
+            } else {
+                showToast('Import failed: ' + ((data && (data.error || data.output)) || 'unknown'), 'error');
+            }
+        }).catch(function(e) { showToast('Import failed: ' + e.message, 'error'); });
+    };
+    reader.onerror = function() { showToast('Import failed: could not read file', 'error'); };
+    reader.readAsText(file);
+}

@@ -31,7 +31,7 @@ PORT = 8000
 
 sys.path.insert(0, str(BASE))
 from core.config import PHOTO_PRICE, SETTINGS_PATH, list_wavespeed_accounts, set_wavespeed_account, remove_wavespeed_account, rename_wavespeed_account, get_active_wavespeed_key, set_active_wavespeed_account, test_wavespeed_account, get_identity, set_identity
-from core.prompt_banks import list_banks, get_bank, create_bank, update_bank, delete_bank, clone_bank, get_active_bank_id, set_active_bank_id
+from core.prompt_banks import list_banks, get_bank, create_bank, update_bank, delete_bank, clone_bank, get_active_bank_id, set_active_bank_id, export_banks, import_banks, export_banks, import_banks
 
 sys.path.insert(0, str(PIPELINE_DIR))
 from prompt_bank import list_presets, build_jobs, build_jobs_multi, get_builtin_pools
@@ -196,19 +196,22 @@ from collections import defaultdict
 def _collect():
     if not OUTPUTS.is_dir():
         return []
-    entries = sorted(OUTPUTS.iterdir())
-    entries = [e for e in entries if e.is_dir() and (list(e.rglob("*.mp4")) or list(e.rglob("*.png")) or list(e.rglob("*.jpg")))]
+    entries = [e for e in OUTPUTS.iterdir() if e.is_dir() and (list(e.rglob("*.mp4")) or list(e.rglob("*.png")) or list(e.rglob("*.jpg")))]
     date_groups = defaultdict(list)
-    for entry in sorted(entries, key=lambda e: e.stat().st_mtime, reverse=True):
-        dt = datetime.fromtimestamp(entry.stat().st_mtime)
-        date_key = dt.strftime("%Y-%m-%d")
+    for entry in entries:
+        try:
+            dt = datetime.strptime(entry.name, "%Y-%m-%d")
+            date_key = dt.strftime("%Y-%m-%d")
+        except ValueError:
+            dt = datetime.fromtimestamp(entry.stat().st_mtime)
+            date_key = dt.strftime("%Y-%m-%d")
         date_groups[date_key].append({"entry": entry, "mtime": entry.stat().st_mtime, "dt": dt})
 
     sorted_dates = sorted(date_groups.keys(), reverse=True)
     batches = []
     for date_key in sorted_dates:
         group = date_groups[date_key]
-        date_label = group[0]["dt"].strftime("%B %d, %Y")
+        date_label = datetime.strptime(date_key, "%Y-%m-%d").strftime("%B %d, %Y")
         all_items = []
         stem_counts = {}
         for g in sorted(group, key=lambda x: x["mtime"], reverse=True):
@@ -518,6 +521,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
             banks.setdefault("builtin", {"id": "builtin", "name": "Built-in", "description": "", "pools": {}})
             self._json({"ok": True, "banks": banks})
 
+        elif path == "/api/settings/banks/export":
+            payload = json.dumps(export_banks(), indent=2).encode("utf-8")
+            filename = f"prompt_banks_{datetime.now().strftime('%Y-%m-%d')}.json"
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+            self.send_header("Content-Length", str(len(payload)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+
         elif path == "/api/settings/banks/view":
             bank_id = parse_qs(parsed.query).get("id", [None])[0]
             if not bank_id:
@@ -534,6 +549,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         elif path == "/api/settings/banks/pools/defaults":
             self._json({"ok": True, "pools": get_builtin_pools()})
+
+        elif path == "/api/settings/banks/export":
+            data = json.dumps(export_banks(), indent=2).encode("utf-8")
+            filename = f"prompt_banks_{datetime.now().strftime('%Y-%m-%d')}.json"
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(data)
 
         elif path == "/api/settings/banks/active/pools":
             pools = dict(get_builtin_pools())
@@ -616,6 +642,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 set_identity(avatar_url=avatar_url)
                 _log_activity("Identity avatar URL updated")
                 self._json({"ok": True, "identity": get_identity()})
+
+        elif parsed.path == "/api/settings/banks/import":
+            data = body.get("data")
+            if data is None:
+                data = body
+            try:
+                result = import_banks(data)
+            except Exception as e:
+                self._json({"ok": False, "error": str(e)}, 500)
+            else:
+                self._json(result)
 
         elif parsed.path == "/api/run/photo":
             prompts_data = body.get("prompts", "prompts_alina_b1.json")
@@ -825,6 +862,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     self._json(result)
                 else:
                     self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
+
+        elif parsed.path == "/api/settings/banks/import":
+            data = body.get("data", body)
+            try:
+                result = import_banks(data)
+                if result.get("ok"):
+                    _log_activity(f"Prompt banks imported: {result['imported']} new, {result['skipped']} skipped")
+                    self._json(result)
+                else:
+                    self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
+            except Exception as e:
+                self._json({"ok": False, "error": str(e)}, 500)
 
         else:
             self._json({"error": "not found"}, 404)
