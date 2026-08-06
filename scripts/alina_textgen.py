@@ -418,3 +418,35 @@ def batch_generate(count, platforms=None, hook_types=None, seed=None):
         seen.add(cap["text"])
         results.append(cap)
     return results
+
+
+# ---------------------------------------------------------------------------
+# CLI.
+# ---------------------------------------------------------------------------
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Generate Alina Sky identity-locked on-screen captions."
+    )
+    parser.add_argument("n", type=int, nargs="?", default=10,
+                        help="Number of captions (default 10)")
+    parser.add_argument("platform", nargs="?", choices=list(PLATFORM_CONFIG),
+                        default="tiktok",
+                        help="Target platform (default tiktok)")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="Random seed for reproducible output")
+    args = parser.parse_args()
+
+    for i, cap in enumerate(batch_generate(args.n, platforms=[args.platform],
+                                           seed=args.seed), 1):
+        print(f"--- {i} [{cap['platform']}] [{cap['hook_type']}] ---")
+        print(cap["text"])
+        print(cap["cta"])
+        if cap["hashtags"]:
+            print(" ".join(cap["hashtags"]))
+
+
+if __name__ == "__main__":
+    main()
