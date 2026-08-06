@@ -344,3 +344,77 @@ PLATFORM_CONFIG = {
         "hashtags": [],
     },
 }
+
+
+# ---------------------------------------------------------------------------
+# Caption generation.
+# ---------------------------------------------------------------------------
+
+_HOOK_KEYS = list(OPENERS.keys())
+
+
+def generate_caption(hook_type=None, platform="tiktok", seed=None):
+    """Generate one caption dict.
+
+    hook_type: one of the 5 keys; None or unknown -> random hook.
+    platform: key in PLATFORM_CONFIG; unknown -> falls back to "tiktok".
+    seed: when given, random.seed(seed) is called before selection for full
+          reproducibility.
+    Returns: {"text", "platform", "hook_type", "cta", "hashtags"}
+    """
+    if seed is not None:
+        random.seed(seed)
+
+    if hook_type not in OPENERS:
+        hook_type = random.choice(_HOOK_KEYS)
+
+    if platform not in PLATFORM_CONFIG:
+        platform = "tiktok"
+    config = PLATFORM_CONFIG[platform]
+
+    opener = random.choice(OPENERS[hook_type])
+    num_middles = random.randint(0, 2)
+    middles = random.sample(MIDDLES[hook_type], num_middles)
+    closer = random.choice(CLOSERS[hook_type])
+
+    text = ". ".join([opener] + middles + [closer]) + "."
+
+    return {
+        "text": text,
+        "platform": platform,
+        "hook_type": hook_type,
+        "cta": random.choice(config["cta_pool"]),
+        "hashtags": list(config["hashtags"]),
+    }
+
+
+def batch_generate(count, platforms=None, hook_types=None, seed=None):
+    """Generate `count` unique captions.
+
+    platforms: list of platform keys; None -> all 5; single string -> [string].
+    hook_types: list of hook keys to pick from; None -> all 5.
+    seed: when given, random.seed(seed) before generation (reproducible).
+    Dedups by text — collisions regenerate, guarded by a 200-attempt cap.
+    Returns: list of caption dicts (len == count unless cap exhausted).
+    """
+    if platforms is None:
+        platforms = list(PLATFORM_CONFIG.keys())
+    elif isinstance(platforms, str):
+        platforms = [platforms]
+
+    if seed is not None:
+        random.seed(seed)
+
+    seen = set()
+    results = []
+    attempts = 0
+    while len(results) < count and attempts < 200:
+        attempts += 1
+        platform = random.choice(platforms)
+        hook = random.choice(hook_types) if hook_types else None
+        cap = generate_caption(hook_type=hook, platform=platform)
+        if cap["text"] in seen:
+            continue
+        seen.add(cap["text"])
+        results.append(cap)
+    return results
