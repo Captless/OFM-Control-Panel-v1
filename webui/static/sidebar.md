@@ -1,12 +1,14 @@
 # Sidebar Navigation Implementation Plan
 
 ## Overview
-Replace current flat layout with collapsible sidebar navigation featuring three sections:
-- **Image Generation** (Generate Images, Prompt Bank)
+Replace current flat layout with collapsible sidebar navigation featuring four sections:
+- **Image Generation** (Generate Images, Prompt Preview)
 - **Caption Generation** (Generate Captions)
 - **Outputs** (View Outputs)
+- **Settings** (bottom) — Identity Card + Prompt Bank Card (extracted from Settings modal)
 
 Sidebar collapses to a floating toggle button (floater) outside the sidebar. State persists in localStorage.
+Settings modal removed from toolbar; Settings now lives in sidebar bottom section.
 
 ---
 
@@ -55,6 +57,16 @@ Sidebar collapses to a floating toggle button (floater) outside the sidebar. Sta
         </button></li>
       </ul>
     </section>
+    <!-- Settings at bottom -->
+    <section class="nav-section nav-section-bottom">
+      <h4 class="nav-section-title">Settings</h4>
+      <ul class="nav-items">
+        <li><button class="nav-item" data-section="settings" onclick="showSection('settings')">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">Settings</span>
+        </button></li>
+      </ul>
+    </section>
   </nav>
 </aside>
 
@@ -79,26 +91,36 @@ Sidebar collapses to a floating toggle button (floater) outside the sidebar. Sta
       <span class="floater-icon">📁</span>
       <span class="floater-label">View Outputs</span>
     </button>
+    <button class="floater-item" data-section="settings" onclick="showSection('settings')">
+      <span class="floater-icon">⚙️</span>
+      <span class="floater-label">Settings</span>
+    </button>
   </div>
 </div>
 
 <div class="sidebar-overlay" id="sidebar-overlay" hidden></div>
 ```
 
+**Remove from toolbar (right side):**
+- Settings nav trigger (gear icon) — **REMOVED**
+
 **Wrap main content in sections:**
 ```html
 <main class="main" id="main-content">
   <section id="section-generation" class="content-section active">
-    <!-- existing gen-layout + caption-gen-card -->
+    <!-- existing gen-layout + caption-gen-card (Caption Generator REMOVED from here) -->
   </section>
   <section id="section-prompts" class="content-section" hidden>
     <!-- Prompt Bank editor UI (new dedicated UI, moved from Settings modal) -->
   </section>
   <section id="section-captions" class="content-section" hidden>
-    <!-- existing caption-gen-card -->
+    <!-- existing caption-gen-card (moved here from generation section) -->
   </section>
   <section id="section-outputs" class="content-section" hidden>
     <!-- existing outputs area -->
+  </section>
+  <section id="section-settings" class="content-section" hidden>
+    <!-- Identity Card + Prompt Bank Card (extracted from Settings modal) -->
   </section>
 </main>
 ```
@@ -163,8 +185,9 @@ Sidebar collapses to a floating toggle button (floater) outside the sidebar. Sta
 .sidebar-toggle:hover { background: var(--btn-hover); color: var(--accent); }
 .sidebar.collapsed .sidebar-toggle .chevron { transform: rotate(180deg); }
 
-.sidebar-nav { flex: 1; overflow-y: auto; padding: 8px 0; }
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 8px 0; display: flex; flex-direction: column; }
 .nav-section { padding: 0 12px 16px; }
+.nav-section.nav-section-bottom { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); }
 .nav-section-title {
   font-size: 10px;
   font-family: var(--font-mono);
@@ -264,6 +287,10 @@ Sidebar collapses to a floating toggle button (floater) outside the sidebar. Sta
 
 ### 3. `app.js` — Logic
 
+**Remove from toolbar right side (HTML already handles):**
+- `settings-nav-trigger` element and its click handler `toggleSettingsModal()`
+- Keep: theme modal, API modal, balance, live indicator
+
 **Add state variables (near top):**
 ```javascript
 var _sidebarCollapsed = false;
@@ -351,8 +378,27 @@ function showSection(sectionId) {
   }
   if (sectionId === 'outputs') refreshOutputs();
   else if (sectionId === 'generation') fetchBalance();
-  else if (sectionId === 'prompts') loadPromptBankUI(); // new function for Prompt Bank UI
+  else if (sectionId === 'prompts') loadPromptBankUI();
+  else if (sectionId === 'settings') loadSettingsUI(); // Identity + Prompt Bank cards
   syncPanelHeights();
+}
+```
+
+**Add `loadPromptBankUI()` and `loadSettingsUI()` (new functions):**
+```javascript
+// ── Dedicated Prompt Bank UI (extracted from Settings modal) ──
+function loadPromptBankUI() {
+  // This mirrors the pool editor from Settings modal but as a dedicated section
+  // Uses existing: _poolDefaults, _poolActive, _activeBankId, _savedBanks, _POOL_LABELS, _isDictPool, _isStrPool, _poolToText, etc.
+  loadBankEditor(); // Reuses existing function that loads pool editor + bank list
+}
+
+// ── Dedicated Settings UI (Identity + Prompt Bank cards) ──
+function loadSettingsUI() {
+  // Loads identity section + prompt bank section into #section-settings
+  // Uses existing: loadSettings() which already loads identity + bank editor
+  // But renders into different container (not modal)
+  loadSettings();
 }
 ```
 
@@ -405,11 +451,13 @@ document.addEventListener('DOMContentLoaded', function() {
 ## Todo List
 
 - [ ] **HTML**: Add sidebar + floater markup to `index.html`
-- [ ] **HTML**: Wrap main content in 4 `<section id="section-*">` blocks
+- [ ] **HTML**: Remove settings nav trigger from toolbar
+- [ ] **HTML**: Wrap main content in 5 `<section id="section-*">` blocks (generation, prompts, captions, outputs, settings)
 - [ ] **HTML**: Move Caption Generator card into `#section-captions`
 - [ ] **HTML**: Move Outputs area into `#section-outputs`
 - [ ] **HTML**: Move Image Generation card + Prompt Preview into `#section-generation`
-- [ ] **HTML**: Create new Prompt Bank UI in `#section-prompts` (extract from Settings modal)
+- [ ] **HTML**: Create `#section-prompts` (Prompt Bank UI — extracted from Settings modal pool editor)
+- [ ] **HTML**: Create `#section-settings` (Identity Card + Prompt Bank Card — extracted from Settings modal)
 - [ ] **CSS**: Append sidebar/floater/overlay/styles to `style.css`
 - [ ] **JS**: Add state vars (`_sidebarCollapsed`, `_activeSection`)
 - [ ] **JS**: Add persistence functions (`loadSidebarState`, `saveSidebarState`)
@@ -417,6 +465,8 @@ document.addEventListener('DOMContentLoaded', function() {
 - [ ] **JS**: Add `showSection(sectionId)` with active state management
 - [ ] **JS**: Wire up DOMContentLoaded listeners for sidebar toggle, floater, overlay
 - [ ] **JS**: Create `loadPromptBankUI()` for dedicated Prompt Bank section
+- [ ] **JS**: Create `loadSettingsUI()` for dedicated Settings section (identity + prompt bank)
+- [ ] **JS**: Remove `toggleSettingsModal()` and Settings modal references from toolbar
 - [ ] **Verify**: `node --check webui/static/app.js` passes
 - [ ] **Verify**: Manual test — collapse/expand, section switching, floater click, persist on reload, mobile drawer
 
@@ -424,7 +474,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 ## Notes
 
-- **Prompt Bank UI**: Extract pool editor from Settings modal (`loadPoolEditor`, `renderPoolEditor`, etc.) into standalone `loadPromptBankUI()` — keep Settings modal for identity/upload only
-- **Toolbar**: Unchanged (balance, API selector, theme, settings remain fixed top)
+- **Prompt Bank UI**: Extract pool editor from Settings modal (`loadPoolEditor`, `renderPoolEditor`, etc.) into standalone `loadPromptBankUI()` — keep `loadBankEditor()` shared
+- **Settings UI**: Extract Identity section + Prompt Bank section from Settings modal into standalone `loadSettingsUI()` 
+- **Toolbar**: Remove settings gear icon; keep balance, API selector, Live indicator, theme selector, brand
 - **Floater behavior**: Click on floater toggle button → opens menu → click item → navigates + closes menu
 - **Persist keys**: `ofm_sidebar_collapsed` (boolean), `ofm_active_section` (string)
+- **Settings modal**: Can be kept for other uses or removed entirely once extraction complete
