@@ -2787,3 +2787,18 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
   text-decoration: underline;
 }
 .btn-link:hover { color: var(--accent); opacity: .8; }
+
+/* ── Caption Generator ── */
+.caption-gen-card { max-width: 100%; }
+.caption-list { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; }
+.caption-item { border: 1px solid var(--border); border-left: 2px solid var(--accent); border-radius: var(--radius); padding: 12px; background: var(--surface); }
+.caption-item-head { display: flex; gap: 8px; margin-bottom: 8px; }
+.cap-badge { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 8px; border: 1px solid var(--border); border-radius: 9999px; color: var(--accent); }
+.caption-text-raw { white-space: pre-wrap; word-wrap: break-word; font-family: var(--font-mono); font-size: 12px; color: var(--fg); margin: 0 0 8px; }
+.caption-meta { font-size: 11px; color: var(--fg2); margin-bottom: 8px; }
+.cap-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+.caption-empty { padding: 20px; text-align: center; color: var(--fg2); border: 1px dashed var(--border); border-radius: var(--radius); }
+@media (max-width: 768px) {
+  .cap-actions { flex-wrap: wrap; }
+  .caption-item { padding: 10px; }
+}
