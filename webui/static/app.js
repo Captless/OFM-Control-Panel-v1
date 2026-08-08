@@ -1140,6 +1140,8 @@ async function startPromptGeneration() {
 
 function schedulePreviewRefresh() {
     if (!_pendingJobs) return;
+    var items = document.querySelectorAll('.prompt-item');
+    if (items.length > 0 && items[0].classList.contains('editing')) return;
     clearTimeout(_previewDebounce);
     _previewDebounce = setTimeout(function() { fetchPromptPreview(true); }, 300);
 }
