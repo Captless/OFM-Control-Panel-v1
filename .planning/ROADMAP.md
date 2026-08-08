@@ -32,8 +32,10 @@ Plans:
 **Goal:** New card in `webui/static/index.html` below Image Generation: platform pills, hook-type pills, count slider, Generate button, caption list with per-caption copy + copy-all + clear. JS in `app.js`, styles in `style.css`. Matches existing retro-terminal theme.
 **Requirements:** TBD
 **Depends on:** Phase 2
-**Plans:** 0 plans
+**Plans:** 1/1 plans complete
 Plans:
+
+- [x] 03-01-PLAN.md
 
 - [ ] TBD (run /gsd-plan-phase 3 to break down)
 
