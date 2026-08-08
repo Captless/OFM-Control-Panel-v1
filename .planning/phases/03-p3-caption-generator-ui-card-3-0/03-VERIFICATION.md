@@ -1,9 +1,10 @@
 ---
 phase: 03-p3-caption-generator-ui-card-3-0
 verified: 2026-08-08T03:54:06Z
-status: human_needed
-score: 1/3 truths verified
-behavior_unverified: 2
+status: passed
+score: 3/3 truths verified
+behavior_unverified: 0
+human_verification_passed: "All 3 browser tests PASSED by operator 2026-08-08: generate-render, copy/copy-all+toast, clear"
 overrides_applied: 0
 gaps: []
 behavior_unverified_items:
@@ -31,8 +32,8 @@ human_verification:
 
 **Phase Goal:** New card in `webui/static/index.html` below Image Generation: platform pills, hook-type pills, count slider, Generate button, caption list with per-caption copy + copy-all + clear. JS in `app.js`, styles in `style.css`. Matches existing retro-terminal theme. (ROADMAP.md Phase 3)
 **Verified:** 2026-08-08T03:54:06Z
-**Status:** human_needed
-**Re-verification:** No — initial verification
+**Status:** passed
+**Re-verification:** Human browser verification completed by operator 2026-08-08 — all 3 tests passed (generate→render list, copy/copy-all clipboard+toast, clear→empty).
 
 ## Goal Achievement
 
@@ -41,10 +42,10 @@ human_verification:
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
 | 1 | Caption Generator card renders in the page with platform pills, hook-type pills, count slider, and Generate button | ✓ VERIFIED | Commit 592b9dd inserts `.card.caption-gen-card` between `</div><!-- /gen-layout -->` and `.out-header`; 5 radios `name="cap_platform"` (tiktok checked/reels/shorts/x/stories), 6 radios `name="cap_hook"` (vulnerable checked/confident/playful/aesthetic/relatable/mixed), `#cap-count` range min=1 max=20 value=5 + `#cap-count-label`, `#btn-caption` with `.btn-text` "Generate Captions"; live GET `/` :8000 → 200 contains caption-gen-card, btn-caption, btn-copy-all, btn-clear-caps |
-| 2 | Generating posts to /api/captions/generate and renders returned captions with per-caption copy, copy-all, and clear | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | `generateCaptions()` posts via `api('/api/captions/generate', body)` (hook_types=[hook] unless mixed), disables button + `.btn-text` swap, calls `renderCaptions()`, reveals Copy All/Clear, toasts; `renderCaptions()` builds esc()'d per-caption items with per-item `onclick="copyCaption(N)"`; live POST `{count:3,platform:tiktok,hook_types:[vulnerable],seed:1}` → 200 `ok:true`, 3 captions each with text/platform/hook_type/cta/hashtags. Click-to-render transition not browser-exercised — see Human Verification |
-| 3 | Copy/copy-all writes to clipboard and shows a toast | ⚠️ PRESENT_BEHAVIOR_UNVERIFIED | `copyCaption(idx)` + `copyAllCaptions()` use `navigator.clipboard.writeText` (per-caption text; all joined `\n\n`) with `showSuccess` toasts + `showError` catch; `clearCaptions()` resets list/hides buttons/toasts 'Cleared'. Code present + wired via inline onclick; runtime clipboard/toast behavior needs browser — see Human Verification |
+| 2 | Generating posts to /api/captions/generate and renders returned captions with per-caption copy, copy-all, and clear | ✓ VERIFIED | `generateCaptions()` posts via `api('/api/captions/generate', body)` (hook_types=[hook] unless mixed), disables button + `.btn-text` swap, calls `renderCaptions()`, reveals Copy All/Clear, toasts; `renderCaptions()` builds esc()'d per-caption items with per-item `onclick="copyCaption(N)"`; live POST `{count:3,platform:tiktok,hook_types:[vulnerable],seed:1}` → 200 `ok:true`, 3 captions each with text/platform/hook_type/cta/hashtags. Operator browser test PASSED: list populates with badges/text/meta, Copy All + Clear appear. |
+| 3 | Copy/copy-all writes to clipboard and shows a toast | ✓ VERIFIED | `copyCaption(idx)` + `copyAllCaptions()` use `navigator.clipboard.writeText` (per-caption text; all joined `\n\n`) with `showSuccess` toasts + `showError` catch; `clearCaptions()` resets list/hides buttons/toasts 'Cleared'. Operator browser test PASSED: paste works, toasts show, clear empties list. |
 
-**Score:** 1/3 truths verified (2 present, behavior-unverified)
+**Score:** 3/3 truths verified (human browser verification completed)
 
 ### Required Artifacts
 
