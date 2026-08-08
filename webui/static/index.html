@@ -343,6 +343,48 @@
 
 </div><!-- /gen-layout -->
 
+  <!-- Caption Generator -->
+  <div class="card caption-gen-card">
+    <h3>Caption Generator</h3>
+
+    <div class="field">
+      <label>Platform</label>
+      <div class="vibe-pills">
+        <label class="pill"><input type="radio" name="cap_platform" value="tiktok" checked> TikTok</label>
+        <label class="pill"><input type="radio" name="cap_platform" value="reels"> Reels</label>
+        <label class="pill"><input type="radio" name="cap_platform" value="shorts"> Shorts</label>
+        <label class="pill"><input type="radio" name="cap_platform" value="x"> X</label>
+        <label class="pill"><input type="radio" name="cap_platform" value="stories"> Stories</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Hook Type</label>
+      <div class="vibe-pills">
+        <label class="pill"><input type="radio" name="cap_hook" value="vulnerable" checked> Vulnerable</label>
+        <label class="pill"><input type="radio" name="cap_hook" value="confident"> Confident</label>
+        <label class="pill"><input type="radio" name="cap_hook" value="playful"> Playful</label>
+        <label class="pill"><input type="radio" name="cap_hook" value="aesthetic"> Aesthetic</label>
+        <label class="pill"><input type="radio" name="cap_hook" value="relatable"> Relatable</label>
+        <label class="pill"><input type="radio" name="cap_hook" value="mixed"> Mixed</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Count: <span id="cap-count-label">5</span></label>
+      <input type="range" id="cap-count" min="1" max="20" value="5" class="photo-slider" oninput="document.getElementById('cap-count-label').textContent=this.value">
+    </div>
+
+    <button class="btn" onclick="generateCaptions()" id="btn-caption" style="width:100%"><span class="btn-text">Generate Captions</span></button>
+    <div id="caption-list" class="caption-list">
+      <div class="caption-empty">No captions yet. Pick a platform and hook type, then click Generate Captions.</div>
+    </div>
+    <div class="cap-actions">
+      <button class="btn btn-sm btn-outline" onclick="copyAllCaptions()" id="btn-copy-all" style="display:none;">Copy All</button>
+      <button class="btn btn-sm btn-outline" onclick="clearCaptions()" id="btn-clear-caps" style="display:none;">Clear</button>
+    </div>
+  </div>
+
   <div class="out-header" style="margin-top:0">
     <h2>Outputs</h2>
     <span class="out-meta" id="global-stats">Loading...</span>
