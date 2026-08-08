@@ -20,7 +20,7 @@ Plans:
 **Goal:** Wire generator into `webui/server.py`. POST `/api/captions/generate` — request `{count, platform, hook_types[], seed}`, response `{ok, captions:[{text, platform, hook_type, cta, hashtags}]}`. Import from scripts dir. Malformed body → 400.
 **Requirements:** TBD
 **Depends on:** Phase 1
-**Plans:** 1/1 plans executed
+**Plans:** 1/1 plans complete
 Plans:
 
 - [x] 02-01-PLAN.md
