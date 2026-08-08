@@ -6,7 +6,7 @@ Web control panel for the OFM pipeline. Contains the HTTP server (port 8000), th
 ## Files
 | File | Responsibility |
 |------|---------------|
-| `server.py` | HTTP server + REST API (port 8000) — serves static UI, prompt building, pipeline subprocess orchestration, output browsing, multi-account management |
+| `server.py` | HTTP server + REST API (port 8000) — serves static UI, prompt building, pipeline subprocess orchestration, output browsing, multi-account management, caption generation (`POST /api/captions/generate`) |
 | `dashboard.py` | Static dashboard HTML generator — collects outputs, embeds images in b64, serves or writes |
 | `wavespeed_tiktok_client.py` | TikTok-specific WaveSpeed client (nano-banana-2 → kling-v2.5-turbo-std) |
 | `activity.json` | Run history log (timestamps, prompt bank names, account switches) |

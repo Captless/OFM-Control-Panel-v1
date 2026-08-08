@@ -18,7 +18,7 @@ Personal pipeline for generating alt-girl aesthetic photos and TikTok videos via
 | `webui/` | Web control panel — HTTP server, TikTok client, dashboard generator | 5 files | [View](webui/codemap.md) |
 | `webui/static/` | Frontend (HTML/CSS/JS) — warm monochrome UI, no framework | 3 files | [View](webui/static/codemap.md) |
 | `pipeline/` | Photo/video generation pipeline — prompt bank, i2v client | 4 files | [View](pipeline/codemap.md) |
-| `scripts/` | Utility entry points (server launcher, dashboard opener, meta backfill, saver) | 6 files | [View](scripts/codemap.md) |
+| `scripts/` | Utility entry points (server launcher, dashboard opener, meta backfill, saver) | 7 files | [View](scripts/codemap.md) |
 | `hot-take-influencer/` | Opinion/talking-head video persona workflow | 2 files | [View](hot-take-influencer/codemap.md) |
 | `docs/` | Loose style guides + identity reference (Alina) | 2 files | — |
 

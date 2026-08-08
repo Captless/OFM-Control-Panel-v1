@@ -39,6 +39,7 @@ OFM/
 │   ├── wavespeed_i2v_client.py        Image-to-video client
 │   └── alina_video_guide.md           Video prompt style guide
 ├── scripts/                           Utility entry points
+│   ├── alina_textgen.py               Caption generator CLI (identity-locked pools)
 │   ├── run_tiktok.py                  Batch TikTok generation CLI
 │   ├── open_server.py                 Server launcher
 │   ├── open_dashboard.py              Dashboard viewer
@@ -62,6 +63,7 @@ OFM/
 - **Generation panel**: Vibe/Camera/Lighting/Outfit/Time/Count controls, Generate button
 - **Outputs table**: Grouped by date, hover preview, fullscreen, caption edit, download, delete
 - **Balance display**: Per-account and total balance, auto-refresh every 60s
+- **Caption Generator**: Card with platform pills (tiktok/reels/shorts/x/stories) + hook-type pills + count; `generateCaptions()`/`renderCaptions()`/`copyCaption()`/`copyAllCaptions()`/`clearCaptions()`; backed by `POST /api/captions/generate` → `scripts/alina_textgen.py` (identity-locked pools)
 
 ### API Endpoints (`webui/server.py`)
 
@@ -77,6 +79,7 @@ OFM/
 | GET | `/api/balance/total` | Sum across all accounts |
 | GET | `/api/outputs` | List media in outputs directory |
 | POST | `/api/caption/edit` | Edit caption text file |
+| POST | `/api/captions/generate` | Generate N captions (count 1-20, platform, hook_types, seed) |
 | POST | `/api/media/delete` | Delete media + companion txt |
 | GET/POST | `/api/settings/wavespeed/*` | CRUD for API key accounts |
 | GET | `/api/settings/key/status` | Account list + active account |
@@ -156,6 +159,18 @@ This keeps AGENTS.md in sync with reality without re-running `/init-deep`.
 ---
 
 ## Recent Changes
+
+### 2026-08-06 — Caption generator feature (phases 1-4)
+
+**generator module** ✓ — `scripts/alina_textgen.py`: zero-dependency, identity-locked pool-based caption generator (Alina alt-girl tone). `OPENERS`/`MIDDLES`/`CLOSERS` pools × 5 hook types (vulnerable/confident/playful/aesthetic/relatable), `PLATFORM_CONFIG` per-platform CTA + hashtags (tiktok/reels/shorts/x/stories), seed-reproducible `generate_caption`/`batch_generate` with text dedup, argparse CLI (`py scripts/alina_textgen.py 10 tiktok --seed 42`).
+
+**server endpoint** ✓ — `webui/server.py` `POST /api/captions/generate`: body `{count (1-20), platform, hook_types, seed}`; ValueError→400, Exception→500; imports `batch_generate` from scripts via `sys.path` (scripts/ has no `__init__.py`).
+
+**UI card** ✓ — `webui/static/` caption-gen-card in `index.html`, `app.js` `generateCaptions()`/`renderCaptions()`/`copyCaption()`/`copyAllCaptions()`/`clearCaptions()`, `.caption-*` styles.
+
+**CI + docs** ✓ — `.github/workflows/ci.yml` syntax-check includes `scripts/alina_textgen.py` py_compile + import-test `sys.path.insert(0,'scripts')` line; `codemap.md`/`scripts/codemap.md`/`AGENTS.md` document the feature.
+
+**verified** ✓ — py_compile clean; live POST count=3 → `ok:true` 3 captions; GET `/` serves caption-gen-card; all existing endpoints regression-passed on :8000.
 
 ### 2026-08-05 — Reactive prompt preview (non-locking Generate)
 
