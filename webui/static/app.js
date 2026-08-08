@@ -1034,9 +1034,16 @@ function _renderGenStatus(images) {
     strip.innerHTML = html;
 }
 function _startGenAnim() {
-    _btnTxt('Generating...');
+    var dots = 1;
+    clearInterval(_genAnimTimer);
+    _genAnimTimer = setInterval(function() {
+        dots = (dots % 3) + 1;
+        _btnTxt('Generating' + new Array(dots + 1).join('.'));
+    }, 500);
+    _btnTxt('Generating.');
 }
-function _resetBtn() { var btn = document.getElementById('btn-photo'); if (btn) { btn.disabled = false; } _btnTxt('Generate'); setControlsLocked(false); var strip = document.getElementById('gen-status-strip'); if (strip) { strip.style.display = 'none'; strip.innerHTML = ''; } }
+
+function _resetBtn() { var btn = document.getElementById('btn-photo'); if (btn) { btn.classList.remove('loading'); btn.disabled = false; } _btnTxt('Generate'); setControlsLocked(false); clearInterval(_genAnimTimer); var strip = document.getElementById('gen-status-strip'); if (strip) { strip.style.display = 'none'; strip.innerHTML = ''; } }
 
 function setControlsLocked(locked) {
     var card = document.querySelector('.gen-layout .card');
@@ -1092,6 +1099,7 @@ function showInfo(message, duration) { showToast(message, 'info', duration || 40
 function showWarning(message, duration) { showToast(message, 'warning', duration || 5000); }
 
 var _previewDebounce = null;
+var _genAnimTimer = null;
 var _previewFetching = false;
 
 async function fetchPromptPreview(silent) {
@@ -1134,6 +1142,7 @@ async function fetchPromptPreview(silent) {
 async function startPromptGeneration() {
     if (_previewFetching) return;
     _previewFetching = true;
+    _btnTxt('Generating prompts\u2026');
     await fetchPromptPreview(false);
     _previewFetching = false;
 }
@@ -1179,10 +1188,11 @@ async function confirmGeneration() {
     _resetPromptList();
     setControlsLocked(true);
     btn.disabled = true;
-    _startGenAnim();
+    btn.classList.add('loading'); _startGenAnim();
     var r2 = await api('/api/run/photo', {prompts: jobs});
     if (!r2.ok) {
         _btnTxt('FAIL: ' + (r2.output || 'error'));
+        clearInterval(_genAnimTimer);
         showError('Failed to start generation: ' + (r2.output || 'error'));
         fetchBalance();
         setTimeout(_resetBtn, 3000);
@@ -1195,6 +1205,8 @@ async function confirmGeneration() {
     var _maxRetries = 3;
     var _deadline = Date.now() + 45 * 60 * 1000;
 var _fail = function(msg) {
+        btn.classList.remove('loading');
+        clearInterval(_genAnimTimer);
         _btnTxt(msg);
         fetchBalance();
         setTimeout(_resetBtn, 3000);
@@ -1233,6 +1245,7 @@ var _fail = function(msg) {
                 _btnTxt('FAIL: ' + (p.detail || 'error'));
                 showError('Generation failed: ' + (p.detail || 'error'));
             }
+            clearInterval(_genAnimTimer);
             fetchBalance();
             setTimeout(_resetBtn, 3000);
             _pendingJobs = null;
