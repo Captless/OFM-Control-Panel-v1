@@ -44,7 +44,7 @@ Plans:
 **Goal:** Verify full flow (UI → endpoint → generator), confirm no regressions in existing photo pipeline, add `scripts/` to CI import path if needed, update codemap/AGENTS.md.
 **Requirements:** TBD
 **Depends on:** Phase 3
-**Plans:** 1/1 plans executed
+**Plans:** 1/1 plans complete
 Plans:
 
 - [x] 04-01-PLAN.md
