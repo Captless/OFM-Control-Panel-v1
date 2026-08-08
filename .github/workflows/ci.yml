@@ -29,6 +29,7 @@ jobs:
           python -m py_compile core/errors.py
           python -m py_compile core/text_generator.py
           python -m py_compile scripts/run_tiktok.py
+          python -m py_compile scripts/alina_textgen.py
           python -m py_compile scripts/backfill_prompts.py
           python -m py_compile scripts/open_dashboard.py
           python -m py_compile scripts/open_server.py
@@ -53,6 +54,7 @@ jobs:
           python -c "import pipeline.pipeline; import pipeline.prompt_bank; print('pipeline OK')"
           python -c "import webui.server; import webui.wavespeed_tiktok_client; print('webui OK')"
           python -c "import api.wavespeed_client; print('api OK')"
+          python -c "import sys; sys.path.insert(0, 'scripts'); import alina_textgen; print('scripts OK')"
 
   frontend-lint:
     name: Frontend Basic Check

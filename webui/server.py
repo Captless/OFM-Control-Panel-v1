@@ -40,6 +40,10 @@ API_DIR = BASE / "api"
 sys.path.insert(0, str(API_DIR))
 from wavespeed_client import WaveSpeedClient
 
+SCRIPTS_DIR = BASE / "scripts"
+sys.path.insert(0, str(SCRIPTS_DIR))
+from alina_textgen import batch_generate, PLATFORM_CONFIG
+
 _balance_cache = {"time": 0, "value": None}
 
 LOCK_STALE_SECONDS = 10 * 60
@@ -633,6 +637,37 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._json(result)
             return
         body = self._read_body()
+
+        if parsed.path == "/api/captions/generate":
+            count = body.get("count", 10)
+            if not isinstance(count, int) or isinstance(count, bool):
+                self._json({"ok": False, "error": "count must be an integer"}, 400)
+                return
+            count = max(1, min(20, count))
+
+            platform = (body.get("platform") or "tiktok").strip()
+            if platform not in PLATFORM_CONFIG:
+                self._json({"ok": False, "error": "unknown platform"}, 400)
+                return
+
+            hook_types = body.get("hook_types")
+            if hook_types is not None and not isinstance(hook_types, list):
+                self._json({"ok": False, "error": "hook_types must be a list"}, 400)
+                return
+
+            seed = body.get("seed")
+            if seed is not None and (not isinstance(seed, int) or isinstance(seed, bool)):
+                self._json({"ok": False, "error": "seed must be an integer"}, 400)
+                return
+
+            try:
+                caps = batch_generate(count, platforms=[platform], hook_types=hook_types, seed=seed)
+                self._json({"ok": True, "captions": caps})
+            except ValueError as e:
+                self._json({"ok": False, "error": str(e)}, 400)
+            except Exception as e:
+                self._json({"ok": False, "error": str(e)}, 500)
+            return
 
         if parsed.path == "/api/settings/identity":
             avatar_url = (body.get("avatar_url") or "").strip()

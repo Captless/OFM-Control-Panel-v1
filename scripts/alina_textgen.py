@@ -1,0 +1,472 @@
+"""
+Standalone identity-locked caption generator for Alina Sky.
+
+Zero-dependency, pool-based on-screen caption generator (no AI API).
+Produces platform-optimized short captions for TikTok/Reels/Shorts/X/Stories
+grounded in Alina's alt-girl identity: raw amateur iPhone aesthetic, damp/wet
+hair, black band tees, 3am texts, mirror checks, fit checks, night drives,
+dark rooms, moody candid energy.
+
+Structure modeled after core/text_generator.py but standalone:
+OPENERS (5 hooks x 20) -> MIDDLES (5 hooks x 12) -> CLOSERS (5 hooks x 12).
+
+Usage:
+  python scripts/alina_textgen.py 10
+  python scripts/alina_textgen.py 5 reels --seed 42
+"""
+
+import random
+
+# ---------------------------------------------------------------------------
+# Pools — Alina-identity grounded, short enough for 6s on-screen captions
+# (roughly 40-90 chars per segment).
+# ---------------------------------------------------------------------------
+
+OPENERS = {
+    "vulnerable": [
+        "caught myself checking my phone for a text i already knew wasnt coming",
+        "3am and my brain is replaying everything i said today",
+        "wore my heart on my sleeve and forgot the world doesnt care about sleeves",
+        "some nights the quiet gets so loud i cant hear my own music",
+        "wish i could be as kind to myself as i am to everyone else",
+        "been crying in the car again but the fit was good so it counts",
+        "i overshare with the wrong people and go silent with the right ones",
+        "the shower is the only place i let myself feel things",
+        "sent the text. instantly regretted it. classic.",
+        "i miss being missed",
+        "damp hair and a heavy heart, my two most common moods",
+        "been feeling everything too much and nothing at all, sometimes in the same hour",
+        "i keep quiet about the things that keep me up at night",
+        "nobody asks if im okay, they just ask why im quiet",
+        "there is a version of me that only exists at 3am",
+        "wish someone saw through my dark lipstick to the mess behind it",
+        "been masking so long i forgot my real face",
+        "the silence after a fight says more than any words i could find",
+        "my mirror knows more about me than anyone else",
+        "holding it together in public, falling apart in my bedroom",
+    ],
+    "confident": [
+        "woke up like this and yes the attitude came free",
+        "mirror check passed. moving on.",
+        "not everyone gets this version of me. honestly most dont.",
+        "fit check: black, moody, unbothered. the usual.",
+        "i clean up well and i know it",
+        "being called intimidating is my favorite compliment",
+        "walked in like i owned the place. i did.",
+        "some people cant handle a girl who knows her worth",
+        "hair wet, makeup fresh, energy unmatched",
+        "i dont chase. i attract. and i attract well.",
+        "my confidence is not arrogance, its earned",
+        "stared at my reflection until i believed my own hype",
+        "the baddie in the mirror is not a stranger anymore",
+        "one look and they know i am not to be played with",
+        "i wasnt built to fit in, i was built to stand out",
+        "taking up space was the best decision i ever made",
+        "my standards are high because i am worth the climb",
+        "came for myself and stayed for nobody",
+        "black fits, dark hair, zero apologies",
+        "watch me walk away and regret it later",
+    ],
+    "playful": [
+        "pov: me trying to be serious for one second",
+        "my toxic trait is thinking i can do everything in 10 minutes",
+        "wearing black but my heart is (slightly) soft",
+        "me, a menace in a band tee",
+        "caught me in my natural habitat: bed, hoodie, 2am",
+        "i have 47 tabs open in my brain and none of them are productive",
+        "not me overthinking a text that took me 20 minutes to send",
+        "i am the friend who says lets go then asks where 3 times",
+        "came for the aesthetic stayed for the chaos",
+        "my camera roll is 90% mirror checks and 10% food",
+        "damp hair selfie because i am a professional",
+        "i put the alt in alternative and the unhinged in weekend",
+        "smiling for the camera like i dont have 5 alarms snoozed",
+        "rated my own fit 10/10, no notes needed",
+        "me pretending i know what im doing with my life",
+        "i am a mix of dark humor and questionable decisions",
+        "the mirror and i had a photoshoot. it was a paid gig.",
+        "my personality is just being the designated navigator and still getting lost",
+        "said i would go to bed early. we all know how that ends.",
+        "wearing my emotions on my sleeve and my eyeliner too",
+    ],
+    "aesthetic": [
+        "damp hair, black band tee, dim room lighting. the holy trinity.",
+        "moody light catches everything i try to hide",
+        "golden hour hits different when you live in black",
+        "my aesthetic is bedroom photos with the lights low",
+        "messy hair, smudged liner, cinematic energy",
+        "the mirror is a filter i refuse to leave home without",
+        "night drives and neon signs, my favorite palette",
+        "dark room, phone flash, nothing else needed",
+        "aesthetic is not a phase, its a lifestyle at this point",
+        "black nails, black tee, black coffee, black mood",
+        "lens flare and low light, the mood writes itself",
+        "she is a whole vibe and the vibe is dimly lit",
+        "raw, unposed, unbothered. exactly how i like it.",
+        "every dark corner of this room is a photoshoot",
+        "wet hair and window light, the only filter i trust",
+        "captured in the dark where i shine brightest",
+        "candid, moody, slightly chaotic. my brand.",
+        "the blue glow of 3am and my bedroom ceiling",
+        "band tee oversized, makeup smudged, story untold",
+        "aesthetic of a girl who lives in her own movie",
+    ],
+    "relatable": [
+        "spent 30 minutes picking an outfit to stay home",
+        "the wifi went out and i forgot how to be a person",
+        "my 3am texts are poetry and my 3pm texts are gibberish",
+        "i am either thriving or in shambles, no in between",
+        "made a whole plan then canceled it to rot in bed",
+        "overthinking is my cardio",
+        "i check my phone for texts i know are not there",
+        "my bedtime is a suggestion i ignore daily",
+        "heard a song and now i am emotionally compromised",
+        "i keep buying black clothes like i dont already have 40",
+        "the groupchat knows more about my life than i do",
+        "i made eye contact with my reflection and nodded like we accomplished something",
+        "same 5 songs on repeat for 2 weeks, no complaints",
+        "i texted back 3 hours later and said lol",
+        "my mirror checks are more consistent than my sleep schedule",
+        "i have 3 moods and they are all exhausted",
+        "the amount of effort it takes to be social is unreal",
+        "watched 4 hours of tiktok to avoid 1 email",
+        "my plans for tonight: black tee and dissociating",
+        "said i would start fresh monday. monday is a lie.",
+    ],
+}
+
+MIDDLES = {
+    "vulnerable": [
+        "and i keep picking at the same wound like it will heal faster",
+        "and no amount of music is loud enough to drown the thoughts",
+        "and i pretend the heavy feeling is just the weather",
+        "and the people who matter never seem to notice the cracks",
+        "and i smile through it because nobody wants the real answer",
+        "and somehow i am most honest in the dark",
+        "and i carry everyone elses weight while mine piles up",
+        "and the tears come easier than the words ever do",
+        "and i keep waiting for someone to stay without being asked",
+        "and the quiet nights are the hardest ones to survive",
+        "and i give my best to people who give me their leftovers",
+        "and i still show up smiling like nothing happened",
+    ],
+    "confident": [
+        "and i learned to walk with my head high anyway",
+        "and nobody gets to dim this light, not even my bad days",
+        "and i stopped apologizing for taking up space",
+        "and my crown is crooked but its mine",
+        "and i choose myself first every single time now",
+        "and the mirror finally shows me who i actually am",
+        "and i stopped shrinking to make others comfortable",
+        "and my energy is reserved for those who match it",
+        "and i walk like i have somewhere to be because i do",
+        "and confidence looks good in black, i wear it daily",
+        "and i realized my approval is the only one that matters",
+        "and watch me make my own rules from here",
+    ],
+    "playful": [
+        "and then i saw my reflection and lost my train of thought",
+        "and honestly the delusion is what keeps me going",
+        "and i call this look research, not procrastination",
+        "and my 3am ideas are terrible and i love them",
+        "and then the song came on and i became a main character",
+        "and i blame the eyeliner for my attitude",
+        "and yes i did take this photo 14 times",
+        "and the band tee is doing all the heavy lifting",
+        "and my groupchat is my unpaid therapy",
+        "and i consider this content, not chaos",
+        "and the fit was too good not to document",
+        "and somehow i still look unbothered. amazing.",
+    ],
+    "aesthetic": [
+        "and the low light does the talking for me",
+        "and every shadow in this room knows my name",
+        "and the grain makes it feel more real",
+        "and the flash caught the mood perfectly",
+        "and the mirror kept my secrets like a good friend",
+        "and the dark makes everything look intentional",
+        "and the phone light became my spotlight",
+        "and the reflection framed the story just right",
+        "and the haze in the air matches the haze in my head",
+        "and black on black never misses",
+        "and the wet hair catches the light like it means it",
+        "and the candid moment was worth the 30 takes",
+    ],
+    "relatable": [
+        "and my to do list has one item: exist",
+        "and i will absolutely be doing this again tomorrow",
+        "and my social battery hit zero mid sentence",
+        "and then i got distracted by my own reflection",
+        "and the algorithm knows me better than my friends",
+        "and i overthought this caption for 20 minutes",
+        "and the fridge is empty but my heart is full of snacks",
+        "and i forgot what i was about to say, twice",
+        "and my brain is buffering at 3 percent",
+        "and honestly my mirror checks are a full time job",
+        "and i regret nothing except that one text",
+        "and my plans are written in pencil for a reason",
+    ],
+}
+
+CLOSERS = {
+    "vulnerable": [
+        "but i am still here, still soft, still trying",
+        "so if you see me quiet, be gentle with me",
+        "the hurt passes. i always survive myself.",
+        "one day i will believe the good things too",
+        "and maybe that is okay for now",
+        "but the dark taught me how to find my own light",
+        "i am a work in progress and that is allowed",
+        "so tonight i will just feel it and let it go",
+        "and that is more honest than anything i could fake",
+        "but i am learning to be soft with myself too",
+        "and that has to count for something",
+        "the feeling fades. i always find my way back.",
+    ],
+    "confident": [
+        "so watch me, i am only getting started",
+        "unbothered is a lifestyle i chose",
+        "and i would not trade my edge for your approval",
+        "take it or leave it. i am staying either way.",
+        "the crown stays. the attitude stays. i stay.",
+        "and that is exactly how it should be",
+        "so dont mistake my calm for weakness",
+        "i am the standard and i know it",
+        "respect it or keep scrolling",
+        "and i walk away with my head held high",
+        "my presence is a statement. no caption needed.",
+        "and honestly? i earned every bit of it",
+    ],
+    "playful": [
+        "anyway, back to being unhinged",
+        "10/10 would recommend being me",
+        "and that is the tea. cold. like me.",
+        "no notes. maybe a little chaos.",
+        "ok byeeee, i have a mirror to check",
+        "and i would do it all again tomorrow",
+        "stay tuned for the next episode of me",
+        "rating the night: 10/10 would nap again",
+        "anyway thats my ted talk, no questions",
+        "and scene. cue the outro music.",
+        "dont worry, i am always like this",
+        "chaos managed. barely. moving on.",
+    ],
+    "aesthetic": [
+        "and the mood? captured perfectly",
+        "some moments just deserve a screenshot",
+        "and that is the whole aesthetic",
+        "dark never looked so good",
+        "and the story wrote itself tonight",
+        "vibe recorded. memory kept.",
+        "and honestly the low light carried",
+        "every frame of this is intentional",
+        "and the night kept its promises",
+        "this is the mood. period.",
+        "and i would frame this if i could",
+        "the aesthetic is the message",
+    ],
+    "relatable": [
+        "anyway, my bed is calling and i must go",
+        "and that is just how it goes i guess",
+        "brb, deleting my drafts again",
+        "and now i need a nap. as always.",
+        "so thats my life. riveting, i know.",
+        "anyway, same time tomorrow?",
+        "and i would not have it any other way",
+        "ok but seriously, why is it always like this",
+        "anyway, back to my regularly scheduled chaos",
+        "and that is the update. no questions please.",
+        "see you in my next crisis, bye",
+        "and i am going to bed now. maybe.",
+    ],
+}
+
+# ---------------------------------------------------------------------------
+# Per-platform CTA + hashtag config.
+# ---------------------------------------------------------------------------
+
+PLATFORM_CONFIG = {
+    "tiktok": {
+        "cta_pool": [
+            "follow for part two",
+            "which fit should i wear",
+            "drop a fire emoji if you relate",
+            "follow for more of my delusions",
+            "comment your favorite lyric",
+        ],
+        "hashtags": [
+            "#altgirl", "#altingirl", "#darkaesthetic", "#relatable",
+            "#softgirl", "#mentalhealth", "#altgirlproblems", "#fyp",
+        ],
+    },
+    "reels": {
+        "cta_pool": [
+            "follow for part two",
+            "save this for your 3am thoughts",
+            "comment if you get it",
+            "tag someone who needs to hear this",
+            "share this with your dark side",
+        ],
+        "hashtags": [
+            "#altgirl", "#aesthetic", "#darkaesthetic", "#relatable",
+            "#softgirl", "#altgirlproblems", "#reels", "#explore", "#foryou",
+        ],
+    },
+    "shorts": {
+        "cta_pool": [
+            "which fit should i wear",
+            "follow for daily chaos",
+            "comment your rating 1-10",
+            "like if you felt that",
+            "subscribe for part two",
+        ],
+        "hashtags": [
+            "#altgirl", "#darkaesthetic", "#relatable", "#softgirl",
+            "#shorts", "#fyp", "#youtubeshorts", "#alt",
+        ],
+    },
+    "x": {
+        "cta_pool": [
+            "quote tweet with your take",
+            "drop your thoughts below",
+            "retweet if you relate",
+            "tell me your 3am genre",
+        ],
+        "hashtags": ["#altgirl", "#darkaesthetic", "#relatable"],
+    },
+    "stories": {
+        "cta_pool": [
+            "answer the poll",
+            "slide into my dms with your take",
+            "use the music if you feel it",
+            "share this to your story",
+        ],
+        "hashtags": [],
+    },
+}
+
+
+# ---------------------------------------------------------------------------
+# Caption generation.
+# ---------------------------------------------------------------------------
+
+_HOOK_KEYS = list(OPENERS.keys())
+
+
+_MAX_DEDUP_ATTEMPTS = 5000
+
+
+def generate_caption(hook_type=None, platform="tiktok", seed=None, _rng=None):
+    """Generate one caption dict.
+
+    hook_type: one of the 5 keys; None or unknown -> random hook.
+    platform: key in PLATFORM_CONFIG; unknown -> falls back to "tiktok".
+    seed: when given, a private random.Random(seed) instance is used so the
+          process-global RNG is never mutated (thread-safe).
+    _rng: internal — callers with a seed should pass an explicit Random
+          instance; used by batch_generate to keep one reproducible stream.
+    Returns: {"text", "platform", "hook_type", "cta", "hashtags"}
+    """
+    rng = _rng or random
+    if _rng is None and seed is not None:
+        rng = random.Random(seed)
+
+    if hook_type not in OPENERS:
+        hook_type = rng.choice(_HOOK_KEYS)
+
+    if platform not in PLATFORM_CONFIG:
+        platform = "tiktok"
+    config = PLATFORM_CONFIG[platform]
+
+    opener = rng.choice(OPENERS[hook_type])
+    num_middles = rng.randint(0, 2)
+    middles = rng.sample(MIDDLES[hook_type], num_middles)
+    closer = rng.choice(CLOSERS[hook_type])
+
+    parts = [opener] + middles + [closer]
+    text = ". ".join(p.rstrip(".") for p in parts)
+    if not text.endswith((".", "!", "?")):
+        text += "."
+
+    return {
+        "text": text,
+        "platform": platform,
+        "hook_type": hook_type,
+        "cta": rng.choice(config["cta_pool"]),
+        "hashtags": list(config["hashtags"]),
+    }
+
+
+def batch_generate(count, platforms=None, hook_types=None, seed=None):
+    """Generate `count` unique captions.
+
+    platforms: list of platform keys; None -> all 5; single string -> [string].
+    hook_types: list of hook keys to pick from; None -> all 5.
+    seed: when given, a private random.Random(seed) instance is used so the
+          process-global RNG is never mutated (thread-safe).
+    Dedups by text — collisions regenerate, guarded by a 200-attempt cap.
+    Raises ValueError if the dedup cap is exhausted before `count` unique
+    captions are produced (no silent truncation).
+    Returns: list of caption dicts (len == count).
+    """
+    if count <= 0:
+        return []
+    if platforms is None:
+        platforms = list(PLATFORM_CONFIG.keys())
+    elif isinstance(platforms, str):
+        platforms = [platforms]
+    if not platforms:
+        raise ValueError("platforms must not be empty")
+
+    rng = random.Random(seed) if seed is not None else random
+
+    seen = set()
+    results = []
+    attempts = 0
+    while len(results) < count and attempts < _MAX_DEDUP_ATTEMPTS:
+        attempts += 1
+        platform = rng.choice(platforms)
+        hook = rng.choice(hook_types) if hook_types else None
+        cap = generate_caption(hook_type=hook, platform=platform, _rng=rng)
+        if cap["text"] in seen:
+            continue
+        seen.add(cap["text"])
+        results.append(cap)
+    if len(results) < count:
+        raise ValueError(
+            f"dedup cap {_MAX_DEDUP_ATTEMPTS} exhausted: only {len(results)}/"
+            f"{count} unique captions generated — pools too small for count"
+        )
+    return results
+
+
+# ---------------------------------------------------------------------------
+# CLI.
+# ---------------------------------------------------------------------------
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Generate Alina Sky identity-locked on-screen captions."
+    )
+    parser.add_argument("n", type=int, nargs="?", default=10,
+                        help="Number of captions (default 10)")
+    parser.add_argument("platform", nargs="?", choices=list(PLATFORM_CONFIG),
+                        default="tiktok",
+                        help="Target platform (default tiktok)")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="Random seed for reproducible output")
+    args = parser.parse_args()
+
+    for i, cap in enumerate(batch_generate(args.n, platforms=[args.platform],
+                                           seed=args.seed), 1):
+        print(f"--- {i} [{cap['platform']}] [{cap['hook_type']}] ---")
+        print(cap["text"])
+        print(cap["cta"])
+        if cap["hashtags"]:
+            print(" ".join(cap["hashtags"]))
+
+
+if __name__ == "__main__":
+    main()
