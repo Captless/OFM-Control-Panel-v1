@@ -353,37 +353,46 @@ PLATFORM_CONFIG = {
 _HOOK_KEYS = list(OPENERS.keys())
 
 
-def generate_caption(hook_type=None, platform="tiktok", seed=None):
+_MAX_DEDUP_ATTEMPTS = 5000
+
+
+def generate_caption(hook_type=None, platform="tiktok", seed=None, _rng=None):
     """Generate one caption dict.
 
     hook_type: one of the 5 keys; None or unknown -> random hook.
     platform: key in PLATFORM_CONFIG; unknown -> falls back to "tiktok".
-    seed: when given, random.seed(seed) is called before selection for full
-          reproducibility.
+    seed: when given, a private random.Random(seed) instance is used so the
+          process-global RNG is never mutated (thread-safe).
+    _rng: internal — callers with a seed should pass an explicit Random
+          instance; used by batch_generate to keep one reproducible stream.
     Returns: {"text", "platform", "hook_type", "cta", "hashtags"}
     """
-    if seed is not None:
-        random.seed(seed)
+    rng = _rng or random
+    if _rng is None and seed is not None:
+        rng = random.Random(seed)
 
     if hook_type not in OPENERS:
-        hook_type = random.choice(_HOOK_KEYS)
+        hook_type = rng.choice(_HOOK_KEYS)
 
     if platform not in PLATFORM_CONFIG:
         platform = "tiktok"
     config = PLATFORM_CONFIG[platform]
 
-    opener = random.choice(OPENERS[hook_type])
-    num_middles = random.randint(0, 2)
-    middles = random.sample(MIDDLES[hook_type], num_middles)
-    closer = random.choice(CLOSERS[hook_type])
+    opener = rng.choice(OPENERS[hook_type])
+    num_middles = rng.randint(0, 2)
+    middles = rng.sample(MIDDLES[hook_type], num_middles)
+    closer = rng.choice(CLOSERS[hook_type])
 
-    text = ". ".join([opener] + middles + [closer]) + "."
+    parts = [opener] + middles + [closer]
+    text = ". ".join(p.rstrip(".") for p in parts)
+    if not text.endswith((".", "!", "?")):
+        text += "."
 
     return {
         "text": text,
         "platform": platform,
         "hook_type": hook_type,
-        "cta": random.choice(config["cta_pool"]),
+        "cta": rng.choice(config["cta_pool"]),
         "hashtags": list(config["hashtags"]),
     }
 
@@ -393,30 +402,41 @@ def batch_generate(count, platforms=None, hook_types=None, seed=None):
 
     platforms: list of platform keys; None -> all 5; single string -> [string].
     hook_types: list of hook keys to pick from; None -> all 5.
-    seed: when given, random.seed(seed) before generation (reproducible).
+    seed: when given, a private random.Random(seed) instance is used so the
+          process-global RNG is never mutated (thread-safe).
     Dedups by text — collisions regenerate, guarded by a 200-attempt cap.
-    Returns: list of caption dicts (len == count unless cap exhausted).
+    Raises ValueError if the dedup cap is exhausted before `count` unique
+    captions are produced (no silent truncation).
+    Returns: list of caption dicts (len == count).
     """
+    if count <= 0:
+        return []
     if platforms is None:
         platforms = list(PLATFORM_CONFIG.keys())
     elif isinstance(platforms, str):
         platforms = [platforms]
+    if not platforms:
+        raise ValueError("platforms must not be empty")
 
-    if seed is not None:
-        random.seed(seed)
+    rng = random.Random(seed) if seed is not None else random
 
     seen = set()
     results = []
     attempts = 0
-    while len(results) < count and attempts < 200:
+    while len(results) < count and attempts < _MAX_DEDUP_ATTEMPTS:
         attempts += 1
-        platform = random.choice(platforms)
-        hook = random.choice(hook_types) if hook_types else None
-        cap = generate_caption(hook_type=hook, platform=platform)
+        platform = rng.choice(platforms)
+        hook = rng.choice(hook_types) if hook_types else None
+        cap = generate_caption(hook_type=hook, platform=platform, _rng=rng)
         if cap["text"] in seen:
             continue
         seen.add(cap["text"])
         results.append(cap)
+    if len(results) < count:
+        raise ValueError(
+            f"dedup cap {_MAX_DEDUP_ATTEMPTS} exhausted: only {len(results)}/"
+            f"{count} unique captions generated — pools too small for count"
+        )
     return results
 
 
