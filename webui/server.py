@@ -40,6 +40,10 @@ API_DIR = BASE / "api"
 sys.path.insert(0, str(API_DIR))
 from wavespeed_client import WaveSpeedClient
 
+SCRIPTS_DIR = BASE / "scripts"
+sys.path.insert(0, str(SCRIPTS_DIR))
+from alina_textgen import batch_generate
+
 _balance_cache = {"time": 0, "value": None}
 
 LOCK_STALE_SECONDS = 10 * 60
