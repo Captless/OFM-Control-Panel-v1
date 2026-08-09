@@ -138,16 +138,8 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// ── Settings Modal ──
+// ── Settings ──
 var _pendingAvatarUrl = '';
-
-function _setSettingsExpanded(open) {
-    var t = document.getElementById('settings-nav-trigger');
-    if (t) {
-        t.setAttribute('aria-expanded', open ? 'true' : 'false');
-        t.classList.toggle('open', open);
-    }
-}
 
 function _setSettingsStatus(msg, type) {
     var el = document.getElementById('settings-status');
@@ -155,38 +147,6 @@ function _setSettingsStatus(msg, type) {
     if (!msg) { el.textContent = ''; el.className = 'settings-status'; return; }
     el.textContent = msg;
     el.className = 'settings-status' + (type ? ' ' + type : '');
-}
-
-function toggleSettingsModal() {
-    var modal = document.getElementById('settings-modal');
-    if (!modal) return;
-    if (modal.classList.contains('show')) {
-        closeSettingsModal();
-    } else {
-        modal.classList.add('show');
-        _setSettingsExpanded(true);
-        _setSettingsStatus('');
-        loadSettings();
-        setTimeout(function() {
-            var input = document.getElementById('settings-avatar-url');
-            if (input) input.focus();
-        }, 50);
-    }
-}
-
-function closeSettingsModal() {
-    var nb = document.getElementById('new-bank-modal');
-    var db = document.getElementById('delete-bank-modal');
-    if ((nb && nb.classList.contains('show')) || (db && db.classList.contains('show'))) return;
-    var modal = document.getElementById('settings-modal');
-    if (modal) modal.classList.remove('show');
-    _setSettingsExpanded(false);
-    var newPreview = document.getElementById('settings-new-preview');
-    if (newPreview) { newPreview.style.display = 'none'; newPreview.removeAttribute('src'); }
-    var input = document.getElementById('settings-file-input');
-    if (input) input.value = '';
-    _pendingAvatarUrl = '';
-    _setSettingsStatus('');
 }
 
 async function loadSettings() {
@@ -213,12 +173,10 @@ async function loadSettings() {
     await loadBankEditor();
 }
 
-// ── Prompt bank editor (single pane, collapsed pool cards) ──
+// ── Prompt bank editor (masonry tiles + modal textarea) ──
 
 var _activeBankId = '';
 var _savedBanks = {};
-var _poolDefaults = {};
-var _poolActive = {};
 var _newBankSource = 'builtin';
 var _pendingDeleteId = null;
 
@@ -238,53 +196,79 @@ var _POOL_LABELS = {
     'IDENTITY_LOCK': 'Identity Lock'
 };
 
-function _isDictPool(name) {
-    return name === 'OUTFIT_TOPS_POOLS' || name === 'OUTFIT_BOTTOMS_POOLS' || name === 'LIGHTING_POOLS';
+function _poolLabel(name) { return _POOL_LABELS[name] || name; }
+
+function _poolValType(val) {
+    if (val == null) return 'list';
+    if (Array.isArray(val)) return 'list';
+    if (typeof val === 'object') return 'dict';
+    return 'str';
 }
 
-function _isStrPool(name) {
-    return name === 'DEFAULT_NEGATIVE' || name === 'MIRROR_NEGATIVE' || name === 'IDENTITY_LOCK';
-}
-
-function _poolLabel(name) {
-    return _POOL_LABELS[name] || name;
-}
-
-function _poolTypeBadge(name) {
-    if (_isDictPool(name)) return 'styles';
-    if (_isStrPool(name)) return 'text';
+function _poolTypeBadgeOf(val) {
+    var t = _poolValType(val);
+    if (t === 'dict') return 'styles';
+    if (t === 'str') return 'text';
     return 'list';
 }
 
-function _poolSummary(name, val) {
-    if (val == null) return 'empty';
-    if (_isDictPool(name)) return Object.keys(val).length + ' style' + (Object.keys(val).length !== 1 ? 's' : '');
-    if (_isStrPool(name)) {
-        var s = String(val).trim();
-        return s.length > 42 ? s.substring(0, 42) + '\u2026' : (s || 'empty');
+function _poolCopy(val) {
+    if (val == null) return [];
+    if (Array.isArray(val)) return val.slice();
+    if (typeof val === 'object') {
+        var o = {};
+        Object.keys(val).forEach(function(k) { o[k] = Array.isArray(val[k]) ? val[k].slice() : []; });
+        return o;
     }
-    return (Array.isArray(val) ? val.length : 0) + ' item' + ((Array.isArray(val) && val.length !== 1) ? 's' : '');
+    return String(val);
 }
 
-function _poolToText(name, val) {
-    if (_isDictPool(name)) {
-        var obj = val || {};
+function _poolToText(val) {
+    var t = _poolValType(val);
+    if (t === 'str') return String(val == null ? '' : val);
+    if (t === 'dict') {
         var lines = [];
-        Object.keys(obj).forEach(function(k) {
-            var items = (Array.isArray(obj[k]) ? obj[k] : []).join(', ');
-            lines.push(k + ': ' + items);
+        Object.keys(val).forEach(function(k) {
+            lines.push(k + ': ' + ((val[k] || []).join(', ')));
         });
         return lines.join('\n');
     }
-    if (_isStrPool(name)) return String(val == null ? '' : val);
     return (Array.isArray(val) ? val : []).join('\n');
 }
 
-function _poolValToString(name, val) {
-    if (val == null) return '';
-    if (_isDictPool(name)) return JSON.stringify(val || {});
-    if (_isStrPool(name)) return String(val);
-    return JSON.stringify(val || []);
+function _textToPool(name, text) {
+    var lines = text.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
+    var cur = (_bankEditorDraft && _bankEditorDraft.pools) ? _bankEditorDraft.pools[name] : null;
+    var t = _poolValType(cur);
+    if (t === 'str') return lines.join(' ');
+    if (t === 'dict') {
+        var out = {};
+        lines.forEach(function(line) {
+            var idx = line.indexOf(':');
+            if (idx === -1) return;
+            var key = line.substring(0, idx).trim();
+            var items = line.substring(idx + 1).split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            if (!key) return;
+            if (!out[key]) out[key] = [];
+            items.forEach(function(it) { if (out[key].indexOf(it) === -1) out[key].push(it); });
+        });
+        return out;
+    }
+    return lines;
+}
+
+function _poolCountText(val) {
+    var t = _poolValType(val);
+    if (t === 'dict') return Object.keys(val).length + ' styles';
+    if (t === 'str') return 'text';
+    return (Array.isArray(val) ? val.length : 0) + ' items';
+}
+
+function _poolHintText(val) {
+    var t = _poolValType(val);
+    if (t === 'dict') return 'Format: style: item1, item2  — one style per line.';
+    if (t === 'str') return 'Single block of text.';
+    return 'One item per line.';
 }
 
 async function loadActiveBank() {
@@ -296,30 +280,12 @@ function getSelectedBankId() {
     return _activeBankId;
 }
 
-function toggleActiveBankEditor() {
-    var header = document.getElementById('active-bank-header');
-    var wrap = document.getElementById('pool-editor-wrapper');
-    if (!header || !wrap) return;
-    var closed = wrap.classList.toggle('closed');
-    header.classList.toggle('open', !closed);
-    header.setAttribute('aria-expanded', closed ? 'false' : 'true');
-}
-
-function updateActiveBankHeader() {
-    var nameEl = document.getElementById('active-bank-name');
-    if (!nameEl) return;
-    nameEl.textContent = _activeBankId ? ((_savedBanks[_activeBankId] && _savedBanks[_activeBankId].name) || _activeBankId) : 'Default';
-}
-
-function setActiveBankFromRadio(el) {
-    var id = (el.dataset && el.dataset.bankId) || '';
-    if (id === 'builtin') id = '';
+function setActiveBank(id) {
     if (id === _activeBankId) return;
     api('/api/settings/banks/active', {id: id}).then(function(r) {
         if (r && r.ok) {
             _activeBankId = (r.active || '');
             showSuccess(id ? 'Active prompt bank set' : 'Using Default prompt bank');
-            loadPoolEditor();
             renderBankList();
         } else {
             showError((r && (r.error || r.output)) || 'Failed to set active bank');
@@ -328,119 +294,230 @@ function setActiveBankFromRadio(el) {
     });
 }
 
-async function loadPoolEditor() {
-    var defRes = await api('/api/settings/banks/pools/defaults');
-    var actRes = await api('/api/settings/banks/active/pools');
-    _poolDefaults = (defRes && defRes.pools) ? defRes.pools : {};
-    _poolActive = (actRes && actRes.pools) ? actRes.pools : {};
-    renderPoolEditor();
+async function loadBankEditor() {
+    await loadActiveBank();
+    await renderBankList();
 }
 
-function renderPoolEditor() {
-    var list = document.getElementById('pool-editor-list');
+async function renderBankList() {
+    var list = document.getElementById('settings-bank-list');
     if (!list) return;
-    var names = Object.keys(_poolDefaults);
-    if (!names.length) { list.innerHTML = '<div class="settings-hint">No pools available</div>'; return; }
-    var readOnly = !_activeBankId;
+    var data = await api('/api/settings/banks');
+    var banks = (data && data.banks) ? data.banks : {};
+    _savedBanks = banks;
+    var ids = Object.keys(banks);
     var html = '';
-    if (readOnly) {
-        html += '<div id="pool-editor-note" class="pool-editor-note">Default (read-only) \u2014 create a new bank to edit pools.</div>';
-    }
-    for (var i = 0; i < names.length; i++) {
-        var name = names[i];
-        var val = (_poolActive && _poolActive[name] !== undefined) ? _poolActive[name] : _poolDefaults[name];
-        var text = _poolToText(name, val);
-        html += '<div class="pool-card" data-pool="' + name + '">';
-        html += '<div class="pool-card-header">';
-        html += '<span class="pool-name">' + _poolLabel(name) + '</span>';
-        html += '<span class="pool-badge">' + _poolTypeBadge(name) + '</span>';
-        html += '<span class="pool-summary">' + esc(_poolSummary(name, val)) + '</span>';
+    html += '<div class="bank-tile bank-tile-new" onclick="openNewBankModalFromDefault()" role="button" tabindex="0" aria-label="Create new prompt bank">';
+    html += '<span class="bt-new-plus">+</span><span class="bt-new-label">New Bank</span></div>';
+    for (var i = 0; i < ids.length; i++) {
+        var id = ids[i];
+        var b = banks[id] || {};
+        var isBuiltin = (id === 'builtin');
+        var isActive = isBuiltin ? (!_activeBankId) : (id === _activeBankId);
+        var poolNames = Object.keys(b.pools || {});
+        html += '<div class="bank-tile' + (isActive ? ' active' : '') + (isBuiltin ? ' is-builtin' : '') + '">';
+        html += '<div class="bt-head">';
+        html += '<span class="bt-name" onclick="openBankEditor(\'' + esc(id) + '\')">' + esc(b.name || id) + '</span>';
+        html += '<span class="bt-active-badge">ACTIVE</span>';
         html += '</div>';
-        html += '<div class="pool-card-body">';
-        html += '<div class="settings-hint">' + (_isDictPool(name) ? 'One style per line: style_name: item1, item2' : (_isStrPool(name) ? 'Single text line (wraps in editor)' : 'One item per line')) + '</div>';
-        if (_isStrPool(name)) {
-            html += '<textarea class="pool-input pool-input-str" data-pool="' + name + '" spellcheck="false" rows="3"' + (readOnly ? ' readonly' : '') + '>' + esc(text) + '</textarea>';
+        html += '<div class="bt-pools">';
+        if (!poolNames.length) {
+            html += '<span class="bt-empty">' + (isBuiltin ? 'Built-in defaults' : 'No overrides yet') + '</span>';
         } else {
-            html += '<textarea class="pool-input" data-pool="' + name + '" spellcheck="false" rows="5"' + (readOnly ? ' readonly' : '') + '>' + esc(text) + '</textarea>';
+            for (var p = 0; p < poolNames.length; p++) {
+                html += '<span class="bt-chip">' + esc(_poolLabel(poolNames[p])) + '</span>';
+            }
+        }
+        html += '</div>';
+        html += '<div class="bt-foot">';
+        html += '<span class="bt-count">' + poolNames.length + ' pool' + (poolNames.length !== 1 ? 's' : '') + '</span>';
+        html += '<button type="button" class="btn btn-sm" onclick="openBankEditor(\'' + esc(id) + '\')">Edit</button>';
+        if (!isActive && !isBuiltin) {
+            html += '<button type="button" class="btn btn-sm btn-outline" onclick="setActiveBank(\'' + esc(id) + '\')">Use</button>';
+        }
+        if (!isBuiltin) {
+            html += '<button type="button" class="btn btn-sm btn-outline bt-del" onclick="event.stopPropagation(); confirmDeleteBank(\'' + esc(id) + '\')">Delete</button>';
         }
         html += '</div>';
         html += '</div>';
     }
     list.innerHTML = html;
-    setPoolEditorVisible();
 }
 
-function resetPoolToBuiltin(name) {
-    var card = document.querySelector('.pool-card[data-pool="' + name + '"]');
-    var input = card ? card.querySelector('.pool-input') : null;
-    if (input) input.value = _poolToText(name, _poolDefaults[name]);
+// ── Bank Editor Modal ──
+
+var _bankEditorId = '';
+var _bankEditorPool = '';
+var _bankEditorDraft = null;
+
+function showBankEditor() {
+    var modal = document.getElementById('bank-editor-modal');
+    if (modal) modal.classList.add('show');
 }
 
-function resetAllPoolsToBuiltin() {
-    var cards = document.querySelectorAll('.pool-card');
-    for (var i = 0; i < cards.length; i++) {
-        var name = cards[i].dataset.pool;
-        var input = cards[i].querySelector('.pool-input');
-        if (input) input.value = _poolToText(name, _poolDefaults[name]);
-    }
-    showInfo('Pools reset \u2014 remember to Save Changes');
+function closeBankEditor() {
+    var modal = document.getElementById('bank-editor-modal');
+    if (modal) modal.classList.remove('show');
+    _bankEditorId = '';
+    _bankEditorPool = '';
+    _bankEditorDraft = null;
 }
 
-function collectPoolChanges() {
-    var pools = {};
-    var cards = document.querySelectorAll('.pool-card');
-    for (var i = 0; i < cards.length; i++) {
-        var name = cards[i].dataset.pool;
-        var input = cards[i].querySelector('.pool-input');
-        if (!input) continue;
-        var val;
-        try {
-            val = _textToPool(name, input.value);
-        } catch (e) {
-            return {error: name + ': ' + e.message};
-        }
-        if (_poolValToString(name, val) !== _poolValToString(name, _poolDefaults[name])) {
-            pools[name] = val;
-        }
-    }
-    return pools;
-}
-
-function _textToPool(name, text) {
-    if (_isDictPool(name)) {
-        var obj = {};
-        (text || '').split('\n').forEach(function(line) {
-            line = line.trim();
-            if (!line) return;
-            var idx = line.indexOf(':');
-            if (idx === -1) throw new Error('expected "style_name: item1, item2" per line');
-            var key = line.substring(0, idx).trim();
-            if (!key) throw new Error('missing style name');
-            obj[key] = line.substring(idx + 1).split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-        });
-        return obj;
-    }
-    if (_isStrPool(name)) return text.trim().split(/\s+/).join(' ');
-    return text.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
-}
-
-async function saveAllPoolChanges() {
-    var pools = collectPoolChanges();
-    if (pools.error) { showError('Invalid ' + pools.error); return; }
-    var keys = Object.keys(pools);
-    if (!keys.length) { showInfo('No changes to save'); return; }
-    if (_activeBankId) {
-        var r = await api('/api/settings/banks/update', {id: _activeBankId, pools: pools});
-        if (r && r.ok) { showSuccess('Changes saved'); await loadPoolEditor(); renderBankList(); }
-        else { showError((r && (r.error || r.output)) || 'Save failed'); }
+async function openBankEditor(id) {
+    var b = (id === 'builtin') ? null : (_savedBanks[id] || null);
+    if (id !== 'builtin' && !b) return;
+    var pools;
+    if (id === 'builtin') {
+        var def = await api('/api/settings/banks/pools/defaults');
+        pools = (def && def.pools) ? def.pools : {};
     } else {
-        openNewBankModalFromDefault();
+        pools = b.pools || {};
+    }
+    _bankEditorId = id;
+    var draft = {};
+    Object.keys(pools).forEach(function(k) { draft[k] = _poolCopy(pools[k]); });
+    _bankEditorDraft = { id: id, name: (b ? (b.name || '') : 'Built-in'), pools: draft };
+    _bankEditorPool = Object.keys(draft)[0] || '';
+    renderBankEditor();
+    showBankEditor();
+}
+
+function renderBankEditor() {
+    if (!_bankEditorDraft) return;
+    var readOnly = (_bankEditorId === 'builtin');
+    document.getElementById('bank-editor-title').textContent = readOnly ? 'Built-in Pools' : 'Edit Bank';
+    document.getElementById('bank-editor-subtitle').textContent = readOnly ? 'View-only — create a bank to edit pools' : (_bankEditorDraft.name || '');
+    var nameInput = document.getElementById('be-name');
+    if (nameInput) { nameInput.value = _bankEditorDraft.name; nameInput.disabled = readOnly; }
+    var list = document.getElementById('be-pool-list');
+    var names = Object.keys(_bankEditorDraft.pools);
+    var html = '';
+    for (var i = 0; i < names.length; i++) {
+        var n = names[i];
+        var val = _bankEditorDraft.pools[n];
+        html += '<div class="be-pool-item" data-name="' + esc(n) + '" onclick="selectBankPool(\'' + esc(n) + '\')">';
+        html += '<span class="be-pool-item-name">' + esc(_poolLabel(n)) + '</span>';
+        html += '<span class="be-pool-item-count">' + _poolCountText(val) + '</span>';
+        if (!readOnly) html += '<button type="button" class="be-pool-del" onclick="event.stopPropagation(); deleteBankPool(\'' + esc(n) + '\')" title="Remove pool">&times;</button>';
+        html += '</div>';
+    }
+    list.innerHTML = html;
+    var saveBtn = document.getElementById('be-save');
+    var resetBtn = document.getElementById('be-reset');
+    var addBtns = document.querySelectorAll('.be-add-pool');
+    for (var a = 0; a < addBtns.length; a++) addBtns[a].style.display = readOnly ? 'none' : '';
+    if (saveBtn) saveBtn.style.display = readOnly ? 'none' : '';
+    if (resetBtn) resetBtn.style.display = readOnly ? 'none' : '';
+    if (!_bankEditorPool || _bankEditorDraft.pools[_bankEditorPool] === undefined) {
+        _bankEditorPool = names[0] || '';
+    }
+    _syncPoolUi();
+}
+
+function _syncPoolUi() {
+    var name = _bankEditorPool;
+    var val = (_bankEditorDraft && name) ? _bankEditorDraft.pools[name] : undefined;
+    var ta = document.getElementById('be-textarea');
+    if (ta) ta.value = (name && val !== undefined) ? _poolToText(val) : '';
+    document.getElementById('be-pool-name').textContent = name ? _poolLabel(name) : '';
+    document.getElementById('be-pool-type').textContent = (val === undefined || val === null) ? '' : _poolTypeBadgeOf(val);
+    document.getElementById('be-hint').textContent = (val === undefined || val === null) ? '' : _poolHintText(val);
+    var items = document.querySelectorAll('.be-pool-item');
+    for (var i = 0; i < items.length; i++) {
+        items[i].classList.toggle('active', items[i].dataset.name === name);
     }
 }
 
-async function createBankFromCurrent() {
-    openNewBankModalFromDefault();
+function selectBankPool(name) {
+    if (!_bankEditorDraft || _bankEditorDraft.pools[name] === undefined) return;
+    if (_bankEditorId !== 'builtin') {
+        var cur = _bankEditorPool;
+        var ta = document.getElementById('be-textarea');
+        if (cur && ta && _bankEditorDraft.pools[cur] !== undefined) {
+            _bankEditorDraft.pools[cur] = _textToPool(cur, ta.value);
+        }
+    }
+    _bankEditorPool = name;
+    _syncPoolUi();
 }
+
+function deleteBankPool(name) {
+    if (_bankEditorId === 'builtin') return;
+    var names = Object.keys(_bankEditorDraft.pools);
+    if (names.length <= 1) { showError('Bank must keep at least one pool'); return; }
+    delete _bankEditorDraft.pools[name];
+    if (_bankEditorPool === name) _bankEditorPool = Object.keys(_bankEditorDraft.pools)[0];
+    renderBankEditor();
+}
+
+function addCustomPool(type) {
+    if (_bankEditorId === 'builtin') return;
+    var name = prompt('New pool name (UPPERCASE, e.g. OCCASIONS):');
+    if (!name) return;
+    name = name.trim().toUpperCase().replace(/\s+/g, '_');
+    if (!name) return;
+    if (_bankEditorDraft.pools[name] !== undefined) { showError('Pool "' + name + '" already exists'); return; }
+    _bankEditorDraft.pools[name] = (type === 'dict') ? {} : (type === 'str') ? '' : [];
+    _bankEditorPool = name;
+    renderBankEditor();
+}
+
+async function resetCurrentPool() {
+    if (_bankEditorId === 'builtin') return;
+    var name = _bankEditorPool;
+    if (!name || _bankEditorDraft.pools[name] === undefined) return;
+    var def = await api('/api/settings/banks/pools/defaults');
+    var defaults = (def && def.pools) ? def.pools : {};
+    _bankEditorDraft.pools[name] = (defaults[name] !== undefined) ? _poolCopy(defaults[name]) : [];
+    _syncPoolUi();
+    showInfo('Pool reset — press Save Bank to keep');
+}
+
+async function saveBankFromModal() {
+    if (_bankEditorId === 'builtin') return;
+    var name = _bankEditorPool;
+    var text = document.getElementById('be-textarea').value;
+    if (name && _bankEditorDraft.pools[name] !== undefined) {
+        _bankEditorDraft.pools[name] = _textToPool(name, text);
+    }
+    var nameInput = document.getElementById('be-name');
+    var newName = (nameInput ? nameInput.value : '').trim();
+    var body = {id: _bankEditorId, pools: _bankEditorDraft.pools};
+    if (newName) body.name = newName;
+    var btn = document.getElementById('be-save');
+    if (btn) btn.disabled = true;
+    var r = await api('/api/settings/banks/update', body);
+    if (btn) btn.disabled = false;
+    if (r && r.ok) {
+        showSuccess('Bank saved');
+        if (newName) _bankEditorDraft.name = newName;
+        renderBankList();
+    } else {
+        showError((r && (r.error || r.output)) || 'Save failed');
+    }
+}
+
+// ESC + outside-click close bank editor
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var be = document.getElementById('bank-editor-modal');
+        if (be && be.classList.contains('show')) { closeBankEditor(); return; }
+        var db = document.getElementById('delete-bank-modal');
+        if (db && db.classList.contains('show')) { closeDeleteBankModal(); return; }
+        var nb = document.getElementById('new-bank-modal');
+        if (nb && nb.classList.contains('show')) { closeNewBankModal(); return; }
+    }
+});
+document.addEventListener('click', function(e) {
+    var be = document.getElementById('bank-editor-modal');
+    if (be && be.classList.contains('show') && !e.target.closest('#bank-editor-box')) { closeBankEditor(); return; }
+    var db = document.getElementById('delete-bank-modal');
+    if (db && db.classList.contains('show') && !e.target.closest('#delete-bank-modal-box')) { closeDeleteBankModal(); return; }
+    var nb = document.getElementById('new-bank-modal');
+    if (nb && nb.classList.contains('show') && !e.target.closest('#new-bank-modal-box')) { closeNewBankModal(); }
+});
+
+// ── Bank create / delete ──
 
 function openNewBankModalFromDefault() {
     _newBankSource = 'builtin';
@@ -449,7 +526,7 @@ function openNewBankModalFromDefault() {
     var h4 = modal.querySelector('.modal-header h4');
     var p = modal.querySelector('.modal-header p');
     if (h4) h4.textContent = 'Create Prompt Bank';
-    if (p) p.textContent = 'Starts with default pools \u2014 customize from there';
+    if (p) p.textContent = 'Starts with default pools — customize from there';
     var input = document.getElementById('new-bank-name');
     if (input) input.value = '';
     var st = document.getElementById('new-bank-status');
@@ -464,13 +541,16 @@ function closeNewBankModal() {
 }
 
 function _createBankWithName(name) {
-    if (_newBankSource === 'builtin') {
-        return api('/api/settings/banks/create', {name: name, pools: _poolDefaults});
-    }
-    if (_activeBankId) {
-        return api('/api/settings/banks/clone', {source_id: _activeBankId, name: name});
-    }
-    return api('/api/settings/banks/create', {name: name, pools: _poolDefaults});
+    return api('/api/settings/banks/pools/defaults').then(function(def) {
+        var pools = (def && def.pools) ? def.pools : {};
+        if (_newBankSource === 'builtin') {
+            return api('/api/settings/banks/create', {name: name, pools: pools});
+        }
+        if (_activeBankId) {
+            return api('/api/settings/banks/clone', {source_id: _activeBankId, name: name});
+        }
+        return api('/api/settings/banks/create', {name: name, pools: pools});
+    });
 }
 
 async function submitNewBank() {
@@ -487,97 +567,10 @@ async function submitNewBank() {
         _activeBankId = r.bank.id;
         closeNewBankModal();
         showSuccess('Bank created: ' + name);
-        await loadPoolEditor(); renderBankList();
+        renderBankList();
     } else {
         if (st) { st.textContent = (r && (r.error || r.output)) || 'Create failed'; st.className = 'new-bank-status error'; }
     }
-}
-
-function setPoolEditorVisible() {
-    var wrap = document.getElementById('pool-editor-wrapper');
-    if (!wrap) return;
-    var readOnly = !_activeBankId;
-    wrap.classList.toggle('readonly', readOnly);
-    var actions = document.querySelector('.pool-editor-actions');
-    if (actions) actions.classList.toggle('hidden', readOnly);
-    var note = document.getElementById('pool-editor-note');
-    if (note) note.classList.toggle('hidden', !readOnly);
-}
-
-async function loadBankEditor() {
-    await loadActiveBank();
-    await Promise.all([loadPoolEditor(), renderBankList()]);
-}
-
-async function renderBankList() {
-    var list = document.getElementById('settings-bank-list');
-    if (!list) return;
-    var data = await api('/api/settings/banks');
-    var banks = (data && data.banks) ? data.banks : {};
-    _savedBanks = banks;
-    var ids = Object.keys(banks);
-    var html = '';
-    for (var i = 0; i < ids.length; i++) {
-        var b = banks[ids[i]] || {};
-        var poolCount = Object.keys(b.pools || {}).length;
-        var isBuiltin = (ids[i] === 'builtin');
-        var isActive = isBuiltin ? (!_activeBankId) : (ids[i] === _activeBankId);
-        html += '<div class="bank-row' + (isActive ? ' active' : '') + (isBuiltin ? ' is-builtin' : '') + '">';
-        html += '<div class="bank-row-main">';
-        html += '<div class="bank-name-wrap">';
-        html += '<button type="button" class="bank-name' + (isBuiltin ? ' is-builtin' : '') + '" onclick="startInlineRename(\'' + esc(ids[i]) + '\', this)"' + (isBuiltin ? '' : ' title="Click to rename"') + ' aria-label="Rename ' + esc(b.name || ids[i]) + '">' + esc(b.name || ids[i]) + '</button>';
-        html += '<input type="text" class="bank-rename-input" data-bank-id="' + esc(ids[i]) + '" hidden>';
-        html += '</div>';
-        html += '<span class="bank-count">' + (isBuiltin ? 'Default' : poolCount + ' override' + (poolCount !== 1 ? 's' : '')) + '</span>';
-        html += '</div>';
-        html += '<div class="bank-row-select">';
-        html += '<label class="provider-toggle" title="' + (isActive ? 'Active prompt bank' : 'Set as active') + '">';
-        html += '<input type="radio" name="active-bank" data-bank-id="' + esc(ids[i]) + '"' + (isActive ? ' checked' : '') + ' onchange="setActiveBankFromRadio(this)">';
-        html += '<span class="toggle-slider"></span>';
-        html += '</label>';
-        html += '</div>';
-        html += '<div class="bank-row-actions">';
-        if (!isBuiltin) {
-            html += '<button type="button" class="btn btn-sm btn-outline" onclick="event.stopPropagation(); confirmDeleteBank(\'' + esc(ids[i]) + '\')" aria-label="Delete ' + esc(b.name || ids[i]) + '">Delete</button>';
-        }
-        html += '</div></div>';
-    }
-    list.innerHTML = html || '<div class="settings-hint empty-state">No saved banks yet. <button type="button" class="btn-link" onclick="event.stopPropagation(); openNewBankModalFromDefault()">Create your first bank</button></div>';
-    updateActiveBankHeader();
-    setPoolEditorVisible();
-}
-
-function startInlineRename(id, btn) {
-    if (id === 'builtin') { showInfo('Default pools are read-only'); return; }
-    var wrap = btn.parentElement;
-    var input = wrap.querySelector('.bank-rename-input');
-    if (!input) return;
-    var old = btn.textContent.trim();
-    input.value = old;
-    input.hidden = false;
-    btn.style.display = 'none';
-    input.focus();
-    input.select();
-    var done = false;
-    var finish = function(save) {
-        if (done) return;
-        done = true;
-        var val = input.value.trim();
-        if (save && val && val !== old) {
-            api('/api/settings/banks/update', {id: id, name: val}).then(function(r) {
-                if (r && r.ok) { showSuccess('Bank renamed'); renderBankList(); }
-                else { showError((r && (r.error || r.output)) || 'Rename failed'); renderBankList(); }
-            });
-        } else {
-            input.hidden = true;
-            btn.style.display = '';
-        }
-    };
-    input.onkeydown = function(e) {
-        if (e.key === 'Enter') { e.preventDefault(); finish(true); }
-        else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
-    };
-    input.onblur = function() { finish(true); };
 }
 
 function confirmDeleteBank(id) {
@@ -604,11 +597,12 @@ async function executeDeleteBank() {
         if (_activeBankId === id) _activeBankId = '';
         showSuccess('Bank deleted');
         await loadActiveBank();
-        await loadPoolEditor(); renderBankList();
+        renderBankList();
     } else {
         showError((r && (r.error || r.output)) || 'Delete failed');
     }
 }
+
 
 function loadAvatarUrl() {
     var input = document.getElementById('settings-avatar-url');
@@ -672,10 +666,14 @@ async function handleAvatarFile(file) {
 }
 
 async function saveIdentity() {
-    if (!_pendingAvatarUrl) { closeSettingsModal(); return; }
+    if (!_pendingAvatarUrl) { _setSettingsStatus('Load or upload an image first.', 'error'); return; }
     var r = await api('/api/settings/identity', { avatar_url: _pendingAvatarUrl });
     if (r && r.ok) {
-        closeSettingsModal();
+        var newPreview = document.getElementById('settings-new-preview');
+        if (newPreview) { newPreview.style.display = 'none'; newPreview.removeAttribute('src'); }
+        var input = document.getElementById('settings-file-input');
+        if (input) input.value = '';
+        _pendingAvatarUrl = '';
         showSuccess('Identity saved');
         loadSettings();
     } else {
@@ -683,24 +681,18 @@ async function saveIdentity() {
     }
 }
 
-// ESC closes settings modal
+// ESC closes new/delete bank modals
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         var db = document.getElementById('delete-bank-modal');
         if (db && db.classList.contains('show')) { closeDeleteBankModal(); return; }
         var nb = document.getElementById('new-bank-modal');
         if (nb && nb.classList.contains('show')) { closeNewBankModal(); return; }
-        var modal = document.getElementById('settings-modal');
-        if (modal && modal.classList.contains('show')) {
-            closeSettingsModal();
-        }
     }
 });
 
-// Outside click closes settings modal
+// Outside click closes new/delete bank modals
 document.addEventListener('click', function(e) {
-    var modal = document.getElementById('settings-modal');
-    var trigger = document.getElementById('settings-nav-trigger');
     var nb = document.getElementById('new-bank-modal');
     var db = document.getElementById('delete-bank-modal');
     if (db && db.classList.contains('show') && !e.target.closest('#delete-bank-modal-box')) {
@@ -711,18 +703,9 @@ document.addEventListener('click', function(e) {
         closeNewBankModal();
         return;
     }
-    if (modal && modal.classList.contains('show') && !e.target.closest('#settings-modal-box') && !e.target.closest('#settings-nav-trigger')) {
-        closeSettingsModal();
-    }
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-    var modal = document.getElementById('settings-modal');
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) closeSettingsModal();
-        });
-    }
     var fileInput = document.getElementById('settings-file-input');
     var zone = document.getElementById('settings-upload-zone');
     if (fileInput) {
@@ -764,9 +747,6 @@ document.addEventListener('DOMContentLoaded', function() {
         toggle.setAttribute('aria-expanded', 'false');
     }
     showSection(_activeSection); // activates correct section
-
-    // Sidebar toggle
-    document.getElementById('sidebar-toggle')?.addEventListener('click', toggleSidebar);
 
     // Floater toggle button
     document.getElementById('floater-toggle')?.addEventListener('click', toggleFloaterMenu);
@@ -910,17 +890,11 @@ function showSection(sectionId) {
   }
   if (sectionId === 'outputs') refreshOutputs();
   else if (sectionId === 'generation') fetchBalance();
-  else if (sectionId === 'prompts') loadPromptBankUI();
   else if (sectionId === 'settings') loadSettingsUI();
   syncPanelHeights();
 }
 
-// ── Prompt Bank UI (extracted from Settings modal) ──
-function loadPromptBankUI() {
-  loadBankEditor();
-}
-
-// ── Settings UI (Identity + Prompt Bank cards, extracted from Settings modal) ──
+// ── Settings UI (Identity + Prompt Bank cards, rendered in #section-settings) ──
 function loadSettingsUI() {
   loadSettings();
 }

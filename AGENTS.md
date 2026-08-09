@@ -160,6 +160,18 @@ This keeps AGENTS.md in sync with reality without re-running `/init-deep`.
 
 ## Recent Changes
 
+### 2026-08-09 — Settings redesign: side-by-side panes + prompt bank tile cards
+
+**settings HTML fixed** ✓ — `webui/static/index.html` `#section-settings` was severely malformed (missing `<div`/`<section`/`<h4` opening tags throughout). Rebuilt scratch: proper two-pane grid **IDENTITY (fixed 380px) | PROMPT BANKS**. Removed dead inline pool-editor markup (`pool-editor-wrapper`/`active-bank-header`/`saveAllPoolChanges`/`resetAllPoolsToBuiltin`) + 2 pre-existing stray `</div>`s. File now fully balanced (HTMLParser 0 errors).
+
+**bank tile cards (masonry)** ✓ — `app.js` old pool-tile editor replaced. `.bank-tiles` CSS `column-count:2` masonry. Tiles: New Bank dashed tile (+ → `openNewBankModalFromDefault`), per-bank card = `.bt-head` (name clickable, ACTIVE badge), `.bt-pools` label chips (via `_POOL_LABELS`), `.bt-foot` (count + Edit/Use/Delete). Builtin tile read-only pseudo-bank. `setActiveBank(id)` → POST `/api/settings/banks/active`.
+
+**bank editor modal** ✓ — `#bank-editor-modal` (z 1001, 760px, 2-col: 220px pool sidebar + textarea). Sidebar: `.be-pool-item` (label, count text, × remove), `+ List/Styles/Text Pool` buttons. Main: name input `#be-name`, `#be-pool-name` + `.pool-badge` type (styles/text/list), `#be-textarea`, `#be-hint`, Reset Pool / Save Bank. Dict pools serialized `style: item1, item2` per line; list = line per item; str = plain. Value-type helpers `_poolValType`/`_poolCopy`/`_poolToText`/`_textToPool`/`_poolCountText`/`_poolHintText`. Builtin = view-only. ESC + outside-click close.
+
+**custom pools** ✓ — `core/prompt_banks.py` `_sanitize_bank` now keeps custom UPPERCASE pool keys (was: only 13 OVERRIDABLE_POOLS). Custom pools persist + edit via modal; only builtin-named pools affect generation (new OUTFIT dict style keys get picked up via flatten fallback).
+
+**verified** ✓ — py_compile + node --check clean; HTML parser balanced; live server restarted: custom pool `OCCASIONS` create→save→restore on bank `prompt v2`, `/api/settings/banks`, `/api/settings/banks/pools/defaults` (13 pools) all 200; served HTML has modal + tiles, no old pool-editor refs.
+
 ### 2026-08-06 — Caption generator feature (phases 1-4)
 
 **generator module** ✓ — `scripts/alina_textgen.py`: zero-dependency, identity-locked pool-based caption generator (Alina alt-girl tone). `OPENERS`/`MIDDLES`/`CLOSERS` pools × 5 hook types (vulnerable/confident/playful/aesthetic/relatable), `PLATFORM_CONFIG` per-platform CTA + hashtags (tiktok/reels/shorts/x/stories), seed-reproducible `generate_caption`/`batch_generate` with text dedup, argparse CLI (`py scripts/alina_textgen.py 10 tiktok --seed 42`).
