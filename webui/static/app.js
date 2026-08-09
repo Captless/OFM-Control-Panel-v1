@@ -281,12 +281,15 @@ function getSelectedBankId() {
 
 function setActiveBank(id) {
     if (id === _activeBankId) return;
+    var prev = _activeBankId;
+    _activeBankId = id;
+    renderBankList();
     api('/api/settings/banks/active', {id: id}).then(function(r) {
         if (r && r.ok) {
             _activeBankId = (r.active || '');
             showSuccess(id ? 'Active prompt bank set' : 'Using Default prompt bank');
-            renderBankList();
         } else {
+            _activeBankId = prev;
             showError((r && (r.error || r.output)) || 'Failed to set active bank');
             renderBankList();
         }
@@ -354,6 +357,7 @@ function selectBank(id) {
 var _bankEditorId = '';
 var _bankEditorPool = '';
 var _bankEditorDraft = null;
+var _bankEditorIsNew = false;
 
 function showBankEditor() {
     var modal = document.getElementById('bank-editor-modal');
@@ -366,6 +370,7 @@ function closeBankEditor() {
     _bankEditorId = '';
     _bankEditorPool = '';
     _bankEditorDraft = null;
+    _bankEditorIsNew = false;
 }
 
 async function openBankEditor(id) {
@@ -390,10 +395,13 @@ async function openBankEditor(id) {
 function renderBankEditor() {
     if (!_bankEditorDraft) return;
     var readOnly = (_bankEditorId === 'builtin');
-    document.getElementById('bank-editor-title').textContent = readOnly ? 'Built-in Pools' : 'Edit Bank';
+    var isNew = _bankEditorIsNew;
+    document.getElementById('bank-editor-title').textContent = readOnly ? 'Built-in Pools' : (isNew ? 'Create Bank' : 'Edit Bank');
     document.getElementById('bank-editor-subtitle').textContent = readOnly ? 'View-only — create a bank to edit pools' : (_bankEditorDraft.name || '');
     var nameInput = document.getElementById('be-name');
     if (nameInput) { nameInput.value = _bankEditorDraft.name; nameInput.disabled = readOnly; }
+    var saveBtn = document.getElementById('be-save');
+    if (saveBtn) saveBtn.textContent = isNew ? 'Create Bank' : 'Save Bank';
     var list = document.getElementById('be-pool-list');
     var names = Object.keys(_bankEditorDraft.pools);
     var html = '';
@@ -408,7 +416,6 @@ function renderBankEditor() {
         html += '</div>';
     }
     list.innerHTML = html;
-    var saveBtn = document.getElementById('be-save');
     var resetBtn = document.getElementById('be-reset');
     var addBtns = document.querySelectorAll('.be-add-pool');
     for (var a = 0; a < addBtns.length; a++) addBtns[a].style.display = readOnly ? 'none' : '';
@@ -491,20 +498,35 @@ async function saveBankFromModal() {
     }
     var nameInput = document.getElementById('be-name');
     var newName = (nameInput ? nameInput.value : '').trim();
-    var body = {id: _bankEditorId, pools: _bankEditorDraft.pools};
-    if (newName) body.name = newName;
+    if (!newName) newName = _bankEditorDraft.name;
     var btn = document.getElementById('be-save');
     var btnTxt = btn ? btn.textContent : '';
     if (btn) { btn.disabled = true; btn.textContent = 'Saving\u2026'; }
-    var r = await api('/api/settings/banks/update', body);
+    if (_bankEditorIsNew) {
+        var r = await api('/api/settings/banks/create', {name: newName, pools: _bankEditorDraft.pools});
+        if (btn) { btn.disabled = false; btn.textContent = btnTxt; }
+        if (r && r.ok) {
+            _activeBankId = r.bank.id;
+            _savedBanks[r.bank.id] = r.bank;
+            showSuccess('Bank created');
+            closeBankEditor();
+            renderBankList();
+        } else {
+            showError((r && (r.error || r.output)) || 'Create failed');
+        }
+        return;
+    }
+    var body = {id: _bankEditorId, pools: _bankEditorDraft.pools};
+    if (newName) body.name = newName;
+    var r2 = await api('/api/settings/banks/update', body);
     if (btn) { btn.disabled = false; btn.textContent = btnTxt; }
-    if (r && r.ok) {
+    if (r2 && r2.ok) {
         showSuccess('Bank saved');
         if (newName) _bankEditorDraft.name = newName;
         closeBankEditor();
         renderBankList();
     } else {
-        showError((r && (r.error || r.output)) || 'Save failed');
+        showError((r2 && (r2.error || r2.output)) || 'Save failed');
     }
 }
 
@@ -591,16 +613,14 @@ async function openNewBankFromDefault() {
     var name = generateNextBankName();
     var def = await api('/api/settings/banks/pools/defaults');
     var pools = (def && def.pools) ? def.pools : {};
-    var r = await api('/api/settings/banks/create', {name: name, pools: pools});
-    if (r && r.ok) {
-        _activeBankId = r.bank.id;
-        _savedBanks[r.bank.id] = r.bank;
-        showSuccess('Bank created: ' + name);
-        renderBankList();
-        openBankEditor(r.bank.id);
-    } else {
-        showError((r && (r.error || r.output)) || 'Create failed');
-    }
+    _bankEditorId = 'new';
+    var draft = {};
+    Object.keys(pools).forEach(function(k) { draft[k] = _poolCopy(pools[k]); });
+    _bankEditorDraft = { id: '', name: name, pools: draft };
+    _bankEditorPool = Object.keys(draft)[0] || '';
+    _bankEditorIsNew = true;
+    renderBankEditor();
+    showBankEditor();
 }
 
 function confirmDeleteBank(id) {

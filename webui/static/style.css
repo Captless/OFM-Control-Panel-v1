@@ -3069,11 +3069,15 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
 
 @media (prefers-reduced-motion: reduce) {
   .bank-row,
+  .bank-row-cta,
   .btn,
   .be-pool-item,
   .be-add-pools .btn {
     transition: none;
   }
+  .bank-row:hover { transform: none; }
+  .bank-row:active { transform: none; }
+  .bank-row-cta:active { transform: none; }
 }
 
 /* button reset for CTA-as-button */
