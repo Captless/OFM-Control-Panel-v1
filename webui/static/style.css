@@ -2495,25 +2495,6 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
 .bank-row-foot { display: flex; align-items: center; gap: 6px; }
 .bank-row-count { flex: 1; font-size: 10px; font-family: var(--font-mono); color: var(--fg3); }
 .bank-row-foot .btn { padding: 4px 10px; font-size: 9px; }
-.bank-row-use {
-  flex-shrink: 0;
-  background: var(--accent);
-  border: 1px solid var(--accent);
-  color: var(--accent-contrast);
-  border-radius: var(--radius);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  padding: 4px 10px;
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-touch-callout: none;
-  transition: background .15s, border-color .15s, transform .15s;
-}
-.bank-row-use:hover { background: var(--accent-soft); border-color: var(--accent-soft); color: var(--accent-contrast); }
-.bank-row-use:active { transform: scale(0.98); }
 .bank-row-del:hover { border-color: var(--error); color: var(--error); background: var(--error-bg); }
 
 /* New Bank CTA row */
@@ -2526,8 +2507,9 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
   text-align: center;
   border-style: dashed;
   color: var(--fg3);
-  font-family: var(--font-mono);
-  font-size: 11px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 1px;
   padding: 12px;
@@ -3055,17 +3037,6 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
   min-height: 44px;
   user-select: none;
 }
-.bank-row-cta:active {
-  transform: scale(0.99);
-}
-
-/* row hover lift — transform/opacity only (compositor-friendly) */
-.bank-row {
-  transform: translateY(0);
-  transition: border-color .15s, background .15s, transform .15s;
-}
-.bank-row:hover { transform: translateY(-1px); }
-.bank-row:active { transform: translateY(0); }
 
 /* modal listbox: overscroll containment + focus ring */
 #be-pool-list {
@@ -3098,15 +3069,11 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
 
 @media (prefers-reduced-motion: reduce) {
   .bank-row,
-  .bank-row-cta,
   .btn,
   .be-pool-item,
   .be-add-pools .btn {
     transition: none;
   }
-  .bank-row:hover { transform: none; }
-  .bank-row:active { transform: none; }
-  .bank-row-cta:active { transform: none; }
 }
 
 /* button reset for CTA-as-button */

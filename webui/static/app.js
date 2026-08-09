@@ -332,10 +332,7 @@ async function renderBankList() {
         html += '<div class="bank-row-foot">';
         html += '<span class="bank-row-count">' + poolNames.length + ' pool' + (poolNames.length !== 1 ? 's' : '') + '</span>';
         html += '<button type="button" class="btn btn-sm" onclick="event.stopPropagation();openBankEditor(\'' + esc(id) + '\')">Edit</button>';
-        if (isBuiltin) {
-            html += '<button type="button" class="bank-row-use" onclick="event.stopPropagation();setActiveBank(\'\')">Use Default</button>';
-        } else {
-            html += '<button type="button" class="bank-row-use" onclick="event.stopPropagation();setActiveBank(\'' + esc(id) + '\')">Use</button>';
+        if (!isBuiltin) {
             html += '<button type="button" class="btn btn-sm btn-outline bank-row-del" onclick="event.stopPropagation();confirmDeleteBank(\'' + esc(id) + '\')">Delete</button>';
         }
         html += '</div>';
@@ -347,6 +344,7 @@ async function renderBankList() {
 }
 
 function selectBank(id) {
+    if (id === 'builtin') id = '';
     if (id === _activeBankId) return;
     setActiveBank(id);
 }
