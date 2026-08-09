@@ -161,10 +161,10 @@
 </div>
 
 <!-- ── Bank Editor Modal ── -->
-<div id="bank-editor-modal" role="dialog" aria-modal="true" aria-label="Edit prompt bank">
+<div id="bank-editor-modal" role="dialog" aria-modal="true" aria-labelledby="bank-editor-title" aria-describedby="bank-editor-subtitle">
   <div id="bank-editor-box">
-    <button class="modal-close" onclick="closeBankEditor()" title="Close">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <button class="modal-close" onclick="closeBankEditor()" aria-label="Close bank editor" type="button">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <line x1="18" y1="6" x2="6" y2="18"/>
         <line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
@@ -176,15 +176,16 @@
     <div class="be-body">
       <div class="be-name-row">
         <label for="be-name">Bank name</label>
-        <input type="text" id="be-name" autocomplete="off" spellcheck="false">
+        <input type="text" id="be-name" autocomplete="off" spellcheck="false" aria-describedby="be-name-hint">
+        <span id="be-name-hint" class="visually-hidden">Enter a unique name for this prompt bank</span>
       </div>
       <div class="be-layout">
         <div class="be-sidebar">
-          <div id="be-pool-list"></div>
+          <div id="be-pool-list" role="listbox" aria-label="Prompt pools" tabindex="0"></div>
           <div class="be-add-pools">
-            <button type="button" class="btn btn-sm btn-outline be-add-pool" onclick="addCustomPool('list')">+ List Pool</button>
-            <button type="button" class="btn btn-sm btn-outline be-add-pool" onclick="addCustomPool('dict')">+ Styles Pool</button>
-            <button type="button" class="btn btn-sm btn-outline be-add-pool" onclick="addCustomPool('str')">+ Text Pool</button>
+            <button type="button" class="btn btn-sm btn-outline be-add-pool" onclick="addCustomPool('list')" aria-label="Add list pool">+ List Pool</button>
+            <button type="button" class="btn btn-sm btn-outline be-add-pool" onclick="addCustomPool('dict')" aria-label="Add styles pool">+ Styles Pool</button>
+            <button type="button" class="btn btn-sm btn-outline be-add-pool" onclick="addCustomPool('str')" aria-label="Add text pool">+ Text Pool</button>
           </div>
         </div>
         <div class="be-main">
@@ -192,8 +193,8 @@
             <span class="be-pool-title" id="be-pool-name"></span>
             <span class="pool-badge" id="be-pool-type"></span>
           </div>
-          <textarea id="be-textarea" spellcheck="false"></textarea>
-          <div class="be-hint" id="be-hint"></div>
+          <textarea id="be-textarea" spellcheck="false" aria-label="Pool items" aria-describedby="be-hint"></textarea>
+          <div class="be-hint" id="be-hint" aria-live="polite"></div>
           <div class="be-actions">
             <button type="button" class="btn btn-sm btn-outline" id="be-reset" onclick="resetCurrentPool()">Reset Pool</button>
             <button type="button" class="btn btn-sm" id="be-save" onclick="saveBankFromModal()">Save Bank</button>
@@ -204,45 +205,18 @@
   </div>
 </div>
 
-<!-- ── New Bank Modal ── -->
-<div id="new-bank-modal" role="dialog" aria-modal="true" aria-label="New prompt bank">
-  <div id="new-bank-modal-box">
-    <button class="modal-close" onclick="closeNewBankModal()" title="Close">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-    <div class="modal-header">
-      <h4>New Prompt Bank</h4>
-      <p>Copy current pools into a new bank</p>
-    </div>
-    <div class="new-bank-body">
-      <div class="field">
-        <label for="new-bank-name">Bank name</label>
-        <input type="text" id="new-bank-name" class="bank-input" placeholder="e.g. Summer Shoot" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter'){event.preventDefault();submitNewBank()}">
-      </div>
-      <div id="new-bank-status" class="new-bank-status" role="status" aria-live="polite"></div>
-    </div>
-    <div class="new-bank-footer">
-      <button type="button" class="btn btn-sm btn-outline" onclick="closeNewBankModal()">Cancel</button>
-      <button type="button" class="btn btn-sm" onclick="submitNewBank()">Create Bank</button>
-    </div>
-  </div>
-</div>
-
 <!-- ── Delete Bank Modal ── -->
-<div id="delete-bank-modal" role="dialog" aria-modal="true" aria-label="Delete prompt bank">
+<div id="delete-bank-modal" role="dialog" aria-modal="true" aria-labelledby="delete-bank-title" aria-describedby="delete-bank-subtitle">
   <div id="delete-bank-modal-box">
-    <button class="modal-close" onclick="closeDeleteBankModal()" title="Close">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <button class="modal-close" onclick="closeDeleteBankModal()" aria-label="Close delete bank dialog" type="button">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <line x1="18" y1="6" x2="6" y2="18"/>
         <line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
     </button>
     <div class="modal-header">
-      <h4>Delete Prompt Bank</h4>
-      <p>This action cannot be undone</p>
+      <h4 id="delete-bank-title">Delete Prompt Bank</h4>
+      <p id="delete-bank-subtitle">This action cannot be undone</p>
     </div>
     <div class="delete-bank-body">
       <p>Delete <strong class="delete-bank-name"></strong>? Its custom pools will be lost.</p>
@@ -452,16 +426,16 @@
         </div>
         <div class="settings-card banks-card">
           <div class="banks-list-header">
-            <h5>Saved Banks</h5>
+            <h5 id="banks-heading">Saved Banks</h5>
             <span class="banks-toolbar">
               <button type="button" class="btn btn-sm" onclick="exportBanks()" title="Download all banks as JSON">Export</button>
-              <label class="btn btn-sm" style="cursor:pointer">Import
+              <label class="btn btn-sm" style="cursor:pointer" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">
+                Import
                 <input type="file" accept=".json,application/json" style="display:none" onchange="importBanks(this.files[0]); this.value=''">
               </label>
-              <button type="button" class="btn btn-sm" onclick="openNewBankModalFromDefault()">New Bank</button>
             </span>
           </div>
-          <div id="settings-bank-list" class="bank-tiles"></div>
+          <div id="settings-bank-list" class="bank-list" role="radiogroup" aria-labelledby="banks-heading" aria-live="polite"></div>
         </div>
       </section>
     </div>
