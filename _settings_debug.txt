@@ -1,0 +1,80 @@
+ 378:   <section id="section-settings" class="content-section" hidden>
+ 379:   <div class="settings-grid">
+ 380: 
+ 381:     <!-- ?? Identity (left, fixed width) ?? -->
+ 382:     <div class="settings-pane identity-pane">
+ 383:       <section class="settings-section identity-section">
+ 384:         <div class="section-header">
+ 385:           <h4>Identity</h4>
+ 386:           <span class="settings-hint">Model reference for generation</span>
+ 387:         </div>
+ 388:         <div class="settings-card identity-card">
+ 389:           <div class="identity-avatar-stack">
+ 390:             <img id="settings-avatar-preview" class="identity-avatar" alt="" aria-hidden="true">
+ 391:             <div id="settings-identity-name" class="identity-name">Loading&hellip;</div>
+ 392:           </div>
+ 393:           <hr class="identity-divider">
+ 394:           <div class="identity-fields">
+ 395:             <div class="field">
+ 396:               <label for="settings-avatar-url">Avatar URL</label>
+ 397:               <div class="input-with-btn">
+ 398:                 <input type="url" id="settings-avatar-url" placeholder="https://&hellip;" autocomplete="off" spellcheck="false">
+ 399:                 <button type="button" class="btn btn-sm btn-outline" id="settings-url-load" onclick="loadAvatarUrl()">Load</button>
+ 400:               </div>
+ 401:             </div>
+ 402:             <div class="field">
+ 403:               <label>Upload Image</label>
+ 404:               <button type="button" class="upload-zone" id="settings-upload-zone" aria-label="Upload identity image">
+ 405:                 <span class="upload-zone-icon">
+ 406:                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+ 407:                 </span>
+ 408:                 <span>Drop image or click to browse</span>
+ 409:               </button>
+ 410:               <input type="file" id="settings-file-input" accept="image/*" hidden>
+ 411:             </div>
+ 412:             <img id="settings-new-preview" class="identity-new-preview" alt="New identity preview" hidden>
+ 413:             <div id="settings-status" class="settings-status" role="status" aria-live="polite"></div>
+ 414:             <button type="button" class="btn btn-sm" onclick="saveIdentity()">Save Identity</button>
+ 415:           </div>
+ 416:         </div>
+ 417:       </section>
+ 418:     </div>
+ 419: 
+ 420:     <!-- ?? Prompt Banks (right, flexible) ?? -->
+ 421:     <div class="settings-pane bank-pane">
+ 422:       <section class="settings-section banks-section">
+ 423:         <div class="section-header">
+ 424:           <h4>Prompt Banks</h4>
+ 425:           <span class="settings-hint">Tile cards &mdash; click a bank to edit its pools</span>
+ 426:         </div>
+ 427:         <div class="settings-card banks-card">
+ 428:           <div class="banks-list-header">
+ 429:             <h5 id="banks-heading">Saved Banks</h5>
+ 430:             <span class="banks-toolbar">
+ 431:               <button type="button" class="btn btn-sm" onclick="exportBanks()" title="Download all banks as JSON">Export</button>
+ 432:               <label class="btn btn-sm" style="cursor:pointer" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">
+ 433:                 Import
+ 434:                 <input type="file" accept=".json,application/json" style="display:none" onchange="importBanks(this.files[0]); this.value=''">
+ 435:               </label>
+ 436:             </span>
+ 437:           </div>
+ 438:           <div id="settings-bank-list" class="bank-tiles" aria-labelledby="banks-heading" aria-live="polite"></div>
+ 439:         </div>
+ 440:       </section>
+ 441:     </div>
+ 442: 
+ 443:   </div>
+ 444: </section>
+ 445: </main>
+ 446: 
+ 447: 
+ 448: </div><!-- /app -->
+ 449: 
+ 450: <!-- ?? Hidden sidebar elements (JS compat) ?? -->
+ 451: <div style="display:none">
+ 452:   <div id="global-stats">Loading...</div>
+ 453:   <span id="sidebar-generated">0</span>
+ 454:   <span id="sidebar-batches">0</span>
+ 455: </div>
+ 456: 
+ 457: <!-- ?? Fullscreen Modal ?? -->

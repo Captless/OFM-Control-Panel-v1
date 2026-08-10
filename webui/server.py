@@ -920,7 +920,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_header("Pragma", "no-cache")
         self.send_header("Expires", "0")
         self.end_headers()
-        self.wfile.write(HOMEPAGE_HTML.encode("utf-8"))
+        self.wfile.write(_load_homepage().encode("utf-8"))
 
     def _json(self, data, status=200):
         self.send_response(status)
@@ -970,7 +970,6 @@ def _load_homepage():
     return "<h1>OFM Control Panel</h1><p>Error: static/index.html not found</p>"
 
 
-HOMEPAGE_HTML = _load_homepage()
 # â”€â”€ Run â”€â”€
 if __name__ == "__main__":
     port = 8000

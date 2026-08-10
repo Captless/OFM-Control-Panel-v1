@@ -50,6 +50,10 @@ function initTheme() {
 }
 initTheme();
 
+// ── Sidebar state ──
+var _sidebarCollapsed = false;
+var _activeSection = 'generation';
+
 // ── Theme Modal ──
 function toggleThemeModal() {
     var modal = document.getElementById('theme-modal');
@@ -134,16 +138,8 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// ── Settings Modal ──
+// ── Settings ──
 var _pendingAvatarUrl = '';
-
-function _setSettingsExpanded(open) {
-    var t = document.getElementById('settings-nav-trigger');
-    if (t) {
-        t.setAttribute('aria-expanded', open ? 'true' : 'false');
-        t.classList.toggle('open', open);
-    }
-}
 
 function _setSettingsStatus(msg, type) {
     var el = document.getElementById('settings-status');
@@ -151,38 +147,6 @@ function _setSettingsStatus(msg, type) {
     if (!msg) { el.textContent = ''; el.className = 'settings-status'; return; }
     el.textContent = msg;
     el.className = 'settings-status' + (type ? ' ' + type : '');
-}
-
-function toggleSettingsModal() {
-    var modal = document.getElementById('settings-modal');
-    if (!modal) return;
-    if (modal.classList.contains('show')) {
-        closeSettingsModal();
-    } else {
-        modal.classList.add('show');
-        _setSettingsExpanded(true);
-        _setSettingsStatus('');
-        loadSettings();
-        setTimeout(function() {
-            var input = document.getElementById('settings-avatar-url');
-            if (input) input.focus();
-        }, 50);
-    }
-}
-
-function closeSettingsModal() {
-    var nb = document.getElementById('new-bank-modal');
-    var db = document.getElementById('delete-bank-modal');
-    if ((nb && nb.classList.contains('show')) || (db && db.classList.contains('show'))) return;
-    var modal = document.getElementById('settings-modal');
-    if (modal) modal.classList.remove('show');
-    _setSettingsExpanded(false);
-    var newPreview = document.getElementById('settings-new-preview');
-    if (newPreview) { newPreview.style.display = 'none'; newPreview.removeAttribute('src'); }
-    var input = document.getElementById('settings-file-input');
-    if (input) input.value = '';
-    _pendingAvatarUrl = '';
-    _setSettingsStatus('');
 }
 
 async function loadSettings() {
@@ -209,13 +173,10 @@ async function loadSettings() {
     await loadBankEditor();
 }
 
-// ── Prompt bank editor (single pane, collapsed pool cards) ──
+// ── Prompt bank editor (masonry tiles + modal textarea) ──
 
 var _activeBankId = '';
 var _savedBanks = {};
-var _poolDefaults = {};
-var _poolActive = {};
-var _newBankSource = 'builtin';
 var _pendingDeleteId = null;
 
 var _POOL_LABELS = {
@@ -234,53 +195,79 @@ var _POOL_LABELS = {
     'IDENTITY_LOCK': 'Identity Lock'
 };
 
-function _isDictPool(name) {
-    return name === 'OUTFIT_TOPS_POOLS' || name === 'OUTFIT_BOTTOMS_POOLS' || name === 'LIGHTING_POOLS';
+function _poolLabel(name) { return _POOL_LABELS[name] || name; }
+
+function _poolValType(val) {
+    if (val == null) return 'list';
+    if (Array.isArray(val)) return 'list';
+    if (typeof val === 'object') return 'dict';
+    return 'str';
 }
 
-function _isStrPool(name) {
-    return name === 'DEFAULT_NEGATIVE' || name === 'MIRROR_NEGATIVE' || name === 'IDENTITY_LOCK';
-}
-
-function _poolLabel(name) {
-    return _POOL_LABELS[name] || name;
-}
-
-function _poolTypeBadge(name) {
-    if (_isDictPool(name)) return 'styles';
-    if (_isStrPool(name)) return 'text';
+function _poolTypeBadgeOf(val) {
+    var t = _poolValType(val);
+    if (t === 'dict') return 'styles';
+    if (t === 'str') return 'text';
     return 'list';
 }
 
-function _poolSummary(name, val) {
-    if (val == null) return 'empty';
-    if (_isDictPool(name)) return Object.keys(val).length + ' style' + (Object.keys(val).length !== 1 ? 's' : '');
-    if (_isStrPool(name)) {
-        var s = String(val).trim();
-        return s.length > 42 ? s.substring(0, 42) + '\u2026' : (s || 'empty');
+function _poolCopy(val) {
+    if (val == null) return [];
+    if (Array.isArray(val)) return val.slice();
+    if (typeof val === 'object') {
+        var o = {};
+        Object.keys(val).forEach(function(k) { o[k] = Array.isArray(val[k]) ? val[k].slice() : []; });
+        return o;
     }
-    return (Array.isArray(val) ? val.length : 0) + ' item' + ((Array.isArray(val) && val.length !== 1) ? 's' : '');
+    return String(val);
 }
 
-function _poolToText(name, val) {
-    if (_isDictPool(name)) {
-        var obj = val || {};
+function _poolToText(val) {
+    var t = _poolValType(val);
+    if (t === 'str') return String(val == null ? '' : val);
+    if (t === 'dict') {
         var lines = [];
-        Object.keys(obj).forEach(function(k) {
-            var items = (Array.isArray(obj[k]) ? obj[k] : []).join(', ');
-            lines.push(k + ': ' + items);
+        Object.keys(val).forEach(function(k) {
+            lines.push(k + ': ' + ((val[k] || []).join(', ')));
         });
         return lines.join('\n');
     }
-    if (_isStrPool(name)) return String(val == null ? '' : val);
     return (Array.isArray(val) ? val : []).join('\n');
 }
 
-function _poolValToString(name, val) {
-    if (val == null) return '';
-    if (_isDictPool(name)) return JSON.stringify(val || {});
-    if (_isStrPool(name)) return String(val);
-    return JSON.stringify(val || []);
+function _textToPool(name, text) {
+    var lines = text.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
+    var cur = (_bankEditorDraft && _bankEditorDraft.pools) ? _bankEditorDraft.pools[name] : null;
+    var t = _poolValType(cur);
+    if (t === 'str') return lines.join(' ');
+    if (t === 'dict') {
+        var out = {};
+        lines.forEach(function(line) {
+            var idx = line.indexOf(':');
+            if (idx === -1) return;
+            var key = line.substring(0, idx).trim();
+            var items = line.substring(idx + 1).split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+            if (!key) return;
+            if (!out[key]) out[key] = [];
+            items.forEach(function(it) { if (out[key].indexOf(it) === -1) out[key].push(it); });
+        });
+        return out;
+    }
+    return lines;
+}
+
+function _poolCountText(val) {
+    var t = _poolValType(val);
+    if (t === 'dict') return Object.keys(val).length + ' styles';
+    if (t === 'str') return 'text';
+    return (Array.isArray(val) ? val.length : 0) + ' items';
+}
+
+function _poolHintText(val) {
+    var t = _poolValType(val);
+    if (t === 'dict') return 'Format: style: item1, item2  — one style per line.';
+    if (t === 'str') return 'Single block of text.';
+    return 'One item per line.';
 }
 
 async function loadActiveBank() {
@@ -292,217 +279,26 @@ function getSelectedBankId() {
     return _activeBankId;
 }
 
-function toggleActiveBankEditor() {
-    var header = document.getElementById('active-bank-header');
-    var wrap = document.getElementById('pool-editor-wrapper');
-    if (!header || !wrap) return;
-    var closed = wrap.classList.toggle('closed');
-    header.classList.toggle('open', !closed);
-    header.setAttribute('aria-expanded', closed ? 'false' : 'true');
-}
-
-function updateActiveBankHeader() {
-    var nameEl = document.getElementById('active-bank-name');
-    if (!nameEl) return;
-    nameEl.textContent = _activeBankId ? ((_savedBanks[_activeBankId] && _savedBanks[_activeBankId].name) || _activeBankId) : 'Default';
-}
-
-function setActiveBankFromRadio(el) {
-    var id = (el.dataset && el.dataset.bankId) || '';
-    if (id === 'builtin') id = '';
+function setActiveBank(id) {
     if (id === _activeBankId) return;
+    var prev = _activeBankId;
+    _activeBankId = id;
+    renderBankList();
     api('/api/settings/banks/active', {id: id}).then(function(r) {
         if (r && r.ok) {
             _activeBankId = (r.active || '');
             showSuccess(id ? 'Active prompt bank set' : 'Using Default prompt bank');
-            loadPoolEditor();
-            renderBankList();
         } else {
+            _activeBankId = prev;
             showError((r && (r.error || r.output)) || 'Failed to set active bank');
             renderBankList();
         }
     });
 }
 
-async function loadPoolEditor() {
-    var defRes = await api('/api/settings/banks/pools/defaults');
-    var actRes = await api('/api/settings/banks/active/pools');
-    _poolDefaults = (defRes && defRes.pools) ? defRes.pools : {};
-    _poolActive = (actRes && actRes.pools) ? actRes.pools : {};
-    renderPoolEditor();
-}
-
-function renderPoolEditor() {
-    var list = document.getElementById('pool-editor-list');
-    if (!list) return;
-    var names = Object.keys(_poolDefaults);
-    if (!names.length) { list.innerHTML = '<div class="settings-hint">No pools available</div>'; return; }
-    var readOnly = !_activeBankId;
-    var html = '';
-    if (readOnly) {
-        html += '<div id="pool-editor-note" class="pool-editor-note">Default (read-only) \u2014 create a new bank to edit pools.</div>';
-    }
-    for (var i = 0; i < names.length; i++) {
-        var name = names[i];
-        var val = (_poolActive && _poolActive[name] !== undefined) ? _poolActive[name] : _poolDefaults[name];
-        var text = _poolToText(name, val);
-        html += '<div class="pool-card" data-pool="' + name + '">';
-        html += '<div class="pool-card-header">';
-        html += '<span class="pool-name">' + _poolLabel(name) + '</span>';
-        html += '<span class="pool-badge">' + _poolTypeBadge(name) + '</span>';
-        html += '<span class="pool-summary">' + esc(_poolSummary(name, val)) + '</span>';
-        html += '</div>';
-        html += '<div class="pool-card-body">';
-        html += '<div class="settings-hint">' + (_isDictPool(name) ? 'One style per line: style_name: item1, item2' : (_isStrPool(name) ? 'Single text line (wraps in editor)' : 'One item per line')) + '</div>';
-        if (_isStrPool(name)) {
-            html += '<textarea class="pool-input pool-input-str" data-pool="' + name + '" spellcheck="false" rows="3"' + (readOnly ? ' readonly' : '') + '>' + esc(text) + '</textarea>';
-        } else {
-            html += '<textarea class="pool-input" data-pool="' + name + '" spellcheck="false" rows="5"' + (readOnly ? ' readonly' : '') + '>' + esc(text) + '</textarea>';
-        }
-        html += '</div>';
-        html += '</div>';
-    }
-    list.innerHTML = html;
-    setPoolEditorVisible();
-}
-
-function resetPoolToBuiltin(name) {
-    var card = document.querySelector('.pool-card[data-pool="' + name + '"]');
-    var input = card ? card.querySelector('.pool-input') : null;
-    if (input) input.value = _poolToText(name, _poolDefaults[name]);
-}
-
-function resetAllPoolsToBuiltin() {
-    var cards = document.querySelectorAll('.pool-card');
-    for (var i = 0; i < cards.length; i++) {
-        var name = cards[i].dataset.pool;
-        var input = cards[i].querySelector('.pool-input');
-        if (input) input.value = _poolToText(name, _poolDefaults[name]);
-    }
-    showInfo('Pools reset \u2014 remember to Save Changes');
-}
-
-function collectPoolChanges() {
-    var pools = {};
-    var cards = document.querySelectorAll('.pool-card');
-    for (var i = 0; i < cards.length; i++) {
-        var name = cards[i].dataset.pool;
-        var input = cards[i].querySelector('.pool-input');
-        if (!input) continue;
-        var val;
-        try {
-            val = _textToPool(name, input.value);
-        } catch (e) {
-            return {error: name + ': ' + e.message};
-        }
-        if (_poolValToString(name, val) !== _poolValToString(name, _poolDefaults[name])) {
-            pools[name] = val;
-        }
-    }
-    return pools;
-}
-
-function _textToPool(name, text) {
-    if (_isDictPool(name)) {
-        var obj = {};
-        (text || '').split('\n').forEach(function(line) {
-            line = line.trim();
-            if (!line) return;
-            var idx = line.indexOf(':');
-            if (idx === -1) throw new Error('expected "style_name: item1, item2" per line');
-            var key = line.substring(0, idx).trim();
-            if (!key) throw new Error('missing style name');
-            obj[key] = line.substring(idx + 1).split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-        });
-        return obj;
-    }
-    if (_isStrPool(name)) return text.trim().split(/\s+/).join(' ');
-    return text.split('\n').map(function(s) { return s.trim(); }).filter(Boolean);
-}
-
-async function saveAllPoolChanges() {
-    var pools = collectPoolChanges();
-    if (pools.error) { showError('Invalid ' + pools.error); return; }
-    var keys = Object.keys(pools);
-    if (!keys.length) { showInfo('No changes to save'); return; }
-    if (_activeBankId) {
-        var r = await api('/api/settings/banks/update', {id: _activeBankId, pools: pools});
-        if (r && r.ok) { showSuccess('Changes saved'); await loadPoolEditor(); renderBankList(); }
-        else { showError((r && (r.error || r.output)) || 'Save failed'); }
-    } else {
-        openNewBankModalFromDefault();
-    }
-}
-
-async function createBankFromCurrent() {
-    openNewBankModalFromDefault();
-}
-
-function openNewBankModalFromDefault() {
-    _newBankSource = 'builtin';
-    var modal = document.getElementById('new-bank-modal');
-    if (!modal) return;
-    var h4 = modal.querySelector('.modal-header h4');
-    var p = modal.querySelector('.modal-header p');
-    if (h4) h4.textContent = 'Create Prompt Bank';
-    if (p) p.textContent = 'Starts with default pools \u2014 customize from there';
-    var input = document.getElementById('new-bank-name');
-    if (input) input.value = '';
-    var st = document.getElementById('new-bank-status');
-    if (st) { st.textContent = ''; st.className = 'new-bank-status'; }
-    modal.classList.add('show');
-    setTimeout(function() { if (input) input.focus(); }, 30);
-}
-
-function closeNewBankModal() {
-    var modal = document.getElementById('new-bank-modal');
-    if (modal) modal.classList.remove('show');
-}
-
-function _createBankWithName(name) {
-    if (_newBankSource === 'builtin') {
-        return api('/api/settings/banks/create', {name: name, pools: _poolDefaults});
-    }
-    if (_activeBankId) {
-        return api('/api/settings/banks/clone', {source_id: _activeBankId, name: name});
-    }
-    return api('/api/settings/banks/create', {name: name, pools: _poolDefaults});
-}
-
-async function submitNewBank() {
-    var input = document.getElementById('new-bank-name');
-    var st = document.getElementById('new-bank-status');
-    var name = (input.value || '').trim();
-    if (!name) {
-        if (st) { st.textContent = 'Enter a bank name'; st.className = 'new-bank-status error'; }
-        if (input) input.focus();
-        return;
-    }
-    var r = await _createBankWithName(name);
-    if (r && r.ok) {
-        _activeBankId = r.bank.id;
-        closeNewBankModal();
-        showSuccess('Bank created: ' + name);
-        await loadPoolEditor(); renderBankList();
-    } else {
-        if (st) { st.textContent = (r && (r.error || r.output)) || 'Create failed'; st.className = 'new-bank-status error'; }
-    }
-}
-
-function setPoolEditorVisible() {
-    var wrap = document.getElementById('pool-editor-wrapper');
-    if (!wrap) return;
-    var readOnly = !_activeBankId;
-    wrap.classList.toggle('readonly', readOnly);
-    var actions = document.querySelector('.pool-editor-actions');
-    if (actions) actions.classList.toggle('hidden', readOnly);
-    var note = document.getElementById('pool-editor-note');
-    if (note) note.classList.toggle('hidden', !readOnly);
-}
-
 async function loadBankEditor() {
     await loadActiveBank();
-    await Promise.all([loadPoolEditor(), renderBankList()]);
+    await renderBankList();
 }
 
 async function renderBankList() {
@@ -514,66 +310,317 @@ async function renderBankList() {
     var ids = Object.keys(banks);
     var html = '';
     for (var i = 0; i < ids.length; i++) {
-        var b = banks[ids[i]] || {};
-        var poolCount = Object.keys(b.pools || {}).length;
-        var isBuiltin = (ids[i] === 'builtin');
-        var isActive = isBuiltin ? (!_activeBankId) : (ids[i] === _activeBankId);
-        html += '<div class="bank-row' + (isActive ? ' active' : '') + (isBuiltin ? ' is-builtin' : '') + '">';
-        html += '<div class="bank-row-main">';
-        html += '<div class="bank-name-wrap">';
-        html += '<button type="button" class="bank-name' + (isBuiltin ? ' is-builtin' : '') + '" onclick="startInlineRename(\'' + esc(ids[i]) + '\', this)"' + (isBuiltin ? '' : ' title="Click to rename"') + ' aria-label="Rename ' + esc(b.name || ids[i]) + '">' + esc(b.name || ids[i]) + '</button>';
-        html += '<input type="text" class="bank-rename-input" data-bank-id="' + esc(ids[i]) + '" hidden>';
+        var id = ids[i];
+        var b = banks[id] || {};
+        var isBuiltin = (id === 'builtin');
+        var isActive = isBuiltin ? (!_activeBankId) : (id === _activeBankId);
+        var poolNames = Object.keys(b.pools || {});
+        var name = b.name || id;
+        html += '<div class="bank-row' + (isActive ? ' active' : '') + (isBuiltin ? ' is-builtin' : '') + '" role="radio" aria-checked="' + (isActive ? 'true' : 'false') + '" aria-label="' + esc(name) + '" tabindex="0" data-bank-id="' + esc(id) + '" onclick="selectBank(\'' + esc(id) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();selectBank(\'' + esc(id) + '\')}">';
+        html += '<span class="bank-row-radio" aria-hidden="true"></span>';
+        html += '<div class="bank-row-body">';
+        html += '<div class="bank-row-head">';
+        html += '<span class="bank-row-name">' + esc(name) + '</span>';
+        if (isActive) html += '<span class="bank-row-active">ACTIVE</span>';
         html += '</div>';
-        html += '<span class="bank-count">' + (isBuiltin ? 'Default' : poolCount + ' override' + (poolCount !== 1 ? 's' : '')) + '</span>';
-        html += '</div>';
-        html += '<div class="bank-row-select">';
-        html += '<label class="provider-toggle" title="' + (isActive ? 'Active prompt bank' : 'Set as active') + '">';
-        html += '<input type="radio" name="active-bank" data-bank-id="' + esc(ids[i]) + '"' + (isActive ? ' checked' : '') + ' onchange="setActiveBankFromRadio(this)">';
-        html += '<span class="toggle-slider"></span>';
-        html += '</label>';
-        html += '</div>';
-        html += '<div class="bank-row-actions">';
-        if (!isBuiltin) {
-            html += '<button type="button" class="btn btn-sm btn-outline" onclick="event.stopPropagation(); confirmDeleteBank(\'' + esc(ids[i]) + '\')" aria-label="Delete ' + esc(b.name || ids[i]) + '">Delete</button>';
+        html += '<div class="bank-row-pools">';
+        if (!poolNames.length) {
+            html += '<span class="bt-empty">' + (isBuiltin ? 'Built-in defaults' : 'No overrides yet') + '</span>';
+        } else {
+            for (var p = 0; p < poolNames.length; p++) {
+                html += '<span class="bt-chip">' + esc(_poolLabel(poolNames[p])) + '</span>';
+            }
         }
-        html += '</div></div>';
+        html += '</div>';
+        html += '<div class="bank-row-foot">';
+        html += '<span class="bank-row-count">' + poolNames.length + ' pool' + (poolNames.length !== 1 ? 's' : '') + '</span>';
+        html += '<button type="button" class="btn btn-sm" onclick="event.stopPropagation();openBankEditor(\'' + esc(id) + '\')">Edit</button>';
+        if (!isBuiltin) {
+            html += '<button type="button" class="btn btn-sm btn-outline bank-row-del" onclick="event.stopPropagation();confirmDeleteBank(\'' + esc(id) + '\')">Delete</button>';
+        }
+        html += '</div>';
+        html += '</div>';
+        html += '</div>';
     }
-    list.innerHTML = html || '<div class="settings-hint empty-state">No saved banks yet. <button type="button" class="btn-link" onclick="event.stopPropagation(); openNewBankModalFromDefault()">Create your first bank</button></div>';
-    updateActiveBankHeader();
-    setPoolEditorVisible();
+    html += '<button type="button" class="bank-row bank-row-cta" onclick="openNewBankFromDefault()">+ Create New Bank</button>';
+    list.innerHTML = html;
 }
 
-function startInlineRename(id, btn) {
-    if (id === 'builtin') { showInfo('Default pools are read-only'); return; }
-    var wrap = btn.parentElement;
-    var input = wrap.querySelector('.bank-rename-input');
-    if (!input) return;
-    var old = btn.textContent.trim();
-    input.value = old;
-    input.hidden = false;
-    btn.style.display = 'none';
-    input.focus();
-    input.select();
-    var done = false;
-    var finish = function(save) {
-        if (done) return;
-        done = true;
-        var val = input.value.trim();
-        if (save && val && val !== old) {
-            api('/api/settings/banks/update', {id: id, name: val}).then(function(r) {
-                if (r && r.ok) { showSuccess('Bank renamed'); renderBankList(); }
-                else { showError((r && (r.error || r.output)) || 'Rename failed'); renderBankList(); }
-            });
-        } else {
-            input.hidden = true;
-            btn.style.display = '';
+function selectBank(id) {
+    if (id === 'builtin') id = '';
+    if (id === _activeBankId) return;
+    setActiveBank(id);
+}
+
+// ── Bank Editor Modal ──
+
+var _bankEditorId = '';
+var _bankEditorPool = '';
+var _bankEditorDraft = null;
+var _bankEditorIsNew = false;
+
+function showBankEditor() {
+    var modal = document.getElementById('bank-editor-modal');
+    if (modal) modal.classList.add('show');
+}
+
+function closeBankEditor() {
+    var modal = document.getElementById('bank-editor-modal');
+    if (modal) modal.classList.remove('show');
+    _bankEditorId = '';
+    _bankEditorPool = '';
+    _bankEditorDraft = null;
+    _bankEditorIsNew = false;
+}
+
+async function openBankEditor(id) {
+    var b = (id === 'builtin') ? null : (_savedBanks[id] || null);
+    if (id !== 'builtin' && !b) return;
+    var pools;
+    if (id === 'builtin') {
+        var def = await api('/api/settings/banks/pools/defaults');
+        pools = (def && def.pools) ? def.pools : {};
+    } else {
+        pools = b.pools || {};
+    }
+    _bankEditorId = id;
+    var draft = {};
+    Object.keys(pools).forEach(function(k) { draft[k] = _poolCopy(pools[k]); });
+    _bankEditorDraft = { id: id, name: (b ? (b.name || '') : 'Built-in'), pools: draft };
+    _bankEditorPool = Object.keys(draft)[0] || '';
+    renderBankEditor();
+    showBankEditor();
+}
+
+function renderBankEditor() {
+    if (!_bankEditorDraft) return;
+    var readOnly = (_bankEditorId === 'builtin');
+    var isNew = _bankEditorIsNew;
+    document.getElementById('bank-editor-title').textContent = readOnly ? 'Built-in Pools' : (isNew ? 'Create Bank' : 'Edit Bank');
+    document.getElementById('bank-editor-subtitle').textContent = readOnly ? 'View-only — create a bank to edit pools' : (_bankEditorDraft.name || '');
+    var nameInput = document.getElementById('be-name');
+    if (nameInput) { nameInput.value = _bankEditorDraft.name; nameInput.disabled = readOnly; }
+    var saveBtn = document.getElementById('be-save');
+    if (saveBtn) saveBtn.textContent = isNew ? 'Create Bank' : 'Save Bank';
+    var list = document.getElementById('be-pool-list');
+    var names = Object.keys(_bankEditorDraft.pools);
+    var html = '';
+    for (var i = 0; i < names.length; i++) {
+        var n = names[i];
+        var val = _bankEditorDraft.pools[n];
+        var selected = (n === _bankEditorPool);
+        html += '<div class="be-pool-item' + (selected ? ' active' : '') + '" data-name="' + esc(n) + '" role="option" aria-selected="' + (selected ? 'true' : 'false') + '" tabindex="' + (selected ? '0' : '-1') + '" onclick="selectBankPool(\'' + esc(n) + '\')">';
+        html += '<span class="be-pool-item-name">' + esc(_poolLabel(n)) + '</span>';
+        html += '<span class="be-pool-item-count">' + _poolCountText(val) + '</span>';
+        if (!readOnly) html += '<button type="button" class="be-pool-del" onclick="event.stopPropagation(); deleteBankPool(\'' + esc(n) + '\')" title="Remove pool ' + esc(_poolLabel(n)) + '" aria-label="Remove pool ' + esc(_poolLabel(n)) + '">&times;</button>';
+        html += '</div>';
+    }
+    list.innerHTML = html;
+    var resetBtn = document.getElementById('be-reset');
+    var addBtns = document.querySelectorAll('.be-add-pool');
+    for (var a = 0; a < addBtns.length; a++) addBtns[a].style.display = readOnly ? 'none' : '';
+    if (saveBtn) saveBtn.style.display = readOnly ? 'none' : '';
+    if (resetBtn) resetBtn.style.display = readOnly ? 'none' : '';
+    if (!_bankEditorPool || _bankEditorDraft.pools[_bankEditorPool] === undefined) {
+        _bankEditorPool = names[0] || '';
+    }
+    _syncPoolUi();
+}
+
+function _syncPoolUi() {
+    var name = _bankEditorPool;
+    var val = (_bankEditorDraft && name) ? _bankEditorDraft.pools[name] : undefined;
+    var ta = document.getElementById('be-textarea');
+    if (ta) ta.value = (name && val !== undefined) ? _poolToText(val) : '';
+    document.getElementById('be-pool-name').textContent = name ? _poolLabel(name) : '';
+    document.getElementById('be-pool-type').textContent = (val === undefined || val === null) ? '' : _poolTypeBadgeOf(val);
+    document.getElementById('be-hint').textContent = (val === undefined || val === null) ? '' : _poolHintText(val);
+    var items = document.querySelectorAll('.be-pool-item');
+    for (var i = 0; i < items.length; i++) {
+        var isSel = items[i].dataset.name === name;
+        items[i].classList.toggle('active', isSel);
+        items[i].setAttribute('aria-selected', isSel ? 'true' : 'false');
+        items[i].tabIndex = isSel ? 0 : -1;
+    }
+}
+
+function selectBankPool(name) {
+    if (!_bankEditorDraft || _bankEditorDraft.pools[name] === undefined) return;
+    if (_bankEditorId !== 'builtin') {
+        var cur = _bankEditorPool;
+        var ta = document.getElementById('be-textarea');
+        if (cur && ta && _bankEditorDraft.pools[cur] !== undefined) {
+            _bankEditorDraft.pools[cur] = _textToPool(cur, ta.value);
         }
-    };
-    input.onkeydown = function(e) {
-        if (e.key === 'Enter') { e.preventDefault(); finish(true); }
-        else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
-    };
-    input.onblur = function() { finish(true); };
+    }
+    _bankEditorPool = name;
+    _syncPoolUi();
+}
+
+function deleteBankPool(name) {
+    if (_bankEditorId === 'builtin') return;
+    var names = Object.keys(_bankEditorDraft.pools);
+    if (names.length <= 1) { showError('Bank must keep at least one pool'); return; }
+    delete _bankEditorDraft.pools[name];
+    if (_bankEditorPool === name) _bankEditorPool = Object.keys(_bankEditorDraft.pools)[0];
+    renderBankEditor();
+}
+
+function addCustomPool(type) {
+    if (_bankEditorId === 'builtin') return;
+    var name = prompt('New pool name (UPPERCASE, e.g. OCCASIONS):');
+    if (!name) return;
+    name = name.trim().toUpperCase().replace(/\s+/g, '_');
+    if (!name) return;
+    if (_bankEditorDraft.pools[name] !== undefined) { showError('Pool "' + name + '" already exists'); return; }
+    _bankEditorDraft.pools[name] = (type === 'dict') ? {} : (type === 'str') ? '' : [];
+    _bankEditorPool = name;
+    renderBankEditor();
+}
+
+async function resetCurrentPool() {
+    if (_bankEditorId === 'builtin') return;
+    var name = _bankEditorPool;
+    if (!name || _bankEditorDraft.pools[name] === undefined) return;
+    var def = await api('/api/settings/banks/pools/defaults');
+    var defaults = (def && def.pools) ? def.pools : {};
+    _bankEditorDraft.pools[name] = (defaults[name] !== undefined) ? _poolCopy(defaults[name]) : [];
+    _syncPoolUi();
+    showInfo('Pool reset — press Save Bank to keep');
+}
+
+async function saveBankFromModal() {
+    if (_bankEditorId === 'builtin') return;
+    var name = _bankEditorPool;
+    var text = document.getElementById('be-textarea').value;
+    if (name && _bankEditorDraft.pools[name] !== undefined) {
+        _bankEditorDraft.pools[name] = _textToPool(name, text);
+    }
+    var nameInput = document.getElementById('be-name');
+    var newName = (nameInput ? nameInput.value : '').trim();
+    if (!newName) newName = _bankEditorDraft.name;
+    var btn = document.getElementById('be-save');
+    var btnTxt = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving\u2026'; }
+    if (_bankEditorIsNew) {
+        var r = await api('/api/settings/banks/create', {name: newName, pools: _bankEditorDraft.pools});
+        if (btn) { btn.disabled = false; btn.textContent = btnTxt; }
+        if (r && r.ok) {
+            _activeBankId = r.bank.id;
+            _savedBanks[r.bank.id] = r.bank;
+            showSuccess('Bank created');
+            closeBankEditor();
+            renderBankList();
+        } else {
+            showError((r && (r.error || r.output)) || 'Create failed');
+        }
+        return;
+    }
+    var body = {id: _bankEditorId, pools: _bankEditorDraft.pools};
+    if (newName) body.name = newName;
+    var r2 = await api('/api/settings/banks/update', body);
+    if (btn) { btn.disabled = false; btn.textContent = btnTxt; }
+    if (r2 && r2.ok) {
+        showSuccess('Bank saved');
+        if (newName) _bankEditorDraft.name = newName;
+        closeBankEditor();
+        renderBankList();
+    } else {
+        showError((r2 && (r2.error || r2.output)) || 'Save failed');
+    }
+}
+
+// ESC + outside-click close bank editor
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var be = document.getElementById('bank-editor-modal');
+        if (be && be.classList.contains('show')) { closeBankEditor(); return; }
+        var db = document.getElementById('delete-bank-modal');
+        if (db && db.classList.contains('show')) { closeDeleteBankModal(); return; }
+    }
+});
+document.addEventListener('click', function(e) {
+    var be = document.getElementById('bank-editor-modal');
+    if (be && be.classList.contains('show') && !e.target.closest('#bank-editor-box')) { closeBankEditor(); return; }
+    var db = document.getElementById('delete-bank-modal');
+    if (db && db.classList.contains('show') && !e.target.closest('#delete-bank-modal-box')) { closeDeleteBankModal(); }
+});
+
+// ── Bank create / delete ──
+
+document.addEventListener('DOMContentLoaded', function() {
+    var poolList = document.getElementById('be-pool-list');
+    if (poolList) {
+        poolList.addEventListener('keydown', function(e) {
+            var items = Array.prototype.slice.call(poolList.querySelectorAll('.be-pool-item'));
+            if (!items.length) return;
+            var idx = items.indexOf(document.activeElement);
+            if (idx === -1) {
+                var cur = poolList.querySelector('.be-pool-item.active');
+                idx = cur ? items.indexOf(cur) : 0;
+            }
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                var n = (e.key === 'ArrowDown') ? (idx + 1) % items.length : (idx - 1 + items.length) % items.length;
+                items[n].focus();
+                selectBankPool(items[n].dataset.name);
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                items[0].focus();
+                selectBankPool(items[0].dataset.name);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                items[items.length - 1].focus();
+                selectBankPool(items[items.length - 1].dataset.name);
+            } else if (e.key === 'Enter' || e.key === ' ') {
+                var active = document.activeElement;
+                if (active && active.classList && active.classList.contains('be-pool-item')) {
+                    e.preventDefault();
+                    selectBankPool(active.dataset.name);
+                }
+            }
+        });
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    var tileList = document.getElementById('settings-bank-list');
+    if (!tileList) return;
+    tileList.addEventListener('keydown', function(e) {
+        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+        var targets = Array.prototype.slice.call(tileList.querySelectorAll('.bank-row, .bank-row-cta'));
+        if (!targets.length) return;
+        var idx = targets.indexOf(document.activeElement);
+        if (idx === -1) return;
+        e.preventDefault();
+        var n = (e.key === 'ArrowDown') ? (idx + 1) % targets.length : (idx - 1 + targets.length) % targets.length;
+        targets[n].focus();
+    });
+});
+
+function generateNextBankName() {
+    var max = 0;
+    Object.keys(_savedBanks).forEach(function(id) {
+        if (id === 'builtin') return;
+        var name = _savedBanks[id].name || '';
+        var m = /^Bank (\d+)$/i.exec(name);
+        if (m) max = Math.max(max, parseInt(m[1], 10));
+    });
+    return 'Bank ' + (max + 1);
+}
+
+async function openNewBankFromDefault() {
+    var name = generateNextBankName();
+    var def = await api('/api/settings/banks/pools/defaults');
+    var pools = (def && def.pools) ? def.pools : {};
+    _bankEditorId = 'new';
+    var draft = {};
+    Object.keys(pools).forEach(function(k) { draft[k] = _poolCopy(pools[k]); });
+    _bankEditorDraft = { id: '', name: name, pools: draft };
+    _bankEditorPool = Object.keys(draft)[0] || '';
+    _bankEditorIsNew = true;
+    renderBankEditor();
+    showBankEditor();
 }
 
 function confirmDeleteBank(id) {
@@ -594,17 +641,22 @@ function closeDeleteBankModal() {
 async function executeDeleteBank() {
     var id = _pendingDeleteId;
     if (!id) return;
+    var delBtn = document.querySelector('#delete-bank-modal-box .btn-danger');
+    var delTxt = delBtn ? delBtn.textContent : '';
+    if (delBtn) { delBtn.disabled = true; delBtn.textContent = 'Deleting\u2026'; }
     var r = await api('/api/settings/banks/delete', {id: id});
+    if (delBtn) { delBtn.disabled = false; delBtn.textContent = delTxt; }
     closeDeleteBankModal();
     if (r && r.ok) {
         if (_activeBankId === id) _activeBankId = '';
         showSuccess('Bank deleted');
         await loadActiveBank();
-        await loadPoolEditor(); renderBankList();
+        renderBankList();
     } else {
         showError((r && (r.error || r.output)) || 'Delete failed');
     }
 }
+
 
 function loadAvatarUrl() {
     var input = document.getElementById('settings-avatar-url');
@@ -668,10 +720,14 @@ async function handleAvatarFile(file) {
 }
 
 async function saveIdentity() {
-    if (!_pendingAvatarUrl) { closeSettingsModal(); return; }
+    if (!_pendingAvatarUrl) { _setSettingsStatus('Load or upload an image first.', 'error'); return; }
     var r = await api('/api/settings/identity', { avatar_url: _pendingAvatarUrl });
     if (r && r.ok) {
-        closeSettingsModal();
+        var newPreview = document.getElementById('settings-new-preview');
+        if (newPreview) { newPreview.style.display = 'none'; newPreview.removeAttribute('src'); }
+        var input = document.getElementById('settings-file-input');
+        if (input) input.value = '';
+        _pendingAvatarUrl = '';
         showSuccess('Identity saved');
         loadSettings();
     } else {
@@ -679,46 +735,7 @@ async function saveIdentity() {
     }
 }
 
-// ESC closes settings modal
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        var db = document.getElementById('delete-bank-modal');
-        if (db && db.classList.contains('show')) { closeDeleteBankModal(); return; }
-        var nb = document.getElementById('new-bank-modal');
-        if (nb && nb.classList.contains('show')) { closeNewBankModal(); return; }
-        var modal = document.getElementById('settings-modal');
-        if (modal && modal.classList.contains('show')) {
-            closeSettingsModal();
-        }
-    }
-});
-
-// Outside click closes settings modal
-document.addEventListener('click', function(e) {
-    var modal = document.getElementById('settings-modal');
-    var trigger = document.getElementById('settings-nav-trigger');
-    var nb = document.getElementById('new-bank-modal');
-    var db = document.getElementById('delete-bank-modal');
-    if (db && db.classList.contains('show') && !e.target.closest('#delete-bank-modal-box')) {
-        closeDeleteBankModal();
-        return;
-    }
-    if (nb && nb.classList.contains('show') && !e.target.closest('#new-bank-modal-box')) {
-        closeNewBankModal();
-        return;
-    }
-    if (modal && modal.classList.contains('show') && !e.target.closest('#settings-modal-box') && !e.target.closest('#settings-nav-trigger')) {
-        closeSettingsModal();
-    }
-});
-
 document.addEventListener('DOMContentLoaded', function() {
-    var modal = document.getElementById('settings-modal');
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) closeSettingsModal();
-        });
-    }
     var fileInput = document.getElementById('settings-file-input');
     var zone = document.getElementById('settings-upload-zone');
     if (fileInput) {
@@ -746,6 +763,42 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // ── Sidebar initialization ──
+    loadSidebarState();
+
+    // Apply persisted state
+    var sidebar = document.getElementById('sidebar');
+    var floater = document.getElementById('sidebar-floater');
+    var toggle = document.getElementById('sidebar-toggle');
+    if (_sidebarCollapsed) {
+        sidebar.classList.add('collapsed');
+        floater.classList.add('visible');
+        toggle.setAttribute('aria-expanded', 'false');
+    }
+    showSection(_activeSection); // activates correct section
+
+    // Floater toggle button
+    document.getElementById('floater-toggle')?.addEventListener('click', toggleFloaterMenu);
+
+    // Close floater on outside click
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.sidebar-floater')) closeFloaterMenu();
+    });
+
+    // Mobile overlay
+    if (window.innerWidth < 768) {
+        var overlay = document.getElementById('sidebar-overlay');
+        overlay.onclick = function() {
+            document.getElementById('sidebar').classList.remove('open');
+            overlay.classList.remove('visible');
+        };
+    }
+
+    // Keyboard: Escape closes floater
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeFloaterMenu();
+    });
 });
 
 // ── Reduced motion listener ──
@@ -786,6 +839,94 @@ async function api(url, body) {
         console.error('API error:', url, e);
         return {ok: false, output: 'Network error: ' + e.message};
     }
+}
+
+// ── Sidebar persistence ──
+function loadSidebarState() {
+  try {
+    var collapsed = localStorage.getItem('ofm_sidebar_collapsed');
+    if (collapsed === 'true') _sidebarCollapsed = true;
+    var section = localStorage.getItem('ofm_active_section');
+    if (section) _activeSection = section;
+  } catch(e) {}
+}
+
+function saveSidebarState() {
+  try {
+    localStorage.setItem('ofm_sidebar_collapsed', _sidebarCollapsed);
+    localStorage.setItem('ofm_active_section', _activeSection);
+  } catch(e) {}
+}
+
+// ── Sidebar toggle ──
+function toggleSidebar() {
+  var sidebar = document.getElementById('sidebar');
+  var floater = document.getElementById('sidebar-floater');
+  var toggle = document.getElementById('sidebar-toggle');
+  _sidebarCollapsed = !_sidebarCollapsed;
+  sidebar.classList.toggle('collapsed', _sidebarCollapsed);
+  toggle.setAttribute('aria-expanded', !_sidebarCollapsed);
+  if (_sidebarCollapsed) {
+    floater.classList.add('visible');
+    closeFloaterMenu();
+  } else {
+    floater.classList.remove('visible');
+  }
+  saveSidebarState();
+  syncPanelHeights();
+}
+
+function expandSidebar() {
+  var sidebar = document.getElementById('sidebar');
+  var floater = document.getElementById('sidebar-floater');
+  var toggle = document.getElementById('sidebar-toggle');
+  _sidebarCollapsed = false;
+  sidebar.classList.remove('collapsed');
+  sidebar.classList.remove('open');
+  floater.classList.remove('visible');
+  toggle.setAttribute('aria-expanded', 'true');
+  closeFloaterMenu();
+  saveSidebarState();
+  syncPanelHeights();
+}
+
+function closeFloaterMenu() {
+  var menu = document.getElementById('floater-menu');
+  if (menu) menu.classList.remove('open');
+}
+
+function toggleFloaterMenu(e) {
+  if (e) e.stopPropagation();
+  var menu = document.getElementById('floater-menu');
+  if (menu) menu.classList.toggle('open');
+}
+
+// ── Section switching ──
+function showSection(sectionId) {
+  document.querySelectorAll('.nav-item, .floater-item').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.section === sectionId);
+  });
+  document.querySelectorAll('.content-section').forEach(function(sec) {
+    var isActive = sec.id === 'section-' + sectionId;
+    sec.hidden = !isActive;
+    sec.classList.toggle('active', isActive);
+  });
+  _activeSection = sectionId;
+  saveSidebarState();
+  closeFloaterMenu();
+  if (window.innerWidth < 768) {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('visible');
+  }
+  if (sectionId === 'outputs') refreshOutputs();
+  else if (sectionId === 'generation') fetchBalance();
+  else if (sectionId === 'settings') loadSettingsUI();
+  syncPanelHeights();
+}
+
+// ── Settings UI (Identity + Prompt Bank cards, rendered in #section-settings) ──
+function loadSettingsUI() {
+  loadSettings();
 }
 
 // ── Photo Generation Controls ──

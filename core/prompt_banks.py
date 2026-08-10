@@ -75,16 +75,19 @@ def clone_bank(source_id: str, new_name: str) -> dict:
 
 
 def _sanitize_bank(data) -> dict:
-    """Keep only known pool keys; drop empty/invalid overrides."""
+    """Keep known overridable pools plus custom UPPERCASE pools with valid values."""
     pools = data.get("pools", {})
     if not isinstance(pools, dict):
         pools = {}
     clean = {}
-    for key in OVERRIDABLE_POOLS:
-        if key in pools:
-            val = pools[key]
+    for key, val in pools.items():
+        if not isinstance(key, str) or not key.strip():
+            continue
+        if key in OVERRIDABLE_POOLS:
             if isinstance(val, (list, dict, str)) and (val or isinstance(val, str)):
                 clean[key] = val
+        elif key.isupper() and isinstance(val, (list, dict, str)):
+            clean[key] = val
     return clean
 
 
