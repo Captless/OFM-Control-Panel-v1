@@ -161,6 +161,18 @@ This keeps AGENTS.md in sync with reality without re-running `/init-deep`.
 
 ## Recent Changes
 
+### 2026-08-10 — Bank editor modal redesign: guided editor (search + purposes + built-in overrides)
+
+**search** ✓ — `webui/static/index.html` `#be-pool-search` input above `#be-pool-list` in modal sidebar; `app.js` DOMContentLoaded listener filters `.be-pool-item` by `data-name` (case-insensitive, reuses `.hidden` helper); pool-list keyboard nav skips hidden items. Search value reset on `openBankEditor()`/`openNewBankFromDefault()`.
+
+**pool purposes** ✓ — `app.js` `_POOL_PURPOSES` map (13 keys, plain-English purpose per built-in pool) + `_OVERRIDABLE_POOLS` array (13 names). New `#be-pool-purpose` line under `#be-pool-head` (set in `_syncPoolUi()`, `aria-live="polite"`); pool items carry `title` tooltip with purpose.
+
+**custom vs builtin badges** ✓ — pool list items get amber `custom` badge (`_OVERRIDABLE_POOLS.indexOf(name)===-1` && !readOnly). **Available built-ins** section in sidebar for custom banks: lists the 13 `_OVERRIDABLE_POOLS` not yet overridden, each with an Override button → `addBuiltinPool(name)` pulls the built-in value from `_bankEditorDefaults` (now fetched once and stored in both `openBankEditor` + `openNewBankFromDefault`), re-renders.
+
+**CSS** ✓ — `style.css` new block: `#be-pool-search` (mono, accent focus ring), `.be-pool-purpose`, `.be-pool-item-badge.custom` (amber), `.be-avail-head`/`.be-avail-item`/`.be-avail-add` (dashed divider, hover + focus-visible). Template feature (Option 1 sketch) deliberately NOT implemented.
+
+**verified** ✓ — `node --check` clean; HTML parser balanced; live :8000 serves `/` with `be-pool-search`+`be-pool-purpose`, `/static/app.js` with `_POOL_PURPOSES`/`addBuiltinPool`/`be-avail-add`, `/static/style.css` with `.be-pool-purpose`.
+
 ### 2026-08-09 — Prompt bank: New Bank auto-clone + USE button redesign
 
 **New Bank auto-clone** ✓ — `#new-bank-modal` (name-input modal) removed entirely. New Bank tile is now a large `<button>` CTA (`.bt-new-sub` "Clone defaults & edit"). Click → `openNewBankFromDefault()`: `generateNextBankName()` scans `_savedBanks` for highest `Bank N` suffix → GET `/api/settings/banks/pools/defaults` → POST create {name, pools} → set active → render list → open editor immediately. Name can be changed via inline dblclick rename or editor `#be-name`. Removed dead JS: `openNewBankModalFromDefault`, `submitNewBank`, `closeNewBankModal`, `_createBankWithName`, `_newBankSource`; removed dead CSS (`#new-bank-modal*`, `.new-bank-body`, `.bank-input`, `.new-bank-status`; kept `.new-bank-footer` shared by delete modal); removed toolbar New Bank button (tile is the CTA).

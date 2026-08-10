@@ -197,6 +197,29 @@ var _POOL_LABELS = {
 
 function _poolLabel(name) { return _POOL_LABELS[name] || name; }
 
+var _OVERRIDABLE_POOLS = [
+    'INDOOR_SCENES', 'MIRROR_SCENES', 'OUTDOOR_SCENES',
+    'FRAMING', 'HAIR', 'POSES', 'QUALITY',
+    'OUTFIT_TOPS_POOLS', 'OUTFIT_BOTTOMS_POOLS', 'LIGHTING_POOLS',
+    'DEFAULT_NEGATIVE', 'MIRROR_NEGATIVE', 'IDENTITY_LOCK'
+];
+
+var _POOL_PURPOSES = {
+    'INDOOR_SCENES': 'Indoor photo locations (bedroom, bathroom, living room)',
+    'MIRROR_SCENES': 'Mirror selfie locations (bathroom mirror, wardrobe mirror)',
+    'OUTDOOR_SCENES': 'Outdoor locations (alley, street, rooftop, graffiti wall)',
+    'FRAMING': 'Camera angle & crop (tilted, off-center, motion blur)',
+    'HAIR': 'Hair state (wet, messy, damp, braided, bedhead)',
+    'POSES': 'Body posture (weight shift, hip tilt, hand on hip, candid)',
+    'QUALITY': 'iPhone aesthetic (grain, noise, compression, raw sensor look)',
+    'OUTFIT_TOPS_POOLS': 'Top clothing by style (sexy, date_night, night_club, baggy, lounge_sexy)',
+    'OUTFIT_BOTTOMS_POOLS': 'Bottom clothing by style (same style keys as tops)',
+    'LIGHTING_POOLS': 'Lighting mood by type (warm, cool, dimlit, flash, screen, mixed)',
+    'DEFAULT_NEGATIVE': 'What to avoid in handheld shots (phone, lamp, smiling, jewelry)',
+    'MIRROR_NEGATIVE': 'What to avoid in mirror shots (lamp, smiling, jewelry)',
+    'IDENTITY_LOCK': 'Identity consistency prompt (hair/lip color match)'
+};
+
 function _poolValType(val) {
     if (val == null) return 'list';
     if (Array.isArray(val)) return 'list';
@@ -358,6 +381,7 @@ var _bankEditorId = '';
 var _bankEditorPool = '';
 var _bankEditorDraft = null;
 var _bankEditorIsNew = false;
+var _bankEditorDefaults = null;
 
 function showBankEditor() {
     var modal = document.getElementById('bank-editor-modal');
@@ -376,18 +400,16 @@ function closeBankEditor() {
 async function openBankEditor(id) {
     var b = (id === 'builtin') ? null : (_savedBanks[id] || null);
     if (id !== 'builtin' && !b) return;
-    var pools;
-    if (id === 'builtin') {
-        var def = await api('/api/settings/banks/pools/defaults');
-        pools = (def && def.pools) ? def.pools : {};
-    } else {
-        pools = b.pools || {};
-    }
+    var def = await api('/api/settings/banks/pools/defaults');
+    _bankEditorDefaults = (def && def.pools) ? def.pools : {};
+    var pools = (id === 'builtin') ? _bankEditorDefaults : (b.pools || {});
     _bankEditorId = id;
     var draft = {};
     Object.keys(pools).forEach(function(k) { draft[k] = _poolCopy(pools[k]); });
     _bankEditorDraft = { id: id, name: (b ? (b.name || '') : 'Built-in'), pools: draft };
     _bankEditorPool = Object.keys(draft)[0] || '';
+    var search = document.getElementById('be-pool-search');
+    if (search) search.value = '';
     renderBankEditor();
     showBankEditor();
 }
@@ -409,11 +431,27 @@ function renderBankEditor() {
         var n = names[i];
         var val = _bankEditorDraft.pools[n];
         var selected = (n === _bankEditorPool);
+        var isCustom = (_OVERRIDABLE_POOLS.indexOf(n) === -1);
+        var purpose = _POOL_PURPOSES[n] || '';
         html += '<div class="be-pool-item' + (selected ? ' active' : '') + '" data-name="' + esc(n) + '" role="option" aria-selected="' + (selected ? 'true' : 'false') + '" tabindex="' + (selected ? '0' : '-1') + '" onclick="selectBankPool(\'' + esc(n) + '\')">';
-        html += '<span class="be-pool-item-name">' + esc(_poolLabel(n)) + '</span>';
+        html += '<span class="be-pool-item-name" title="' + esc(purpose) + '">' + esc(_poolLabel(n)) + '</span>';
+        if (isCustom && !readOnly) html += '<span class="be-pool-item-badge custom">custom</span>';
         html += '<span class="be-pool-item-count">' + _poolCountText(val) + '</span>';
         if (!readOnly) html += '<button type="button" class="be-pool-del" onclick="event.stopPropagation(); deleteBankPool(\'' + esc(n) + '\')" title="Remove pool ' + esc(_poolLabel(n)) + '" aria-label="Remove pool ' + esc(_poolLabel(n)) + '">&times;</button>';
         html += '</div>';
+    }
+    if (!readOnly) {
+        var avail = [];
+        for (var a = 0; a < _OVERRIDABLE_POOLS.length; a++) {
+            if (_bankEditorDraft.pools[_OVERRIDABLE_POOLS[a]] === undefined) avail.push(_OVERRIDABLE_POOLS[a]);
+        }
+        if (avail.length) {
+            html += '<div class="be-avail-head">Available built-ins</div>';
+            for (var a2 = 0; a2 < avail.length; a2++) {
+                var an = avail[a2];
+                html += '<div class="be-avail-item"><span class="be-avail-name" title="' + esc(_POOL_PURPOSES[an] || '') + '">' + esc(_poolLabel(an)) + '</span><button type="button" class="be-avail-add" onclick="addBuiltinPool(\'' + esc(an) + '\')">Override</button></div>';
+            }
+        }
     }
     list.innerHTML = html;
     var resetBtn = document.getElementById('be-reset');
@@ -435,6 +473,8 @@ function _syncPoolUi() {
     document.getElementById('be-pool-name').textContent = name ? _poolLabel(name) : '';
     document.getElementById('be-pool-type').textContent = (val === undefined || val === null) ? '' : _poolTypeBadgeOf(val);
     document.getElementById('be-hint').textContent = (val === undefined || val === null) ? '' : _poolHintText(val);
+    var purposeEl = document.getElementById('be-pool-purpose');
+    if (purposeEl) purposeEl.textContent = (name && _POOL_PURPOSES[name]) ? _POOL_PURPOSES[name] : '';
     var items = document.querySelectorAll('.be-pool-item');
     for (var i = 0; i < items.length; i++) {
         var isSel = items[i].dataset.name === name;
@@ -474,6 +514,15 @@ function addCustomPool(type) {
     if (!name) return;
     if (_bankEditorDraft.pools[name] !== undefined) { showError('Pool "' + name + '" already exists'); return; }
     _bankEditorDraft.pools[name] = (type === 'dict') ? {} : (type === 'str') ? '' : [];
+    _bankEditorPool = name;
+    renderBankEditor();
+}
+
+function addBuiltinPool(name) {
+    if (_bankEditorId === 'builtin') return;
+    if (_bankEditorDraft.pools[name] !== undefined) return;
+    var val = (_bankEditorDefaults && _bankEditorDefaults[name] !== undefined) ? _bankEditorDefaults[name] : [];
+    _bankEditorDraft.pools[name] = _poolCopy(val);
     _bankEditorPool = name;
     renderBankEditor();
 }
@@ -550,9 +599,21 @@ document.addEventListener('click', function(e) {
 
 document.addEventListener('DOMContentLoaded', function() {
     var poolList = document.getElementById('be-pool-list');
+    var search = document.getElementById('be-pool-search');
     if (poolList) {
+        if (search) {
+            search.addEventListener('input', function() {
+                var q = search.value.trim().toLowerCase();
+                var items = poolList.querySelectorAll('.be-pool-item');
+                for (var i = 0; i < items.length; i++) {
+                    var label = items[i].dataset.name || '';
+                    items[i].classList.toggle('hidden', !!q && label.toLowerCase().indexOf(q) === -1);
+                }
+            });
+        }
         poolList.addEventListener('keydown', function(e) {
-            var items = Array.prototype.slice.call(poolList.querySelectorAll('.be-pool-item'));
+            var all = Array.prototype.slice.call(poolList.querySelectorAll('.be-pool-item'));
+            var items = all.filter(function(el) { return !el.classList.contains('hidden'); });
             if (!items.length) return;
             var idx = items.indexOf(document.activeElement);
             if (idx === -1) {
@@ -613,12 +674,15 @@ async function openNewBankFromDefault() {
     var name = generateNextBankName();
     var def = await api('/api/settings/banks/pools/defaults');
     var pools = (def && def.pools) ? def.pools : {};
+    _bankEditorDefaults = pools;
     _bankEditorId = 'new';
     var draft = {};
     Object.keys(pools).forEach(function(k) { draft[k] = _poolCopy(pools[k]); });
     _bankEditorDraft = { id: '', name: name, pools: draft };
     _bankEditorPool = Object.keys(draft)[0] || '';
     _bankEditorIsNew = true;
+    var search = document.getElementById('be-pool-search');
+    if (search) search.value = '';
     renderBankEditor();
     showBankEditor();
 }
@@ -778,9 +842,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     showSection(_activeSection); // activates correct section
 
-    // Floater toggle button
-    document.getElementById('floater-toggle')?.addEventListener('click', toggleFloaterMenu);
-
     // Close floater on outside click
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.sidebar-floater')) closeFloaterMenu();
@@ -893,12 +954,6 @@ function expandSidebar() {
 function closeFloaterMenu() {
   var menu = document.getElementById('floater-menu');
   if (menu) menu.classList.remove('open');
-}
-
-function toggleFloaterMenu(e) {
-  if (e) e.stopPropagation();
-  var menu = document.getElementById('floater-menu');
-  if (menu) menu.classList.toggle('open');
 }
 
 // ── Section switching ──
@@ -1475,6 +1530,16 @@ function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 var _preview = null;
 var _viewMode = 'table';
 try { _viewMode = localStorage.getItem('ofm_view_mode') || 'table'; } catch(e) {}
+var _showAll = false;
+try { _showAll = localStorage.getItem('ofm_show_all') === '1'; } catch(e) {}
+
+function setShowAll() {
+    _showAll = !_showAll;
+    try { localStorage.setItem('ofm_show_all', _showAll ? '1' : '0'); } catch(e) {}
+    syncViewToggle();
+    var area = document.getElementById('outputs-area');
+    if (area) renderOutputs();
+}
 
 function setViewMode(mode) {
     _viewMode = (mode === 'grid') ? 'grid' : 'table';
@@ -1485,11 +1550,16 @@ function setViewMode(mode) {
 }
 
 function syncViewToggle() {
-    document.querySelectorAll('.view-toggle button').forEach(function(b) {
+    document.querySelectorAll('.view-toggle button[data-view]').forEach(function(b) {
         var on = b.dataset.view === _viewMode;
         b.classList.toggle('active', on);
         b.setAttribute('aria-selected', on ? 'true' : 'false');
     });
+    var sa = document.getElementById('btn-show-all');
+    if (sa) {
+        sa.classList.toggle('active', _showAll);
+        sa.setAttribute('aria-checked', _showAll ? 'true' : 'false');
+    }
 }
 
 var _cpySvg = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
@@ -1545,8 +1615,8 @@ function renderOutputs() {
     document.querySelectorAll('.b.collapsed').forEach(function(el) {
         collapsed[el.id.replace('batch-', '')] = true;
     });
-    if (_viewMode === 'grid') { area.innerHTML = buildGridHtml(batches); }
-    else { area.innerHTML = buildTableHtml(batches); }
+    if (_viewMode === 'grid') { area.innerHTML = _showAll ? buildFlatGridHtml(batches) : buildGridHtml(batches); }
+    else { area.innerHTML = _showAll ? buildFlatHtml(batches) : buildTableHtml(batches); }
     Object.keys(collapsed).forEach(function(id) {
         var el = document.getElementById('batch-' + id);
         if (el) el.classList.add('collapsed');
@@ -1680,6 +1750,74 @@ function toggleBatch(bid) {
     if (!b) return;
     b.classList.toggle('collapsed');
     localStorage.setItem('ofm_collapse_' + bid, b.classList.contains('collapsed') ? '1' : '0');
+}
+
+function buildFlatHtml(batches) {
+    var html = '';
+    var num = 0;
+    batches.forEach(function(b, bIdx) {
+        var bid = b.id;
+        b.items.forEach(function(item, iIdx) {
+            var sid = bid + '_' + item.stem;
+            num++;
+            html += '<tr class="flat-row">';
+            html += '<td class="n">' + num + '</td>';
+            html += '<td class="m">';
+            if (item.is_video) { html += '<span class="thumb" id="' + sid + '_m">'; } else { html += '<span class="thumb" id="' + sid + '_m" onclick="fullscreen(\'' + sid + '_m\',0)">'; }
+            if (item.is_video) {
+                html += '<video muted loop playsinline preload="metadata"><source src="' + item.src + '" type="video/mp4"></video>';
+            } else {
+                html += '<img src="' + item.src + '" loading="lazy">';
+            }
+            html += '</span>';
+            if (item.prompt) html += '<pre class="prompt-box" id="pb-' + sid + '" data-negative="' + esc(item.negative_prompt || '') + '">' + esc(item.prompt) + '</pre>';
+            if (item.txt_content) html += '<div class="txt" id="' + sid + '_t">' + esc(item.txt_content) + '</div>';
+            html += '</td>';
+            html += '<td class="info">';
+            html += _captionSpan(item, sid);
+            html += _itemMeta(item, sid);
+            html += '</td>';
+            html += '<td class="bt">';
+            html += '<button class="cp" onclick="copyText(\'' + sid + '\')" title="Copy caption">' + _cpySvg + '</button>';
+            html += '<a class="dl" href="' + item.src + '" download="' + item.filename + '" title="Download">' + _dlSvg + '</a>';
+            html += '<button class="del" onclick="deleteMedia(\'' + item.src.replace(/'/g, "\\'") + '\')" title="Delete">' + _delSvg + '</button>';
+            html += '</td>';
+            html += '</tr>';
+        });
+    });
+    if (html) return '<div class="b flat"><div class="b-body"><table class="tw"><tbody>' + html + '</tbody></table></div></div>';
+    return '';
+}
+
+function buildFlatGridHtml(batches) {
+    var html = '';
+    batches.forEach(function(b) {
+        var bid = b.id;
+        b.items.forEach(function(item) {
+            var sid = bid + '_' + item.stem;
+            var srcEsc = item.src.replace(/'/g, "\\'");
+            html += '<div class="g-card">';
+            html += '<div class="g-thumb" id="' + sid + '_m"' + (item.is_video ? '' : ' onclick="fullscreen(\'' + sid + '_m\',0)"') + '>';
+            if (item.is_video) {
+                html += '<video muted loop playsinline preload="metadata"><source src="' + item.src + '" type="video/mp4"></video>';
+            } else {
+                html += '<img src="' + item.src + '" loading="lazy">';
+            }
+            html += '</div>';
+            if (item.prompt) html += '<pre class="prompt-box" id="pb-' + sid + '" data-negative="' + esc(item.negative_prompt || '') + '">' + esc(item.prompt) + '</pre>';
+            html += '<div class="g-body">';
+            html += _captionSpan(item, sid);
+            html += _itemMeta(item, sid);
+            html += '<div class="g-actions">';
+            if (item.txt_content) html += '<button class="cp" onclick="copyText(\'' + sid + '\')" title="Copy caption">' + _cpySvg + '</button>';
+            html += '<a class="dl" href="' + item.src + '" download="' + item.filename + '" title="Download">' + _dlSvg + '</a>';
+            html += '<button class="del" onclick="deleteMedia(\'' + srcEsc + '\')" title="Delete">' + _delSvg + '</button>';
+            html += '</div>';
+            html += '</div></div>';
+        });
+    });
+    if (html) return '<div class="b flat"><div class="b-body"><div class="g-grid">' + html + '</div></div></div>';
+    return '';
 }
 
 async function refreshOutputs() {

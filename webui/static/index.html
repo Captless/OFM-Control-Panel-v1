@@ -46,9 +46,6 @@
   </button>
 
   <div class="sidebar-floater" id="sidebar-floater" role="navigation" aria-label="Quick navigation" hidden>
-    <button class="floater-toggle" id="floater-toggle" aria-label="Expand sidebar" onclick="toggleFloaterMenu(event)">
-      <svg viewBox="0 0 24 24" width="18" height="18"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
     <div class="floater-menu" id="floater-menu">
       <button class="floater-item" data-section="generation" onclick="showSection('generation')">
         <span class="floater-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span>
@@ -181,6 +178,7 @@
       </div>
       <div class="be-layout">
         <div class="be-sidebar">
+          <input type="search" id="be-pool-search" placeholder="Search pools..." aria-label="Filter pools" autocomplete="off" spellcheck="false">
           <div id="be-pool-list" role="listbox" aria-label="Prompt pools" tabindex="0"></div>
           <div class="be-add-pools">
             <button type="button" class="btn btn-sm btn-outline be-add-pool" onclick="addCustomPool('list')" aria-label="Add list pool">+ List Pool</button>
@@ -193,6 +191,7 @@
             <span class="be-pool-title" id="be-pool-name"></span>
             <span class="pool-badge" id="be-pool-type"></span>
           </div>
+          <div class="be-pool-purpose" id="be-pool-purpose" aria-live="polite"></div>
           <textarea id="be-textarea" spellcheck="false" aria-label="Pool items" aria-describedby="be-hint"></textarea>
           <div class="be-hint" id="be-hint" aria-live="polite"></div>
           <div class="be-actions">
@@ -369,6 +368,7 @@
         <button role="tab" data-view="table" class="active" aria-selected="true" onclick="setViewMode('table')">Table</button>
         <button role="tab" data-view="grid" aria-selected="false" onclick="setViewMode('grid')">Grid</button>
       </span>
+      <button class="show-all-switch" id="btn-show-all" role="switch" aria-checked="false" title="Show all outputs without batches" onclick="setShowAll()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></button>
       <span class="out-spacer"></span>
       <button class="btn btn-sm btn-outline" onclick="refreshOutputs()" id="btn-refresh"><span class="btn-text">&#8635; Refresh</span></button>
     </div>

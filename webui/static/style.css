@@ -1152,6 +1152,21 @@ body::after {
   color: var(--accent-contrast);
   font-weight: 700;
 }
+.show-all-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  margin-left: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--fg2);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.show-all-switch:hover { background: var(--btn-hover); color: var(--fg); border-color: var(--accent-soft); }
+.show-all-switch.active { background: var(--accent); border-color: var(--accent); color: var(--accent-contrast); }
 
 /* ═══════════════════════════════════════════════════════════════
    Grid view
@@ -2732,17 +2747,6 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
   display: none;
 }
 .sidebar-floater.visible { display: block; }
-.floater-toggle {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  width: 40px; height: 40px;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--accent); cursor: pointer;
-  box-shadow: 0 2px 8px var(--shadow-lg);
-  transition: background .15s, border-color .15s;
-}
-.floater-toggle:hover { background: var(--btn-hover); border-color: var(--accent-soft); }
 .floater-menu {
   position: absolute; left: 48px; top: 0;
   background: var(--surface);
@@ -2980,6 +2984,87 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
   #be-pool-list { max-height: 160px; }
   #bank-editor-box { max-height: 94vh; }
 }
+
+/* ── Bank editor: search + pool purpose + built-in overrides (2026-08-10) ── */
+#be-pool-search {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--fg);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+#be-pool-search:focus { border-color: var(--accent); box-shadow: 0 0 8px var(--accent-dim); }
+#be-pool-search::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+.be-pool-purpose {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--fg3);
+  line-height: 1.4;
+  min-height: 1.4em;
+}
+
+.be-pool-item-badge.custom {
+  flex-shrink: 0;
+  font-size: 8px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--amber);
+  background: var(--amber-bg);
+  border-radius: 2px;
+  padding: 0 4px;
+}
+
+.be-avail-head {
+  margin: 10px 2px 2px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-size: 9px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--fg3);
+}
+.be-avail-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--fg2);
+}
+.be-avail-item:hover { background: var(--row-hover); }
+.be-avail-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.be-avail-add {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-size: 9px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.be-avail-add:hover { background: var(--accent); color: var(--accent-contrast); }
+.be-avail-add:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* ═══════════════════════════════════════════════════════════════
    Prompt Bank Redesign — a11y, focus, touch, content (2026-08-09)
