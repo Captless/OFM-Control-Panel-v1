@@ -31,10 +31,10 @@ PORT = 8000
 
 sys.path.insert(0, str(BASE))
 from core.config import PHOTO_PRICE, SETTINGS_PATH, list_wavespeed_accounts, set_wavespeed_account, remove_wavespeed_account, rename_wavespeed_account, get_active_wavespeed_key, set_active_wavespeed_account, test_wavespeed_account, get_identity, set_identity
-from core.prompt_banks import list_banks, get_bank, create_bank, update_bank, delete_bank, clone_bank, get_active_bank_id, set_active_bank_id, export_banks, import_banks, export_banks, import_banks
+from core.prompt_banks import list_banks, get_bank, create_bank, update_bank, delete_bank, clone_bank, get_active_bank_id, set_active_bank_id, export_banks, import_banks
 
 sys.path.insert(0, str(PIPELINE_DIR))
-from prompt_bank import list_presets, build_jobs, build_jobs_multi, get_builtin_pools
+from prompt_bank import list_presets, build_jobs_multi, get_builtin_pools
 
 API_DIR = BASE / "api"
 sys.path.insert(0, str(API_DIR))
@@ -336,12 +336,10 @@ def _update_progress(run_id, line):
                 state["detail"] = m.group(3)
 
 
-def _start_pipeline(mode, prompts, with_text=False):
+def _start_pipeline(prompts):
     """Start pipeline in a daemon thread. Returns run_id for progress polling."""
     run_id = uuid.uuid4().hex[:8]
     cmd = [sys.executable, str(PIPELINE_DIR / "pipeline.py"), "--prompts", prompts]
-    if with_text:
-        cmd.append("--with-text")
 
     with _state_lock:
         _pipeline_runs[run_id] = {
@@ -412,16 +410,6 @@ def _start_pipeline(mode, prompts, with_text=False):
     t = threading.Thread(target=_run, daemon=True)
     t.start()
     return run_id
-
-
-def _run_dashboard():
-    cmd = [sys.executable, str(WEBUI_DIR / "dashboard.py"), "--all"]
-    try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-        ok = proc.returncode == 0
-        return {"ok": ok, "output": proc.stdout.strip() if ok else proc.stderr.strip()}
-    except Exception as e:
-        return {"ok": False, "output": str(e)}
 
 
 # â”€â”€ HTTP Handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -553,17 +541,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         elif path == "/api/settings/banks/pools/defaults":
             self._json({"ok": True, "pools": get_builtin_pools()})
-
-        elif path == "/api/settings/banks/export":
-            data = json.dumps(export_banks(), indent=2).encode("utf-8")
-            filename = f"prompt_banks_{datetime.now().strftime('%Y-%m-%d')}.json"
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
-            self.send_header("Content-Length", str(len(data)))
-            self.send_header("Cache-Control", "no-store")
-            self.end_headers()
-            self.wfile.write(data)
 
         elif path == "/api/settings/banks/active/pools":
             pools = dict(get_builtin_pools())
@@ -698,7 +675,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 prompts = str(prompts_path.resolve())
             else:
                 prompts = self._resolve_prompts(prompts_data)
-            run_id = _start_pipeline("photo", prompts)
+            run_id = _start_pipeline(prompts)
             _log_activity(f"Photo pack started: {prompts} [{run_id}]")
             self._json({"ok": True, "run_id": run_id})
 
@@ -897,18 +874,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     self._json(result)
                 else:
                     self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
-
-        elif parsed.path == "/api/settings/banks/import":
-            data = body.get("data", body)
-            try:
-                result = import_banks(data)
-                if result.get("ok"):
-                    _log_activity(f"Prompt banks imported: {result['imported']} new, {result['skipped']} skipped")
-                    self._json(result)
-                else:
-                    self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
-            except Exception as e:
-                self._json({"ok": False, "error": str(e)}, 500)
 
         else:
             self._json({"error": "not found"}, 404)

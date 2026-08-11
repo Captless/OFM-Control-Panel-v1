@@ -22,7 +22,6 @@ jobs:
           python -m py_compile webui/wavespeed_tiktok_client.py
           python -m py_compile pipeline/pipeline.py
           python -m py_compile pipeline/prompt_bank.py
-          python -m py_compile pipeline/wavespeed_i2v_client.py
           python -m py_compile api/wavespeed_client.py
           python -m py_compile core/config.py
           python -m py_compile core/daybatch.py
@@ -30,12 +29,8 @@ jobs:
           python -m py_compile core/text_generator.py
           python -m py_compile scripts/run_tiktok.py
           python -m py_compile scripts/alina_textgen.py
-          python -m py_compile scripts/backfill_prompts.py
           python -m py_compile scripts/open_dashboard.py
           python -m py_compile scripts/open_server.py
-          python -m py_compile scripts/save_meta.py
-          python -m py_compile scripts/update_config.py
-          python -m py_compile hot-take-influencer/scripts/wavespeed_client.py
 
   import-test:
     name: Basic Import Test
@@ -65,7 +60,8 @@ jobs:
         run: |
           test -f webui/static/index.html
           test -f webui/static/style.css
-          test -f webui/static/app.js
+          test -d webui/static/js
           echo "Frontend files present"
       - name: Check JS syntax
-        run: node --check webui/static/app.js
+        run: |
+          for f in webui/static/js/*.js; do node --check "$f"; done

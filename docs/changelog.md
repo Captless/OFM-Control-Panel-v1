@@ -4,6 +4,24 @@ Moved from AGENTS.md to keep main file lean. AGENTS.md keeps only last 4 entries
 
 ---
 
+### 2026-08-11 — Project restructure
+
+**app.js split** ✓ — `webui/static/app.js` (2713 lines, flat globals) deleted; replaced by 10 module files in `webui/static/js/`: `core.js` (window.onerror/unhandledrejection, `setLive()`, `api()`, toast system `showToast`/`showError`/`showSuccess`/`showInfo`/`showWarning`/`_getToastContainer`/`_toastContainer`, `esc()`), `theme.js` (`_themes`, `setTheme`/`initTheme`/`toggleThemeModal`/`closeThemeModal`/`loadThemeList`/`selectTheme`/`handleThemeKeydown`, `motionQuery`/reduced-motion), `layout.js` (`_sidebarCollapsed`/`_activeSection`, `loadSidebarState`/`saveSidebarState`/`toggleSidebar`/`expandSidebar`/`closeFloaterMenu`/`showSection`/`loadSettingsUI`/`syncPanelHeights`/`_heightSyncTimer`), `settings.js` (`_pendingAvatarUrl`, `_setSettingsStatus`, `loadSettings`/`loadAvatarUrl`/`handleAvatarFile`/`saveIdentity` + avatar upload-zone DOMContentLoaded listeners), `promptBanks.js` (all bank state `_activeBankId`/`_savedBanks`/`_pendingDeleteId`/`_POOL_LABELS`/`_OVERRIDABLE_POOLS`/`_POOL_PURPOSES`/`_bankEditor*`, pool helpers, `renderBankList`, bank editor modal, new-bank clone, delete, `exportBanks`/`importBanks`), `captions.js` (`_captions`, `getSelectedCapPlatform`/`Hook`, `generateCaptions`/`renderCaptions`/`copyCaption`/`copyAllCaptions`/`clearCaptions`), `generation.js` (radio getters vibe/camera/lighting/time/outfit, `onVibeChange`/`onCameraChange`, `_balance`/`_perPhoto`/`_pendingJobs`, `fetchBalance`/`refreshBalance`/`updateCost`, `_btnTxt`/`_statusBadge`/`_renderGenStatus`/`_startGenAnim`/`_resetBtn`, `setControlsLocked`, `_previewDebounce`/`_genAnimTimer`/`_previewFetching`, `fetchPromptPreview`), `outputs.js` (`_outputsData`/`_preview`/`_viewMode`/`_showAll`, batch/item `editCaption`/`closeEdit`/`saveEdit`, `showPrompt`/`closePrompt`/`copyPrompt`, `closeFS`), `apiProviders.js` (`_selectedAccount`/`_lastIdentity`/`_lastApiCount`, validation/account API toggle/load), `init.js` (single DOMContentLoaded: `setLive`/`fetchBalance`/`refreshOutputs`/`syncViewToggle`/`checkApiStatus`/`preloadAccounts`/`preloadValidation`/`loadActiveBank`, 30s/60s intervals).
+
+**index.html script tags** ✓ — single monolithic app.js tag replaced with 10 one-line `<script src="/static/js/{core,theme,layout,settings,promptBanks,captions,generation,outputs,apiProviders,init}.js">` tags in load order; `init.js` last.
+
+**scratch/debug cleanup** ✓ — deleted root `_check.py`, `_swap.py`, `test_output2.html`, `_settings_debug.txt`; root + `webui/_srv.log`/`_srv_err.log`; all `__pycache__/`; `pipeline/promptbank_*.json`/`edited_prompts_*.json`; `outputs/*/checkpoint_*.json`.
+
+**UNUSED FILES/ archive** ✓ — `UNUSED FILES/` is the git-ignored archive root with README.md; moved in: `.claude/skills/`, `.playwright-mcp/`, `.slim/`, `hot-take-influencer/`, `PLAN_bank_editor_redesign.md`, `PROMPT_BANK_REDESIGN_PLAN.md`, `scripts/backfill_prompts.py`, `scripts/save_meta.py`, `scripts/update_config.py`, `pipeline/wavespeed_i2v_client.py`, `webui/static/sidebar.md`.
+
+**server.py cleanup** ✓ — `webui/server.py`: removed duplicate `export_banks, import_banks` in the line-34 import; removed unused `build_jobs` prompt_bank import (now `list_presets, build_jobs_multi, get_builtin_pools`); removed dead `_run_dashboard()`; removed duplicate unreachable `/api/settings/banks/export` GET + `/api/settings/banks/import` POST blocks; simplified `_start_pipeline(prompts)` (dropped unused `mode` param + dead `with_text` branch); caller updated to `_start_pipeline(prompts)`.
+
+**ci.yml updated** ✓ — syntax-check no longer py_compiles retired files (`scripts/backfill_prompts.py`, `save_meta.py`, `update_config.py`, `pipeline/wavespeed_i2v_client.py`, `hot-take-influencer/scripts/wavespeed_client.py`); frontend-lint now checks `test -d webui/static/js` and `for f in webui/static/js/*.js; do node --check "$f"; done`.
+
+**verified** ✓ — `python -m py_compile webui/server.py` clean.
+
+---
+
 ### 2026-08-09 — Settings redesign: side-by-side panes + prompt bank tile cards
 
 **settings HTML fixed** ✓ — `webui/static/index.html` `#section-settings` was severely malformed (missing `<div`/`<section`/`<h4` opening tags throughout). Rebuilt scratch: proper two-pane grid **IDENTITY (fixed 380px) | PROMPT BANKS**. Removed dead inline pool-editor markup (`pool-editor-wrapper`/`active-bank-header`/`saveAllPoolChanges`/`resetAllPoolsToBuiltin`) + 2 pre-existing stray `</div>`s. File now fully balanced (HTMLParser 0 errors).
