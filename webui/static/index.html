@@ -412,18 +412,20 @@
 
     <!-- 4c. Outputs -->
     <section id="section-outputs" class="content-section" hidden>
-      <div class="out-header" style="margin-top:0">
-        <h2>Outputs</h2>
-        <span class="out-meta" id="global-stats">Loading...</span>
-        <span class="view-toggle" role="tablist" aria-label="Output view mode">
-          <button role="tab" data-view="table" class="active" aria-selected="true" onclick="setViewMode('table')">Table</button>
-          <button role="tab" data-view="grid" aria-selected="false" onclick="setViewMode('grid')">Grid</button>
-        </span>
-        <button class="show-all-switch" id="btn-show-all" role="switch" aria-checked="false" title="Show all outputs without batches" onclick="setShowAll()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></button>
-        <span class="out-spacer"></span>
-        <button class="btn btn-sm btn-outline" onclick="refreshOutputs()" id="btn-refresh"><span class="btn-text">&#8635; Refresh</span></button>
+      <div class="card outputs-card">
+        <div class="out-header">
+          <h2>Outputs</h2>
+          <span class="out-meta" id="global-stats">Loading...</span>
+          <span class="view-toggle" role="tablist" aria-label="Output view mode">
+            <button role="tab" data-view="table" class="active" aria-selected="true" onclick="setViewMode('table')">Table</button>
+            <button role="tab" data-view="grid" aria-selected="false" onclick="setViewMode('grid')">Grid</button>
+          </span>
+          <button class="show-all-switch" id="btn-show-all" role="switch" aria-checked="false" title="Show all outputs without batches" onclick="setShowAll()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></button>
+          <span class="out-spacer"></span>
+          <button class="btn btn-sm btn-outline" onclick="refreshOutputs()" id="btn-refresh"><span class="btn-text">&#8635; Refresh</span></button>
+        </div>
+        <div id="outputs-area"><div class="outputs-loading">Loading outputs&hellip;</div></div>
       </div>
-      <div id="outputs-area"><div class="outputs-loading">Loading outputs&hellip;</div></div>
     </section>
 
     <!-- 4d. Settings -->

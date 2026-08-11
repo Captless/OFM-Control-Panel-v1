@@ -495,6 +495,16 @@ body::after {
 
 .out-spacer { flex: 1; }
 
+/* Outputs card — matches .card theme */
+.card.outputs-card { max-width: 1084px; }
+.outputs-card .out-header {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.outputs-card .out-header h2 { margin: 0; }
+.outputs-card .out-header h2::before { content: '> '; color: var(--accent); }
+
 /* ═══════════════════════════════════════════════════════════════
    Cards
    ═══════════════════════════════════════════════════════════════ */
@@ -526,14 +536,14 @@ body::after {
 .gen-layout {
   display: flex;
   gap: 24px;
-  align-items: stretch;
+  align-items: flex-start;
   margin-bottom: 32px;
 }
 
 .gen-preview {
-  flex: 1;
+  flex: 0 0 580px;
   min-width: 0;
-  min-height: 300px;
+  height: 560px;
   position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -627,10 +637,15 @@ body::after {
 }
 
 /* ── Responsive ── */
+@media (max-width: 1280px) {
+  .gen-layout { flex-direction: column; }
+  .gen-layout .card, .gen-preview { flex: none; width: 100%; }
+  .gen-preview { height: auto; min-height: 300px; }
+}
 @media (max-width: 768px) {
   .gen-layout { flex-direction: column; }
   .gen-layout .card { flex: none; width: 100%; }
-  .gen-preview { min-height: 260px; }
+  .gen-preview { flex: none; width: 100%; height: auto; min-height: 260px; }
   .gen-preview-body { max-height: 420px; }
 }
 
@@ -1173,7 +1188,8 @@ body::after {
    ═══════════════════════════════════════════════════════════════ */
 .g-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, 180px);
+  justify-content: start;
   gap: 12px;
 }
 
@@ -1255,10 +1271,10 @@ body::after {
 .g-actions svg { display: block; width: 14px; height: 14px; }
 
 @media (max-width: 1024px) {
-  .g-grid { grid-template-columns: repeat(3, 1fr); }
+  .g-grid { grid-template-columns: repeat(auto-fill, 160px); }
 }
 @media (max-width: 768px) {
-  .g-grid { grid-template-columns: repeat(2, 1fr); }
+  .g-grid { grid-template-columns: repeat(auto-fill, 150px); }
   .b-body { overflow-x: auto; }
 }
 @media (max-width: 480px) {
@@ -2661,7 +2677,7 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
 .btn-link:hover { color: var(--accent); opacity: .8; }
 
 /* ── Caption Generator ── */
-.caption-gen-card { max-width: 100%; }
+.caption-gen-card { max-width: 1084px; }
 .caption-list { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; max-height: 420px; overflow-y: auto; }
 .caption-item { border: 1px solid var(--border); border-left: 2px solid var(--accent); border-radius: var(--radius); padding: 12px; background: var(--surface); }
 .caption-item-head { display: flex; gap: 8px; margin-bottom: 8px; }
@@ -2781,9 +2797,13 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
 .sidebar-overlay.visible { display: block; }
 
 /* Main content adjustment */
-.main { padding-left: calc(var(--sidebar-width) + 24px); transition: padding-left .25s cubic-bezier(.32,.72,0,1); }
-.sidebar.collapsed ~ .main { padding-left: 72px; }
-.sidebar.collapsed ~ .sidebar-toggle ~ .main { padding-left: 72px; }
+.main { padding-left: calc(var(--sidebar-width) + 24px); transition: padding-left .25s cubic-bezier(.32,.72,0,1), padding-right .25s cubic-bezier(.32,.72,0,1); }
+.sidebar.collapsed ~ .main { padding-left: 72px; padding-right: 72px; }
+.sidebar.collapsed ~ .sidebar-toggle ~ .main { padding-left: 72px; padding-right: 72px; }
+.sidebar.collapsed ~ .main .gen-layout { justify-content: center; }
+.sidebar.collapsed ~ .sidebar-toggle ~ .main .gen-layout { justify-content: center; }
+.sidebar.collapsed ~ .main .g-grid { justify-content: center; }
+.sidebar.collapsed ~ .sidebar-toggle ~ .main .g-grid { justify-content: center; }
 
 /* Content sections */
 .content-section { display: none; }
@@ -2797,6 +2817,8 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
   .sidebar.collapsed { width: 260px; transform: translateX(-100%); }
   .sidebar-floater.visible { display: block; }
   .main { padding-left: 16px; }
+  .sidebar.collapsed ~ .main { padding-left: 16px; padding-right: 16px; }
+  .sidebar.collapsed ~ .sidebar-toggle ~ .main { padding-left: 16px; padding-right: 16px; }
   .sidebar-toggle { display: none; }
 }
 

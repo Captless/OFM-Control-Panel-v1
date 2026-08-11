@@ -69,7 +69,6 @@ function toggleSidebar() {
     floater.classList.remove('visible');
   }
   saveSidebarState();
-  syncPanelHeights();
 }
 
 function expandSidebar() {
@@ -83,7 +82,6 @@ function expandSidebar() {
   toggle.setAttribute('aria-expanded', 'true');
   closeFloaterMenu();
   saveSidebarState();
-  syncPanelHeights();
 }
 
 function closeFloaterMenu() {
@@ -110,28 +108,9 @@ function showSection(sectionId) {
   if (sectionId === 'outputs') refreshOutputs();
   else if (sectionId === 'generation') fetchBalance();
   else if (sectionId === 'settings') loadSettingsUI();
-  syncPanelHeights();
 }
 
 // ── Settings UI (Identity + Prompt Bank cards, rendered in #section-settings) ──
 function loadSettingsUI() {
   loadSettings();
 }
-// ── Equal-height panels: prompt preview matches generation card ──
-var _heightSyncTimer = null;
-function syncPanelHeights() {
-    var card = document.querySelector('.gen-layout .card');
-    var preview = document.querySelector('.gen-preview');
-    if (!card || !preview) return;
-    if (window.innerWidth < 768) { preview.style.height = 'auto'; return; }
-    preview.style.height = card.offsetHeight + 'px';
-}
-window.addEventListener('load', syncPanelHeights);
-window.addEventListener('resize', function() {
-    clearTimeout(_heightSyncTimer);
-    _heightSyncTimer = setTimeout(syncPanelHeights, 100);
-});
-if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(syncPanelHeights);
-}
-syncPanelHeights();

@@ -229,6 +229,23 @@ POSES = [
 ]
 
 # ---------------------------------------------------------------------------
+# HANDHELD_POSES — candid handheld-selfie angles/gestures only (mirror uses POSES)
+# ---------------------------------------------------------------------------
+
+HANDHELD_POSES = [
+    "chin tucked toward collarbone, gaze lifted to meet lens at slight downward angle, head tilted 15 degrees right creating natural jawline shadow, shoulders relaxed and uneven",
+    "camera held at sternum height angled upward, eyes tracking just left of center as if noticing something beyond frame, weight shifted onto back leg with front knee softly bent",
+    "device at jawline distance, extreme close framing cutting top of forehead, head canted right exposing neck line, lower lip caught between teeth, free hand hovering near collarbone",
+    "gaze directed downward toward palm as if reading screen reflection, brow arched inquisitively, chin slightly lowered creating double-chin compression, posture upright but not stiff",
+    "body captured mid-step, weight fully on trailing leg with leading foot lifted, camera at hip angled up 45 degrees, torso rotated toward leading side creating dynamic diagonal line",
+    "thumb grazing lower frame edge creating organic vignette, chin dropped toward chest, eyes tilted upward beneath lashes at extreme angle, neck elongated, shoulders rolled forward",
+    "torso rotated 60 degrees away from lens, head swiveled 120 degrees back over left shoulder creating spinal twist, gaze sharp over collarbone, free arm hanging loose at side",
+    "device resting on clavicle pointing nearly vertical, chin pressed to chest forcing eyes upward through lowered lashes, forehead dominating upper frame, intimate vulnerable perspective",
+    "right hand mid-motion tucking loose strands behind ear, elbow lifted to shoulder height, head tilted toward working hand exposing jawline, left shoulder dropped in counterbalance",
+    "face angled 30 degrees toward floor, eyes tracking invisible screen held at waist, jaw relaxed with slight parting, neck extended forward in tech-neck curve, shoulders rounded inward",
+]
+
+# ---------------------------------------------------------------------------
 # LIGHTING
 # ---------------------------------------------------------------------------
 
@@ -368,7 +385,8 @@ def build_jobs_multi(count=1, vibe=None, outfit_style=None, camera_style=None, l
     }
     framing_pool = _resolve_pool("FRAMING", FRAMING, bank)
     hair_pool = _resolve_pool("HAIR", HAIR, bank)
-    pose_pool = _resolve_pool("POSES", POSES, bank)
+    handheld_pose_pool = _resolve_pool("HANDHELD_POSES", HANDHELD_POSES, bank)
+    mirror_pose_pool = _resolve_pool("POSES", POSES, bank)
     quality_pool = _resolve_pool("QUALITY", QUALITY, bank)
     tops_pools = _resolve_pool("OUTFIT_TOPS_POOLS", OUTFIT_TOPS_POOLS, bank)
     bottoms_pools = _resolve_pool("OUTFIT_BOTTOMS_POOLS", OUTFIT_BOTTOMS_POOLS, bank)
@@ -403,6 +421,9 @@ def build_jobs_multi(count=1, vibe=None, outfit_style=None, camera_style=None, l
         for v in bottoms_pools.values():
             bottom_pool.extend(v)
 
+    camera_mode = "mirror" if camera_style == "mirror" else "handheld"
+    pose_pool = mirror_pose_pool if camera_mode == "mirror" else handheld_pose_pool
+
     jobs = []
     for _ in range(count):
         scene = random.choice(scene_pool)
@@ -412,8 +433,6 @@ def build_jobs_multi(count=1, vibe=None, outfit_style=None, camera_style=None, l
         bottom = random.choice(bottom_pool)
         pose = random.choice(pose_pool)
         light = random.choice(light_pool)
-
-        camera_mode = "mirror" if camera_style == "mirror" else "handheld"
 
         quality = random.choice(quality_pool)
 
@@ -474,6 +493,7 @@ OVERRIDABLE_POOLS = (
     "FRAMING",
     "HAIR",
     "POSES",
+    "HANDHELD_POSES",
     "QUALITY",
     "OUTFIT_TOPS_POOLS",
     "OUTFIT_BOTTOMS_POOLS",
@@ -493,6 +513,7 @@ def get_builtin_pools() -> dict:
         "FRAMING": FRAMING,
         "HAIR": HAIR,
         "POSES": POSES,
+        "HANDHELD_POSES": HANDHELD_POSES,
         "QUALITY": QUALITY,
         "OUTFIT_TOPS_POOLS": OUTFIT_TOPS_POOLS,
         "OUTFIT_BOTTOMS_POOLS": OUTFIT_BOTTOMS_POOLS,

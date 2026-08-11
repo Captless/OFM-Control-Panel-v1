@@ -1,0 +1,270 @@
+901   text-align: center;
+902   padding: 32px;
+903   color: var(--fg3);
+904   font-size: 12px;
+905   font-family: var(--font-mono);
+906   animation: pulse 1.2s infinite;
+907 }
+908 
+909 /* ── Table output ── */
+910 .tw {
+911   width: 100%;
+912   border-collapse: collapse;
+913   font-size: 12px;
+914   font-family: var(--font-mono);
+915 }
+916 
+917 .tw th {
+918   text-align: left;
+919   padding: 8px 12px;
+920   font-weight: 600;
+921   color: var(--fg2);
+922   font-size: 10px;
+923   text-transform: uppercase;
+924   letter-spacing: 1px;
+925   background: var(--th-bg);
+926   border-bottom: 1px solid var(--border);
+927   white-space: nowrap;
+928 }
+929 
+930 .tw th.n { width: 32px; }
+931 .tw th.dc { width: 32px; }
+932 .tw th.m { width: 76px; }
+933 
+934 .tw td {
+935   padding: 10px 12px;
+936   border-bottom: 1px solid var(--border);
+937   vertical-align: middle;
+938   color: var(--fg);
+939   font-variant-numeric: tabular-nums;
+940 }
+941 
+942 .tw tbody tr:nth-child(even) { background: var(--accent-dim); }
+943 
+944 .tw tr {
+945   transition: background .1s, border-color .15s;
+946   border-left: 2px solid transparent;
+947 }
+948 .tw tr:hover {
+949   background: var(--row-hover);
+950   border-left-color: var(--accent);
+951 }
+952 
+953 .tw td.n {
+954   font-family: var(--font-mono);
+955   color: var(--fg3);
+956   font-size: 10px;
+957   text-align: center;
+958   width: 32px;
+959   font-variant-numeric: tabular-nums;
+960 }
+961 
+962 .tw td.dc {
+963   width: 32px;
+964   text-align: center;
+965 }
+966 
+967 .tw td.dc input { accent-color: var(--accent); cursor: pointer; width: 14px; height: 14px; margin: 0; }
+968 
+969 .tw td.m {
+970   width: 76px;
+971   padding: 4px 8px;
+972 }
+973 
+974 .tw .thumb {
+975   display: block;
+976   width: 60px;
+977   height: 100px;
+978   border-radius: var(--radius);
+979   overflow: hidden;
+980   cursor: pointer;
+981   background: #000;
+982   position: relative;
+983   transition: box-shadow .15s;
+984 }
+985 
+986 .tw .thumb:hover {
+987   box-shadow: 0 0 0 2px var(--accent), 0 0 12px var(--accent-dim);
+988 }
+989 
+990 .tw .thumb img, .tw .thumb video {
+991   width: 100%;
+992   height: 100%;
+993   object-fit: cover;
+994   display: block;
+995 }
+996 
+997 .tw .thumb .vid-badge {
+998   position: absolute;
+999   bottom: 3px;
+1000   right: 3px;
+1001   background: rgba(0,0,0,0.8);
+1002   color: var(--accent);
+1003   font-size: 7px;
+1004   font-family: var(--font-mono);
+1005   padding: 1px 4px;
+1006   border-radius: 2px;
+1007   line-height: 1.2;
+1008   letter-spacing: .5px;
+1009   border: 1px solid var(--accent-soft);
+1010 }
+1011 
+1012 .tw .msg {
+1013   font-size: 10px;
+1014   font-family: var(--font-mono);
+1015   color: var(--accent);
+1016   font-weight: 500;
+1017   margin-left: 4px;
+1018 }
+1019 
+1020 .tw td.info {
+1021   width: auto;
+1022   padding: 10px 12px;
+1023   vertical-align: middle;
+1024   line-height: 1.5;
+1025 }
+1026 
+1027 .caption-text {
+1028   display: -webkit-box;
+1029   -webkit-line-clamp: 2;
+1030   -webkit-box-orient: vertical;
+1031   overflow: hidden;
+1032   text-overflow: ellipsis;
+1033   font-size: 12px;
+1034   font-family: var(--font-mono);
+1035   font-weight: 400;
+1036   color: var(--fg);
+1037   cursor: pointer;
+1038   line-height: 1.4;
+1039   margin-bottom: 4px;
+1040   max-width: 100%;
+1041   word-break: break-word;
+1042 }
+1043 .caption-text:hover { color: var(--accent); }
+1044 
+1045 .caption-placeholder {
+1046   display: block;
+1047   font-size: 12px;
+1048   font-family: var(--font-mono);
+1049   color: var(--fg3);
+1050   cursor: pointer;
+1051   font-style: italic;
+1052   margin-bottom: 4px;
+1053 }
+1054 .caption-placeholder:hover { color: var(--accent); }
+1055 
+1056 .item-meta {
+1057   display: flex;
+1058   align-items: center;
+1059   justify-content: space-between;
+1060   gap: 8px;
+1061   margin-top: 6px;
+1062 }
+1063 
+1064 .prompt-link {
+1065   display: inline-flex;
+1066   align-items: center;
+1067   background: var(--accent-bg);
+1068   border: 1px solid var(--accent-soft);
+1069   color: var(--accent);
+1070   cursor: pointer;
+1071   font-family: var(--font-mono);
+1072   font-size: 10px;
+1073   font-weight: 500;
+1074   padding: 2px 8px;
+1075   border-radius: var(--radius);
+1076   transition: opacity .15s, background .15s;
+1077   user-select: none;
+1078   white-space: nowrap;
+1079 }
+1080 .prompt-link:hover { opacity: .7; }
+1081 
+1082 .tw .created, .g-card .created {
+1083   font-size: 10px;
+1084   font-family: var(--font-mono);
+1085   color: var(--fg3);
+1086   font-variant-numeric: tabular-nums;
+1087   white-space: nowrap;
+1088 }
+1089 
+1090 .item-meta-right {
+1091   display: inline-flex;
+1092   align-items: center;
+1093   gap: 6px;
+1094 }
+1095 
+1096 .tw .fmt, .g-card .fmt {
+1097   font-size: 10px;
+1098   font-family: var(--font-mono);
+1099   color: var(--accent);
+1100   letter-spacing: .5px;
+1101   flex-shrink: 0;
+1102 }
+1103 
+1104 .tw td.bt {
+1105   width: 110px;
+1106   white-space: nowrap;
+1107   text-align: right;
+1108   padding-right: 12px;
+1109 }
+1110 
+1111 .tw .cp, .tw .dl, .tw .del {
+1112   display: inline-flex;
+1113   align-items: center;
+1114   justify-content: center;
+1115   width: 28px;
+1116   height: 28px;
+1117   border-radius: var(--radius);
+1118   cursor: pointer;
+1119   color: var(--fg2);
+1120   background: transparent;
+1121   border: 1px solid transparent;
+1122   padding: 0;
+1123   margin-left: 4px;
+1124   transition: background .12s, color .12s, border-color .12s;
+1125 }
+1126 .tw .cp:first-child, .tw .dl:first-child, .tw .del:first-child { margin-left: 0; }
+1127 .tw .cp:hover, .tw .dl:hover { background: var(--btn-hover); color: var(--accent); border-color: var(--accent-soft); }
+1128 .tw .del:hover { background: var(--error-bg); color: var(--error); border-color: rgba(255,107,107,0.3); }
+1129 .tw .cp svg, .tw .dl svg, .tw .del svg { display: block; width: 14px; height: 14px; }
+1130 
+1131 /* ═══════════════════════════════════════════════════════════════
+1132    Output view toggle (Table / Grid)
+1133    ═══════════════════════════════════════════════════════════════ */
+1134 .view-toggle {
+1135   display: inline-flex;
+1136   border: 1px solid var(--border);
+1137   border-radius: var(--radius);
+1138   overflow: hidden;
+1139   background: var(--bg2);
+1140 }
+1141 .view-toggle button {
+1142   background: transparent;
+1143   border: none;
+1144   padding: 4px 12px;
+1145   font-family: var(--font-mono);
+1146   font-size: 10px;
+1147   text-transform: uppercase;
+1148   letter-spacing: 0.5px;
+1149   color: var(--fg2);
+1150   cursor: pointer;
+1151   transition: background .15s, color .15s;
+1152 }
+1153 .view-toggle button + button { border-left: 1px solid var(--border); }
+1154 .view-toggle button:hover { background: var(--btn-hover); color: var(--fg); }
+1155 .view-toggle button.active {
+1156   background: var(--accent);
+1157   color: var(--accent-contrast);
+1158   font-weight: 700;
+1159 }
+1160 .show-all-switch {
+1161   display: inline-flex;
+1162   align-items: center;
+1163   justify-content: center;
+1164   width: 28px; height: 28px;
+1165   margin-left: 8px;
+1166   background: var(--bg2);
+1167   border: 1px solid var(--border);
+1168   border-radius: 50%;
+1169   color: var(--fg2);
+1170   cursor: pointer;

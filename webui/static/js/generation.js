@@ -164,6 +164,11 @@ function setControlsLocked(locked) {
 var _previewDebounce = null;
 var _genAnimTimer = null;
 var _previewFetching = false;
+var _previewStateKey = null;
+
+function _currentPreviewStateKey() {
+    return [getSelectedVibe(), getSelectedCamera(), getSelectedLighting(), getSelectedTime(), getSelectedOutfitStyle(), document.getElementById('photo-count').value, getSelectedBankId()].join('|');
+}
 
 async function fetchPromptPreview(silent) {
     var vibe = getSelectedVibe();
@@ -181,6 +186,7 @@ async function fetchPromptPreview(silent) {
         }
         return null;
     }
+    _previewStateKey = _currentPreviewStateKey();
     _pendingJobs = r.jobs;
     var list = document.getElementById('prompt-list');
     var html = '';
@@ -198,7 +204,6 @@ async function fetchPromptPreview(silent) {
     document.getElementById('cancel-gen-btn').style.display = 'inline-block';
     document.getElementById('edit-prompts-btn').style.display = 'inline-block';
     _btnTxt('Update Preview');
-    syncPanelHeights();
     return r.jobs;
 }
 
@@ -212,6 +217,7 @@ async function startPromptGeneration() {
 
 function schedulePreviewRefresh() {
     if (!_pendingJobs) return;
+    if (_currentPreviewStateKey() === _previewStateKey) return;
     var items = document.querySelectorAll('.prompt-item');
     if (items.length > 0 && items[0].classList.contains('editing')) return;
     clearTimeout(_previewDebounce);
@@ -229,7 +235,6 @@ function _resetPromptList() {
     document.getElementById('edit-prompts-btn').style.display = 'none';
     document.getElementById('edit-prompts-btn').textContent = 'Edit';
     document.getElementById('confirm-gen-btn').disabled = false;
-    syncPanelHeights();
 }
 
 async function confirmGeneration() {

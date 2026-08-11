@@ -12,6 +12,7 @@ var _POOL_LABELS = {
     'FRAMING': 'Framing',
     'HAIR': 'Hair',
     'POSES': 'Poses',
+    'HANDHELD_POSES': 'Handheld Poses',
     'QUALITY': 'Quality',
     'OUTFIT_TOPS_POOLS': 'Outfit Tops',
     'OUTFIT_BOTTOMS_POOLS': 'Outfit Bottoms',
@@ -25,7 +26,7 @@ function _poolLabel(name) { return _POOL_LABELS[name] || name; }
 
 var _OVERRIDABLE_POOLS = [
     'INDOOR_SCENES', 'MIRROR_SCENES', 'OUTDOOR_SCENES',
-    'FRAMING', 'HAIR', 'POSES', 'QUALITY',
+    'FRAMING', 'HAIR', 'POSES', 'HANDHELD_POSES', 'QUALITY',
     'OUTFIT_TOPS_POOLS', 'OUTFIT_BOTTOMS_POOLS', 'LIGHTING_POOLS',
     'DEFAULT_NEGATIVE', 'MIRROR_NEGATIVE', 'IDENTITY_LOCK'
 ];
@@ -37,6 +38,7 @@ var _POOL_PURPOSES = {
     'FRAMING': 'Camera angle & crop (tilted, off-center, motion blur)',
     'HAIR': 'Hair state (wet, messy, damp, braided, bedhead)',
     'POSES': 'Body posture (weight shift, hip tilt, hand on hip, candid)',
+    'HANDHELD_POSES': 'Handheld-selfie angles & gestures (chin tuck, mid-step, head cant)',
     'QUALITY': 'iPhone aesthetic (grain, noise, compression, raw sensor look)',
     'OUTFIT_TOPS_POOLS': 'Top clothing by style (sexy, date_night, night_club, baggy, lounge_sexy)',
     'OUTFIT_BOTTOMS_POOLS': 'Bottom clothing by style (same style keys as tops)',
