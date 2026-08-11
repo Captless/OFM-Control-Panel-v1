@@ -52,12 +52,7 @@ OUTDOOR_SCENES = [
 # ---------------------------------------------------------------------------
 
 FRAMING = [
-    "slightly tilted uneven framing, head-to-waist crop",
-    "uneven framing, head-to-waist crop",
-    "slight motion blur, uneven composition, head-to-waist crop",
-    "slightly low uneven angle, head-to-waist framing",
-    "off-center framing, head-to-waist crop",
-    "slightly tilted framing, head-to-waist crop, subtle camera shake",
+    "mid-shot crop, waist-up framing",
 ]
 
 # ---------------------------------------------------------------------------
@@ -83,128 +78,211 @@ HAIR = [
 ]
 
 # ---------------------------------------------------------------------------
-# OUTFIT TOPS
+# OUTFIT TOPS — category -> detailed alt/goth designs
 # ---------------------------------------------------------------------------
 
 OUTFIT_TOPS_POOLS = {
-    "sexy": [
-        "black fitted micro tank top with ultra-thin straps, distressed edges, subtle faded gothic print text",
-        "black strappy bandeau crop top with multiple thin intersecting straps, layered construction with irregular cut panels, raw hems and distressed stitching, faint washed gothic symbol print across chest",
-        "black fitted micro cami with ultra-thin straps, soft matte cotton blend, subtle lace trim along neckline, delicate seam shaping and slight stretch tension",
-        "charcoal asymmetrical cut-out crop top with single-shoulder strap design, double-layer matte fabric with visible seam lines and subtle ribbed texture",
-        "black soft crop top with one thin strap and lightly draped neckline, smooth stretch fabric with minimal seams",
-        "black halter-neck micro top with thin strap around neck, cut-out back, fitted stretch fabric",
-        "black fitted tube top with ribbed knit texture, slight stretch, banded top edge",
-        "black off-shoulder fitted crop top with long sleeves, ruched elastic along neckline",
-        "black bodycon crop top with square neckline, fitted through torso, thick straps",
+    "tank": [
+        "black fitted micro tank ultra-thin distressed straps, faded gothic sigil print, soft matte cotton, raw hem",
+        "black ribbed tank thin straps, subtle inverted cross stitch at chest, sheer mesh side panels, raw edges",
+        "charcoal fitted tank deep scoop neck, thin straps, occult text running vertical spine, distressed collar",
+        "black soft cotton tank dropped armholes, thin straps, large faded pentagram back print, loose threads hem",
+        "dark grey fitted tank high neck racerback, subtle metallic thread sigil woven through rib, banded edges",
+        "black micro tank ultra-cropped, spaghetti straps, distressed edges, faded band logo front/back",
+        "off-white fitted tank sheer mesh yoke overlay, thin straps, black occult embroidery at neckline",
+        "black fitted tank wide rib knit, thin straps, subtle bat-wing embroidery chest, raw hem unfinished",
+        "charcoal tank thin straps, raw cut armholes, large faded baphomet silhouette center, soft worn cotton",
+        "black fitted tank deep scoop back, thin straps criss-cross, inverted cross charm at nape, matte finish",
     ],
-    "date_night": [
-        "cream silk camisole with adjustable spaghetti straps, subtle cowl neck, matte finish",
-        "black fitted turtleneck in fine ribbed knit, close-to-body cut, matte texture against skin",
-        "off-white relaxed fit soft blazer layered over black camisole top, visible silk texture at neckline",
-        "deep wine tone slim-fit merino wool pullover with subtle stitch detail at shoulders",
-        "dark forest green chunky knit sweater with wide ribbed collar, white collared blouse visible at neckline",
-        "cream high-neck blouse with subtle eyelet embroidery along collar, small silver pendant at center front",
-        "black satin wrap top with deep neckline, self-tie at waist, smooth drape",
-        "pale ivory silk camisole with lace trim at hem, thin straps",
-        "charcoal knit cardigan over white fitted blouse, structured layering",
+    "tube": [
+        "black fitted tube top ribbed knit texture, banded top edge, slight stretch, clean silhouette",
+        "white seamless tube top soft cotton modal, elasticized inner grip, minimal seams",
+        "charcoal ribbed tube top wide band, subtle cable knit detail, fitted through torso",
+        "black tube top smocked back panel, front smooth matte finish, elastic grip lining",
+        "dark green fitted tube top fine rib, elastic hem, single seam side",
+        "black tube top ruching center front, banded edges, stretch cotton blend",
+        "cream fitted tube top subtle lace trim top edge, silicone grip, seamless body",
+        "black fitted tube top cut-out side details, mesh insert panels, ribbed knit",
+        "black tube top wide rib, elasticized inner band, subtle bat charm at center front",
+        "charcoal tube top fitted, raw hem bottom, single seam, minimalist goth",
     ],
-    "night_club": [
-        "black lace long-sleeve top with strategic opaque panels, high neck",
-        "black corset-style top with visible boning, lace-up back, sweetheart neckline",
-        "black sequin crop top with halter neck, open back, cropped to underbust",
-        "charcoal cut-out bodysuit with geometric cutouts at waist, snap closure",
-        "black velvet crop top with square neck, long fitted sleeves, cropped hem",
-        "black leather-look fitted top with zip front, stand collar",
-        "silver metallic halter top with ruched fabric, thin neck strap",
-        "black fringe crop top with layered fringe hem, fitted bandeau base",
-        "black sheer top with lined bodice, long sleeves",
-    ],
-    "baggy": [
-        "oversized black graphic tee with faded vintage band print, worn collar, boxy relaxed fit hanging loose off one shoulder",
-        "loose charcoal crewneck sweatshirt with wide ribbed neck, relaxed street wear fit, over longline camisole tank",
-        "black tech windbreaker vest over fitted torso top, visible crossbody bag strap, urban practical layering",
+    "oversize_tee": [
+        "oversized black graphic tee faded vintage band print, worn collar, boxy relaxed fit hanging off one shoulder",
+        "loose charcoal crewneck sweatshirt wide ribbed neck, relaxed streetwear fit over longline camisole tank",
         "grey washed vintage concert tee layered under slouchy charcoal knit cardigan, oversized sleeves bunched at wrists",
-        "black oversized hoodie with dropped shoulders, raw hem, kangaroo pocket",
-        "black oversized long-sleeve tee with wide sleeves, boxy fit, slightly cropped",
-        "dark grey oversized flannel shirt worn open over black tank, rolled sleeves",
-        "black puffer vest over baggy long-sleeve top, matte finish",
-        "oversized black denim jacket over white graphic tee, relaxed unbuttoned",
+        "black oversized band tee distressed neck, mineral wash, boxy fit, single chest pocket",
+        "dark grey oversized tee faded occult print, raw collar, dropped shoulder, uneven hem",
+        "black oversized long-sleeve tee wide sleeves, boxy fit, slightly cropped, distressed cuffs",
+        "charcoal oversized sweatshirt raw neck, dropped shoulder, kangaroo pocket, mineral wash",
+        "dark green oversized tee faded band logo, worn fabric, relaxed fit, raw hem",
+        "black oversized tee cut-out shoulder details, mesh inserts, boxy silhouette",
+        "grey vintage wash tee layered over black fitted tank, uneven hem, relaxed",
     ],
-    "lounge_sexy": [
-        "black silk robe with kimono sleeves, self-tie belt, mid-thigh length",
-        "white cotton bralette with delicate floral embroidery, thin straps",
-        "oversized men's white dress shirt unbuttoned, worn off one shoulder",
-        "black lace camisole with adjustable straps, scalloped hem",
-        "charcoal ribbed knit bralette with square neck, wide straps, cropped",
-        "black satin camisole with thin straps, smooth drape, lace trim",
-        "white cotton bralette with delicate stitching, soft stretch fabric",
-        "black satin slip top, deep v-neck, thin straps",
-        "cream knit crop cardigan open, loose fit",
+    "bralette": [
+        "black lace bralette scalloped hem, adjustable straps, sheer unlined panels, subtle underband logo",
+        "charcoal ribbed knit bralette square neck, wide straps, cropped, soft compressive fit",
+        "black satin bralette thin straps, smooth drape, lace trim along neckline, adjustable back",
+        "cream mesh bralette flocked velvet polka dots, thin straps, elastic underband",
+        "black micro bralette triangle cups, thin criss-cross back straps, minimal coverage",
+        "dark wine lace bralette high neck halter, keyhole back, scalloped edges",
+        "black cotton bralette wide elastic band logo, racerback, ribbed texture",
+        "black harness-style bralette multiple thin straps crossing chest, adjustable, hardware rings",
+        "charcoal lace bralette longline band, sheer cups, strappy back, scalloped hem",
+        "black velvet bralette square neck, wide straps, hook back, subtle shine",
+    ],
+    "bodysuit": [
+        "black lace long-sleeve bodysuit strategic opaque panels, high neck, snap closure",
+        "black cut-out bodysuit geometric waist cutouts, high neck, snap crotch, matte stretch",
+        "charcoal ribbed knit bodysuit square neck, long sleeves, thong back, fitted silhouette",
+        "black velvet bodysuit long sleeves, deep v-neck, snap closure, plush texture",
+        "black mesh bodysuit lined bust, sheer sleeves, high neck, snap crotch",
+        "dark green fitted bodysuit mock neck, long sleeves, subtle seam shaping, thong back",
+        "black leather-look bodysuit zip front, stand collar, long sleeves, snap closure",
+        "black sheer bodysuit flocked floral pattern, lined bust, long sleeves, high neck",
+        "black bodysuit cut-out sides, mesh panels, high neck, snap crotch, strappy back",
+        "charcoal bodysuit mock neck, long sleeves, subtle occult embroidery chest, thong back",
+    ],
+    "cardigan": [
+        "cream knit crop cardigan open front, loose fit, wide ribbed cuffs, dropped shoulders",
+        "black oversized cardigan chunky cable knit, open front, patch pockets, mid-thigh length",
+        "charcoal fine merino cardigan deep v-neck, single button, fitted sleeves, cropped hem",
+        "black sheer cardigan floral burnout pattern, open front, raw edges, draped",
+        "dark grey cardigan oversized, raw hem, wide sleeves, dropped shoulder, distressed",
+        "black cardigan deconstructed, asymmetrical hem, raw edges, single button, draped",
+        "charcoal cardigan chunky knit, open front, single pocket, mineral wash, relaxed",
+        "black cardigan mesh panel sides, open front, wide sleeves, raw hem, oversized",
+        "dark green cardigan fine knit, deep v-neck, single button, cropped, subtle texture",
+        "black cardigan burnout velvet pattern, open front, raw edges, mid-thigh length",
+    ],
+    "hoodie": [
+        "black tech windbreaker vest over fitted torso top, visible crossbody bag strap, urban practical layering",
+        "black oversized hoodie dropped shoulders, raw hem, kangaroo pocket, mineral wash",
+        "black cropped hoodie raw hem, wide drawstrings, dropped shoulder, fleece back",
+        "charcoal oversized hoodie distressed graphic print, worn fabric, kangaroo pocket",
+        "black hoodie thumbhole cuffs, oversized, single front pocket, mineral wash",
+        "dark green hoodie oversized, embroidered chest logo, raw hem, dropped shoulder",
+        "black hoodie cut-out shoulder details, mesh inserts, oversized, raw hem",
+        "charcoal oversized hoodie wide drawstrings, distressed cuffs, kangaroo pocket, mineral wash",
+        "black hoodie asymmetrical zip, dropped shoulder, raw hem, oversized fit",
+        "dark grey hoodie oversized, burnout pattern sleeves, kangaroo pocket, raw edges",
+    ],
+    "blazer": [
+        "off-white relaxed fit soft blazer layered over black camisole, visible silk texture at neckline",
+        "black structured blazer oversized, peak lapels, single button, padded shoulders",
+        "charcoal tweed blazer relaxed fit, notch lapels, patch pockets, subtle texture",
+        "black velvet blazer cropped, shawl lapel, single button, smooth drape",
+        "dark grey unstructured blazer linen blend, relaxed, patch pockets, rolled sleeves",
+        "black blazer deconstructed, raw edges, asymmetrical closure, oversized fit",
+        "cream lightweight blazer open front, no lapels, long sleeves, fluid drape",
+        "black blazer mesh inset panels at sides, oversized, notch lapels, single button",
+        "charcoal blazer oversized, raw edges, single button, dropped shoulder, deconstructed",
+        "black velvet blazer cropped, shawl lapel, single button, subtle crushed texture",
     ],
 }
 
 # ---------------------------------------------------------------------------
-# OUTFIT BOTTOMS
+# OUTFIT BOTTOMS — category -> detailed designs
 # ---------------------------------------------------------------------------
 
 OUTFIT_BOTTOMS_POOLS = {
-    "sexy": [
-        "high-waisted beige cargo pants with smooth finish and subtle contour seams",
-        "high-waisted sweatpants slight shaping seams",
-        "black high-waisted micro shorts",
-        "structured black cargo pants with oversized flap pockets, reinforced side seams and subtle strap details",
-        "black fitted lounge shorts with subtle stitching and soft fabric folds",
-        "black high-waisted biker shorts with ruched side seams, tight fit",
-        "black denim pants with distressed hem, high-waisted fit",
-        "black satin mini skirt with high waist, short length",
-        "black bodycon skirt, mid-thigh length, fitted through hips",
+    "miniskirt": [
+        "black leather mini skirt asymmetrical zip hem, low-rise fit, structured waistband",
+        "black high-waisted vinyl shorts side zip, structured waistband, subtle sheen",
+        "black mini skirt patent leather straight silhouette, high waist, hidden back zip",
+        "black pleated mini skirt tennis-inspired, hidden shorts liner, contrast piping",
+        "dark charcoal mini skirt faux leather, exposed zip front, high waist, slight flare",
+        "black sequin mini skirt high waist, short length, lined, subtle shimmer",
+        "black mini skirt in structured wool blend, box pleats, high waist, clean lines",
+        "black cut-out mini skirt side zip, high-waisted, structured fit, hardware detail",
+        "black leather mini skirt raw hem, low-rise, D-ring belt loops, asymmetrical",
+        "charcoal mini skirt vinyl, high waist, side zip, subtle flare, structured",
     ],
-    "date_night": [
-        "dark wine wide-leg pleated trousers",
-        "dark wool high-waist pleated trousers in soft black plaid, front crease",
-        "black full-length narrow pants with prominent central crease",
-        "deep charcoal tailored trousers with subtle drape, fitted through seat, relaxed at hem",
-        "black high-waisted pleated midi skirt in structured wool blend, clean lines",
-        "black satin midi skirt with slit, smooth drape, elastic waist",
-        "dark grey slim-fit trousers with zip front, sharp contained silhouette",
-        "black fitted pencil skirt, knee length, back slit",
-        "navy tailored trousers with subtle pinstripe",
+    "cargo_pants": [
+        "black wide-leg cargo pants oversized flap pockets, stacked and pooling slightly over shoes",
+        "black cargo pants slim tapered, multiple flap pockets, adjustable ankle straps, matte finish",
+        "charcoal cargo pants relaxed fit, oversized side pockets with button flaps, stacked hem",
+        "black cargo pants high waist, D-ring details, utility loops, straight leg, raw hem",
+        "dark green cargo pants wide leg, oversized pockets, drawstring waist, gathered ankles",
+        "black tech cargo pants water-repellent, zip pockets, tapered leg, nylon sheen",
+        "charcoal cargo pants slim, magnetic snap flaps, clean lines, cropped ankle",
+        "black cargo pants distressed knee panels, flap pockets, relaxed fit, stacked hem",
+        "dark grey cargo pants oversized, multiple zip pockets, elastic waist, tapered",
+        "black cargo pants utility straps, oversized pockets, gathered ankles, matte cotton",
     ],
-    "night_club": [
-        "black leather mini skirt with asymmetrical zip hem, low-rise fit",
-        "black high-waisted vinyl shorts with side zip, structured waistband",
-        "black wide-leg trousers with metallic thread woven through, dramatic flare",
-        "black fitted midi skirt with thigh-high slit, hidden side zip",
-        "black cargo pants with chain details, oversized pockets",
-        "black sequin mini skirt, high waist, short length",
-        "black mini skirt in patent leather, straight silhouette",
-        "black skinny trousers with side stripe detail",
-        "black cut-out shorts with side zip, high-waisted, structured fit",
+    "sweatpants": [
+        "black oversized joggers elastic waist, dropped crotch, cuffed ankles, brushed fleece",
+        "grey sweatpants ribbed ankle cuffs, relaxed fit, side pockets, faded wash",
+        "black baggy basketball shorts double-layered over sheer compression tights, hitting mid inner knee",
+        "black cargo joggers oversized pockets, drawstring waist, baggy leg, raw hem",
+        "charcoal sweatpants high waist, wide elastic band, straight leg, subtle logo embroidery",
+        "black tech windbreaker pants over fitted leggings, visible crossbody bag strap, urban layering",
+        "dark grey joggers tapered leg, zip ankles, elastic waist, minimal seams",
+        "black sweatpants distressed knee details, relaxed fit, raw hem, mineral wash",
+        "charcoal joggers oversized, raw hem, wide cuffs, dropped crotch, fleece back",
+        "black sweatpants cut-out knee mesh panels, elastic waist, tapered leg, raw hem",
     ],
-    "baggy": [
-        "black wide-leg cargo pants with oversized flap pockets, stacked and pooling slightly over shoes",
-        "distressed raw hem ripped denim jeans with loose boxy fit hanging around ankle",
-        "black baggy basketball shorts double layered over sheer compression tights, hitting mid inner knee",
-        "black oversized joggers with elastic waist, dropped crotch, cuffed ankles",
-        "dark grey wide-leg trousers with pleated front, relaxed through hip",
-        "black parachute pants with gathered ankles, loose leg",
-        "baggy light-wash denim jeans with oversized leg opening, slouchy fit",
-        "black cargo joggers with oversized pockets, drawstring waist, baggy leg",
-        "grey sweatpants with ribbed ankle cuffs, relaxed fit",
+    "pajama_shorts": [
+        "pale pink silk pajama shorts hello kitty embroidery, contrast white piping, elastic waist, mid-thigh",
+        "baby blue satin shorts sanrio characters print, lace trim hem, drawstring waist",
+        "lavender cotton shorts cute ghost/bats print, ruffled hem, relaxed fit",
+        "cream silk shorts lace trim, small bow detail front, elastic waist, smooth drape",
+        "soft pink modal shorts heart lace trim, scalloped hem, high waist, ultra-soft",
+        "mint green satin shorts cherry embroidery, contrast piping, relaxed fit",
+        "white cotton shorts pastel rainbow stitching, ruffled edges, elastic waist",
+        "pale yellow silk shorts tiny strawberry print, lace hem, drawstring, mid-thigh",
+        "baby pink satin shorts bunny embroidery, lace trim, elastic waist, mid-thigh",
+        "lavender modal shorts moon/stars print, scalloped hem, drawstring, relaxed",
     ],
-    "lounge_sexy": [
-        "black lace-trim short shorts, high-waisted, elastic waist",
-        "black satin high-waisted shorts with side slit, relaxed fit",
-        "black high-cut briefs, minimal coverage",
-        "black boy-short lounge pants, elastic waist, mid-calf length",
-        "black silk pajama shorts with drawstring waist, contrast piping",
-        "white lace-trim cotton shorts, elastic waist, relaxed",
-        "black high-waisted lace shorts, delicate panels",
-        "black satin boxer shorts, elastic waist, loose fit",
-        "black lounge shorts with ruched side seams, high-waisted, soft fabric",
+    "leggings": [
+        "black high-waisted biker shorts ruched side seams, tight fit, compressive, mid-thigh",
+        "black fitted leggings high waist, seamless construction, matte finish, ankle length",
+        "charcoal ribbed leggings high waist, 7/8 length, compressive, subtle texture",
+        "black leather-look leggings high waist, four-way stretch, ankle length, subtle sheen",
+        "dark green compressive leggings high waist, mesh side panels, 7/8 length",
+        "black leggings high waist, ruched back seam, silicone grip hem, ankle length",
+        "charcoal leggings high waist, wide waistband, subtle rib texture, compressive",
+        "black mesh-panel leggings high waist, sheer calf inserts, compressive, ankle length",
+        "black leggings high waist, cut-out knee details, mesh backing, compressive",
+        "dark grey leggings high waist, subtle occult print side, compressive, 7/8 length",
+    ],
+    "denim_shorts": [
+        "black high-waisted distressed denim shorts raw hem, classic five-pocket, slight whiskering",
+        "dark wash denim shorts high waist, clean hem, slight distressing at pockets",
+        "black denim shorts panelled construction, asymmetrical hem, high waist, hardware",
+        "light wash denim shorts oversized leg opening, slouchy fit, rolled hem",
+        "black denim shorts zip front, high waist, structured, minimal distressing",
+        "charcoal denim shorts raw hem, high waist, subtle whiskering, relaxed fit",
+        "black denim shorts distressed thigh, raw hem, high waist, five-pocket",
+        "dark blue denim shorts high waist, rolled hem, relaxed fit, subtle fading",
+        "black denim shorts cut-out sides, raw hem, high waist, hardware details",
+        "charcoal denim shorts panelled, raw hem, high waist, subtle distressing",
+    ],
+    "midi_skirt": [
+        "black fitted midi skirt thigh-high slit, hidden side zip, structured waistband",
+        "black satin midi skirt smooth drape, elastic waist, high slit, bias cut",
+        "black high-waisted pleated midi skirt structured wool blend, clean lines, side zip",
+        "black leather midi skirt asymmetrical hem, high waist, concealed zip, structured",
+        "dark charcoal midi skirt knife pleats, high waist, side zip, swing silhouette",
+        "black velvet midi skirt high waist, subtle flare, hidden zip, plush texture",
+        "black midi skirt wrap-style, tie waist, high slit, fluid drape",
+        "charcoal midi skirt paneled construction, high waist, side zip, architectural seams",
+        "black midi skirt leather, high slit front, asymmetrical hem, structured waist",
+        "charcoal midi skirt pleated, high waist, side zip, swing movement",
+    ],
+    "biker_shorts": [
+        "black high-waisted biker shorts ruched side seams, tight fit, compressive, mid-thigh",
+        "black biker shorts high waist, wide elastic band, silicone grip hem, 7-inch inseam",
+        "charcoal biker shorts high waist, contrast stitching, compressive, reflective logo",
+        "black leather-look biker shorts high waist, zip pockets, structured, mid-thigh",
+        "dark green biker shorts high waist, mesh side panels, compressive, 8-inch inseam",
+        "black biker shorts high waist, ruched back seam, silicone grip, matte finish",
+        "charcoal biker shorts high waist, wide waistband, subtle rib texture, compressive",
+        "black biker shorts high waist, cut-out side panels, mesh inserts, compressive",
+        "black biker shorts high waist, reflective piping, silicone grip, 7-inch inseam",
+        "charcoal biker shorts high waist, ruched sides, wide band, compressive, matte",
     ],
 }
+
 
 # ---------------------------------------------------------------------------
 # POSES — subtle torso/weight only, phone stays out of frame, no arm-in-frame
@@ -287,11 +365,7 @@ LIGHTING_POOLS = {
 # ---------------------------------------------------------------------------
 
 QUALITY = [
-    "imperfect composition, shaky handheld iPhone 15 Pro Max feel, natural skin texture, visible pores, slight under-eye darkness, authentic amateur snapchat-style photo, subtle film grain, non-AI aesthetic, photorealistic, hyperrealistic",
-    "shot on iPhone 15 Pro Max, amateur snapshot aesthetic, visible sensor noise, slight corner softness, unprocessed, natural skin pores, realistic imperfections, authentic everyday photo, no retouching",
-    "elevated ISO noise, grainy shadows, muted colors, slight edge softness, no editing, raw camera output, natural skin texture, non-AI aesthetic, photorealistic",
-    "slightly flat exposure, auto-HDR artifacts, uneven tone, casual crop, natural skin texture, visible pores, authentic unfiltered selfie, non-AI look",
-    "compressed social media look, slight oversharpening, mild banding in gradients, iPhone photo, natural skin, imperfect composition, authentic amateur quality",
+    "imperfect composition, shaky handheld iPhone 15 Pro Max feel, natural skin texture, authentic amateur snapchat-style photo, subtle film grain, slight oversharpening, non-AI aesthetic, photorealistic, hyperrealistic"
 ]
 
 # ---------------------------------------------------------------------------
@@ -312,7 +386,7 @@ MIRROR_NEGATIVE = (
 # IDENTITY LOCK
 # ---------------------------------------------------------------------------
 
-IDENTITY_LOCK = "keep model identity, hair/lip color consistent/accurate/similar"
+IDENTITY_LOCK = "keep model identity, choker, hair, lips color consistent/accurate/similar"
 
 # ---------------------------------------------------------------------------
 # BUILD PROMPT
@@ -376,7 +450,7 @@ def _resolve_pool(name, default, bank=None):
     return default
 
 
-def build_jobs_multi(count=1, vibe=None, outfit_style=None, camera_style=None, lighting=None, time_of_day=None, bank=None):
+def build_jobs_multi(count=1, vibe=None, top_category=None, bottom_category=None, camera_style=None, lighting=None, time_of_day=None, bank=None):
     bank = bank or {}
     scenes_map = {
         "indoor": _resolve_pool("INDOOR_SCENES", INDOOR_SCENES, bank),
@@ -410,13 +484,15 @@ def build_jobs_multi(count=1, vibe=None, outfit_style=None, camera_style=None, l
             light_pool.extend(v)
 
     # Outfit pool selection
-    if outfit_style in tops_pools:
-        top_pool = tops_pools[outfit_style]
-        bottom_pool = bottoms_pools.get(outfit_style, [])
+    if top_category in tops_pools:
+        top_pool = tops_pools[top_category]
     else:
         top_pool = []
         for v in tops_pools.values():
             top_pool.extend(v)
+    if bottom_category in bottoms_pools:
+        bottom_pool = bottoms_pools[bottom_category]
+    else:
         bottom_pool = []
         for v in bottoms_pools.values():
             bottom_pool.extend(v)
@@ -528,7 +604,8 @@ def list_presets():
     return {
         "vibes": ["indoor", "outdoor"],
         "camera_styles": ["handheld", "mirror"],
-        "outfit_styles": ["sexy", "date_night", "night_club", "baggy", "lounge_sexy"],
+        "top_categories": list(OUTFIT_TOPS_POOLS.keys()),
+        "bottom_categories": list(OUTFIT_BOTTOMS_POOLS.keys()),
         "lighting": ["warm", "cool", "dimlit", "flash", "screen", "mixed"],
         "time_of_day": ["day", "night"],
     }

@@ -730,6 +730,24 @@ body::after {
 }
 .photo-slider::-webkit-slider-thumb:hover { background: var(--accent-hover); }
 
+.outfit-select {
+  width: 100%;
+  background: var(--bg3);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  font: inherit;
+  font-family: var(--font-mono);
+  margin-top: 4px;
+  cursor: pointer;
+  outline-offset: 4px;
+}
+.outfit-select:focus-visible { border-color: var(--accent); }
+.outfit-select option { background: var(--bg); color: var(--fg); }
+
+.gen-layout .card.controls-locked .outfit-select { pointer-events: none; opacity: .6; }
+
 .gen-layout .card.controls-locked { opacity: 0.95; }
 .gen-layout .card.controls-locked .pill,
 .gen-layout .card.controls-locked .photo-slider,

@@ -688,7 +688,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             camera_style = body.get("camera_style", "handheld")
             lighting = body.get("lighting", "warm")
             time_of_day = body.get("time_of_day", "day")
-            outfit_style = body.get("outfit_style", "sexy")
+            top_category = body.get("top_category", "tank")
+            bottom_category = body.get("bottom_category", "miniskirt")
             count = int(body.get("count", 6))
             bank_id = (body.get("bank_id") or "").strip()
             if not bank_id:
@@ -703,17 +704,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     count=count, vibe=vibe,
                     camera_style=camera_style, lighting=lighting,
                     time_of_day=time_of_day,
-                    outfit_style=outfit_style,
+                    top_category=top_category,
+                    bottom_category=bottom_category,
                     bank=bank,
                 )
-                stem = f"promptbank_{vibe}_{camera_style}_{lighting}_{time_of_day}_{outfit_style}_{count}"
+                stem = f"promptbank_{vibe}_{camera_style}_{lighting}_{time_of_day}_{top_category}_{bottom_category}_{count}"
                 if bank_id:
                     stem += f"_{bank_id}"
                 prompts_path = PIPELINE_DIR / f"{stem}.json"
                 prompts_path.write_text(json.dumps(jobs, indent=2), encoding="utf-8")
                 _log_activity(
                     f"Prompt bank: {stem}.json ({len(jobs)} jobs, vibe={vibe}, "
-                    f"camera={camera_style}, light={lighting}, time={time_of_day}, outfit={outfit_style}, bank={bank_id or 'builtin'})"
+                    f"camera={camera_style}, light={lighting}, time={time_of_day}, top={top_category}, bottom={bottom_category}, bank={bank_id or 'builtin'})"
                 )
                 self._json({"ok": True, "jobs": jobs, "file": str(prompts_path.name), "count": len(jobs)})
             except Exception as e:

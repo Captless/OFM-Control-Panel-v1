@@ -316,14 +316,31 @@
           </div>
 
           <div class="field">
-            <label>Outfit Style</label>
-            <div class="vibe-pills">
-              <label class="pill"><input type="radio" name="outfit_style" value="sexy" checked onchange="updateCost()"> Sexy</label>
-              <label class="pill"><input type="radio" name="outfit_style" value="date_night" onchange="updateCost()"> Date Night</label>
-              <label class="pill"><input type="radio" name="outfit_style" value="night_club" onchange="updateCost()"> Night Club</label>
-              <label class="pill"><input type="radio" name="outfit_style" value="baggy" onchange="updateCost()"> Baggy</label>
-              <label class="pill"><input type="radio" name="outfit_style" value="lounge_sexy" onchange="updateCost()"> Lounge Sexy</label>
-            </div>
+            <label>Top</label>
+            <select class="outfit-select" id="outfit-top" onchange="updateCost()">
+              <option value="tank" selected>Tank Top</option>
+              <option value="tube">Tube Top</option>
+              <option value="oversize_tee">Oversize Tee</option>
+              <option value="bralette">Bralette</option>
+              <option value="bodysuit">Bodysuit</option>
+              <option value="cardigan">Cardigan</option>
+              <option value="hoodie">Hoodie</option>
+              <option value="blazer">Blazer</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Bottom</label>
+            <select class="outfit-select" id="outfit-bottom" onchange="updateCost()">
+              <option value="miniskirt" selected>Mini Skirt</option>
+              <option value="cargo_pants">Cargo Pants</option>
+              <option value="sweatpants">Sweatpants</option>
+              <option value="pajama_shorts">Pajama Shorts</option>
+              <option value="leggings">Leggings</option>
+              <option value="denim_shorts">Denim Shorts</option>
+              <option value="midi_skirt">Midi Skirt</option>
+              <option value="biker_shorts">Biker Shorts</option>
+            </select>
           </div>
 
           <div class="field">

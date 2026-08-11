@@ -33,12 +33,13 @@ function getSelectedTime() {
     return "day";
 }
 
-function getSelectedOutfitStyle() {
-    var radios = document.querySelectorAll('input[name="outfit_style"]');
-    for (var i = 0; i < radios.length; i++) {
-        if (radios[i].checked) return radios[i].value;
-    }
-    return "any";
+function getSelectedTopCategory() {
+    var el = document.getElementById('outfit-top');
+    return el ? el.value : 'tank';
+}
+function getSelectedBottomCategory() {
+    var el = document.getElementById('outfit-bottom');
+    return el ? el.value : 'miniskirt';
 }
 function onVibeChange() {
     updateCost();
@@ -167,7 +168,7 @@ var _previewFetching = false;
 var _previewStateKey = null;
 
 function _currentPreviewStateKey() {
-    return [getSelectedVibe(), getSelectedCamera(), getSelectedLighting(), getSelectedTime(), getSelectedOutfitStyle(), document.getElementById('photo-count').value, getSelectedBankId()].join('|');
+    return [getSelectedVibe(), getSelectedCamera(), getSelectedLighting(), getSelectedTime(), getSelectedTopCategory(), getSelectedBottomCategory(), document.getElementById('photo-count').value, getSelectedBankId()].join('|');
 }
 
 async function fetchPromptPreview(silent) {
@@ -175,9 +176,10 @@ async function fetchPromptPreview(silent) {
     var camera_style = getSelectedCamera();
     var lighting = getSelectedLighting();
     var time_of_day = getSelectedTime();
-    var outfit_style = getSelectedOutfitStyle();
+    var outfit_top = getSelectedTopCategory();
+    var outfit_bottom = getSelectedBottomCategory();
     var count = parseInt(document.getElementById('photo-count').value) || 6;
-    var r = await api('/api/prompts/generate', {vibe: vibe, camera_style: camera_style, lighting: lighting, time_of_day: time_of_day, outfit_style: outfit_style, count: count, bank_id: getSelectedBankId()});
+    var r = await api('/api/prompts/generate', {vibe: vibe, camera_style: camera_style, lighting: lighting, time_of_day: time_of_day, top_category: outfit_top, bottom_category: outfit_bottom, count: count, bank_id: getSelectedBankId()});
     if (!r.ok) {
         if (!silent) {
             _btnTxt('FAIL: ' + (r.error || 'error'));
