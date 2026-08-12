@@ -31,8 +31,8 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Deepwork state (git-local, OpenCode-readable)
-.slim/deepwork/
+# Archived/unused items (see UNUSED FILES/README.md)
+UNUSED FILES/
 
 # Local settings with live API keys (track settings.json.example instead)
 core/settings.json

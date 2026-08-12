@@ -4,6 +4,36 @@ Moved from AGENTS.md to keep main file lean. AGENTS.md keeps only last 4 entries
 
 ---
 
+### 2026-08-11 — Handheld poses + fixed framing + outfit category dropdowns
+
+**HANDHELD_POSES pool** ✓ — `pipeline/prompt_bank.py` new `HANDHELD_POSES` list (10 detailed candid-handheld pose strings: chin tuck, mid-step, head cant, clavicle angle, etc.; no phone/scene/lighting/expression words). `build_jobs_multi` now picks `HANDHELD_POSES` for handheld camera mode, keeps `POSES` for mirror. Added to `OVERRIDABLE_POOLS` + `get_builtin_pools` (14 pools now). `core/prompt_banks.py` OVERRIDABLE_POOLS updated. `webui/static/js/promptBanks.js`: label "Handheld Poses" + purpose in `_POOL_LABELS`/`_OVERRIDABLE_POOLS`/`_POOL_PURPOSES`.
+
+**FRAMING fixed** ✓ — `FRAMING` pool collapsed from 6 varied items to single consistent `"mid-shot crop, waist-up framing"` (every prompt identical mid-shot crop).
+
+**Outfit category dropdowns** ✓ — 5 style keys (`sexy`/`date_night`/`night_club`/`baggy`/`lounge_sexy`) replaced with category→list dicts: `OUTFIT_TOPS_POOLS` = tank/tube/oversize_tee/bralette/bodysuit/cardigan/hoodie/blazer (10 detailed alt/goth items each), `OUTFIT_BOTTOMS_POOLS` = miniskirt/cargo_pants/sweatpants/pajama_shorts/leggings/denim_shorts/midi_skirt/biker_shorts (10 each; pajama_shorts = cute light colors, hello-kitty/sanrio style). `build_jobs_multi` signature changed `outfit_style=` → `top_category=`/`bottom_category=` (unknown category → flatten all). `list_presets` returns `top_categories`/`bottom_categories` (was `outfit_styles`). UI: 5 outfit radio pills → two `<select id="outfit-top">`/`<select id="outfit-bottom">` in `webui/static/index.html`; new `.outfit-select` CSS (mono font, accent focus, `.controls-locked` disabled). `webui/static/js/generation.js`: `getSelectedTopCategory()`/`getSelectedBottomCategory()` replace `getSelectedOutfitStyle()`; `_currentPreviewStateKey()` + API payload send `top_category`/`bottom_category`. `webui/server.py` `/api/prompts/generate`: reads `top_category` (default `tank`)/`bottom_category` (default `miniskirt`); promptbank filename stem + activity log include top/bottom. `promptBanks.js` `_POOL_PURPOSES` text updated.
+
+**verified** ✓ — `py_compile` + `node --check` clean; 8×8 all-category build test + unknown-category fallback OK; server restarted (was PID 1800, stale cached module); live POST handheld (hoodie+pajama_shorts → "black tech windbreaker vest…" + "cream silk shorts…") + mirror (tube+cargo_pants) return new pools; served HTML has both selects, no `name="outfit_style"` radios.
+
+---
+
+### 2026-08-11 — Project restructure
+
+**app.js split** ✓ — `webui/static/app.js` (2713 lines, flat globals) deleted; replaced by 10 module files in `webui/static/js/`: `core.js` (window.onerror/unhandledrejection, `setLive()`, `api()`, toast system `showToast`/`showError`/`showSuccess`/`showInfo`/`showWarning`/`_getToastContainer`/`_toastContainer`, `esc()`), `theme.js` (`_themes`, `setTheme`/`initTheme`/`toggleThemeModal`/`closeThemeModal`/`loadThemeList`/`selectTheme`/`handleThemeKeydown`, `motionQuery`/reduced-motion), `layout.js` (`_sidebarCollapsed`/`_activeSection`, `loadSidebarState`/`saveSidebarState`/`toggleSidebar`/`expandSidebar`/`closeFloaterMenu`/`showSection`/`loadSettingsUI`/`syncPanelHeights`/`_heightSyncTimer`), `settings.js` (`_pendingAvatarUrl`, `_setSettingsStatus`, `loadSettings`/`loadAvatarUrl`/`handleAvatarFile`/`saveIdentity` + avatar upload-zone DOMContentLoaded listeners), `promptBanks.js` (all bank state `_activeBankId`/`_savedBanks`/`_pendingDeleteId`/`_POOL_LABELS`/`_OVERRIDABLE_POOLS`/`_POOL_PURPOSES`/`_bankEditor*`, pool helpers, `renderBankList`, bank editor modal, new-bank clone, delete, `exportBanks`/`importBanks`), `captions.js` (`_captions`, `getSelectedCapPlatform`/`Hook`, `generateCaptions`/`renderCaptions`/`copyCaption`/`copyAllCaptions`/`clearCaptions`), `generation.js` (radio getters vibe/camera/lighting/time/outfit, `onVibeChange`/`onCameraChange`, `_balance`/`_perPhoto`/`_pendingJobs`, `fetchBalance`/`refreshBalance`/`updateCost`, `_btnTxt`/`_statusBadge`/`_renderGenStatus`/`_startGenAnim`/`_resetBtn`, `setControlsLocked`, `_previewDebounce`/`_genAnimTimer`/`_previewFetching`, `fetchPromptPreview`), `outputs.js` (`_outputsData`/`_preview`/`_viewMode`/`_showAll`, batch/item `editCaption`/`closeEdit`/`saveEdit`, `showPrompt`/`closePrompt`/`copyPrompt`, `closeFS`), `apiProviders.js` (`_selectedAccount`/`_lastIdentity`/`_lastApiCount`, validation/account API toggle/load), `init.js` (single DOMContentLoaded: `setLive`/`fetchBalance`/`refreshOutputs`/`syncViewToggle`/`checkApiStatus`/`preloadAccounts`/`preloadValidation`/`loadActiveBank`, 30s/60s intervals).
+
+**index.html script tags** ✓ — single monolithic app.js tag replaced with 10 one-line `<script src="/static/js/{core,theme,layout,settings,promptBanks,captions,generation,outputs,apiProviders,init}.js">` tags in load order; `init.js` last.
+
+**scratch/debug cleanup** ✓ — deleted root `_check.py`, `_swap.py`, `test_output2.html`, `_settings_debug.txt`; root + `webui/_srv.log`/`_srv_err.log`; all `__pycache__/`; `pipeline/promptbank_*.json`/`edited_prompts_*.json`; `outputs/*/checkpoint_*.json`.
+
+**UNUSED FILES/ archive** ✓ — `UNUSED FILES/` is the git-ignored archive root with README.md; moved in: `.claude/skills/`, `.playwright-mcp/`, `.slim/`, `hot-take-influencer/`, `PLAN_bank_editor_redesign.md`, `PROMPT_BANK_REDESIGN_PLAN.md`, `scripts/backfill_prompts.py`, `scripts/save_meta.py`, `scripts/update_config.py`, `pipeline/wavespeed_i2v_client.py`, `webui/static/sidebar.md`.
+
+**server.py cleanup** ✓ — `webui/server.py`: removed duplicate `export_banks, import_banks` in the line-34 import; removed unused `build_jobs` prompt_bank import (now `list_presets, build_jobs_multi, get_builtin_pools`); removed dead `_run_dashboard()`; removed duplicate unreachable `/api/settings/banks/export` GET + `/api/settings/banks/import` POST blocks; simplified `_start_pipeline(prompts)` (dropped unused `mode` param + dead `with_text` branch); caller updated to `_start_pipeline(prompts)`.
+
+**ci.yml updated** ✓ — syntax-check no longer py_compiles retired files (`scripts/backfill_prompts.py`, `save_meta.py`, `update_config.py`, `pipeline/wavespeed_i2v_client.py`, `hot-take-influencer/scripts/wavespeed_client.py`); frontend-lint now checks `test -d webui/static/js` and `for f in webui/static/js/*.js; do node --check "$f"; done`.
+
+**verified** ✓ — `python -m py_compile webui/server.py` clean.
+
+---
+
 ### 2026-08-09 — Settings redesign: side-by-side panes + prompt bank tile cards
 
 **settings HTML fixed** ✓ — `webui/static/index.html` `#section-settings` was severely malformed (missing `<div`/`<section`/`<h4` opening tags throughout). Rebuilt scratch: proper two-pane grid **IDENTITY (fixed 380px) | PROMPT BANKS**. Removed dead inline pool-editor markup (`pool-editor-wrapper`/`active-bank-header`/`saveAllPoolChanges`/`resetAllPoolsToBuiltin`) + 2 pre-existing stray `</div>`s. File now fully balanced (HTMLParser 0 errors).
