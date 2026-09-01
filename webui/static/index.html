@@ -1,204 +1,437 @@
 <!DOCTYPE html>
-<html lang="en" class="theme-terminal">
+<html lang="en" class="theme-creative">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>OFM Control Panel</title>
-<meta name="description" content="Alina Sky image & video generation control panel — WaveSpeed AI pipeline manager">
-<meta name="theme-color" content="#0a0f0a">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='2' width='28' height='28' rx='4' fill='none' stroke='%23000000' stroke-width='2'/><polyline points='10,8 24,16 10,24' fill='none' stroke='%23000000' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<title>OFM</title>
+<meta name="description" content="Alina Sky image & video generation control panel">
+<meta name="theme-color" content="#141010">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='2' y='2' width='28' height='28' rx='8' fill='none' stroke='%23e880ad' stroke-width='2'/><polyline points='10,8 24,16 10,24' fill='none' stroke='%23e880ad' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <a href="#main-content" style="position:fixed;top:-100%;left:8px;z-index:99999;padding:8px 16px;background:var(--accent);color:var(--accent-contrast);border-radius:0 0 4px 4px;font-family:var(--font-mono);font-size:12px;font-weight:600;text-decoration:none;transition:top .2s" onfocus="this.style.top='0'" onblur="this.style.top='-100%'">Skip to content</a>
-  <div class="app">
+  <a href="#main-content" class="skip-link">Skip to content</a>
 
-  <!-- ══════════════════ 1. SIDEBAR / NAVIGATION ══════════════════ -->
-  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
-    <nav class="sidebar-nav">
-      <ul class="nav-items">
-        <li><button class="nav-item active" data-section="generation" onclick="showSection('generation')">
-          <span class="nav-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span>
-          <span class="nav-label">Image Generation</span>
-        </button></li>
-        <li><button class="nav-item" data-section="captions" onclick="showSection('captions')">
-          <span class="nav-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/><path d="M15 5l4 4"/></svg></span>
-          <span class="nav-label">Caption Generation</span>
-        </button></li>
-        <li><button class="nav-item" data-section="outputs" onclick="showSection('outputs')">
-          <span class="nav-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
-          <span class="nav-label">Outputs</span>
-        </button></li>
-      </ul>
-      <ul class="nav-items nav-items-bottom">
-        <li><button class="nav-item" data-section="settings" onclick="showSection('settings')">
-          <span class="nav-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
-          <span class="nav-label">Settings</span>
-        </button></li>
-      </ul>
+  <!-- ── HUD ── -->
+  <header class="hud">
+    <div class="hud-left">
+      <span class="hud-brand">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>
+        OFM
+      </span>
+      <span class="hud-sep"></span>
+      <span class="hud-balance" id="balance-pill" title="Active account balance">
+        <span class="hud-bal-active" id="bp-active">$0.00</span>
+        <span class="hud-bal-sep">&middot;</span>
+        <span class="hud-bal-total" id="bp-total">$0.00</span>
+      </span>
+      <button class="hud-bal-refresh" id="bp-refresh" onclick="refreshBalance()" title="Refresh balance" aria-label="Refresh balance"><span class="bp-refresh-ico" aria-hidden="true">&#8635;</span></button>
+    </div>
+
+    <nav class="hud-center" aria-label="Workflow">
+      <button class="hud-mode active" data-mode="generate" onclick="switchMode('generate')">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Generate
+      </button>
+      <button class="hud-mode" data-mode="captions" onclick="switchMode('captions')">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Captions
+      </button>
+      <button class="hud-mode" data-mode="outputs" onclick="switchMode('outputs')">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Outputs
+      </button>
+      <button class="hud-mode" data-mode="settings" onclick="switchMode('settings')">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </button>
     </nav>
-  </aside>
 
-  <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Collapse sidebar" aria-expanded="true" onclick="toggleSidebar()">
-    <svg class="chevron" viewBox="0 0 24 24" width="16" height="16"><polyline points="15 18 9 12 15 6"/></svg>
-  </button>
-
-  <div class="sidebar-floater" id="sidebar-floater" role="navigation" aria-label="Quick navigation" hidden>
-    <div class="floater-menu" id="floater-menu">
-      <button class="floater-item" data-section="generation" onclick="showSection('generation')">
-        <span class="floater-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span>
-        <span class="floater-label">Generate Images</span>
-      </button>
-      <button class="floater-item" data-section="captions" onclick="showSection('captions')">
-        <span class="floater-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/><path d="M15 5l4 4"/></svg></span>
-        <span class="floater-label">Generate Captions</span>
-      </button>
-      <button class="floater-item" data-section="outputs" onclick="showSection('outputs')">
-        <span class="floater-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
-        <span class="floater-label">View Outputs</span>
-      </button>
-      <button class="floater-item" data-section="settings" onclick="showSection('settings')">
-        <span class="floater-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
-        <span class="floater-label">Settings</span>
-      </button>
-    </div>
-  </div>
-
-  <div class="sidebar-overlay" id="sidebar-overlay" hidden></div>
-
-  <!-- ══════════════════ 2. TOP TOOLBAR ══════════════════ -->
-  <header class="toolbar">
-    <span class="brand">
-      <svg viewBox="0 0 24 24" width="18" height="18">
-        <rect x="2" y="4" width="20" height="2" rx="1" fill="currentColor"/>
-        <rect x="2" y="11" width="20" height="2" rx="1" fill="currentColor"/>
-        <rect x="2" y="18" width="20" height="2" rx="1" fill="currentColor"/>
-      </svg>
-      OFM
-    </span>
-    <span class="nav-sep"></span>
-    <div class="balance-pill" id="balance-pill">
-      <span class="bp-active" id="bp-active">$0.00</span>
-      <span class="bp-sep">&middot;</span>
-      <span class="bp-total" id="bp-total">$0.00 total</span>
-      <button class="bp-refresh" id="bp-refresh" onclick="refreshBalance()" title="Refresh balance" aria-label="Refresh balance">&#8635;</button>
-    </div>
-
-    <div class="toolbar-right">
-      <span class="live" id="live-indicator"><span class="live-dot" id="live-dot"></span><span class="live-text" id="live-text">Live</span></span>
-      <span class="api-nav-trigger" id="api-nav-trigger" onclick="toggleApiModal()" role="button" tabindex="0" aria-haspopup="dialog" aria-expanded="false" aria-label="API provider selection">
-        <span class="api-nav-dot" id="api-dot"></span>
-        <span class="api-nav-user" id="api-user">Checking...</span>
-        <span class="api-nav-bal" id="api-tab-bal">$--</span>
-        <span class="api-nav-caret">▾</span>
+    <div class="hud-right">
+      <span class="hud-live" id="live-indicator">
+        <span class="live-dot" id="live-dot"></span>
+        <span class="live-text" id="live-text">Live</span>
       </span>
-      <span class="theme-nav-trigger" id="theme-nav-trigger" onclick="toggleThemeModal()" role="button" tabindex="0" aria-haspopup="dialog" aria-expanded="false" aria-label="Theme selection">
-        <span class="theme-nav-dot" id="theme-nav-dot"></span>
-        <span class="theme-nav-name" id="theme-nav-name">Terminal</span>
-        <span class="theme-nav-caret">▾</span>
-      </span>
+      <button class="hud-trigger" id="api-nav-trigger" onclick="toggleApiModal()" aria-haspopup="dialog" aria-label="API provider selection">
+        <span class="trigger-dot" id="api-dot"></span>
+        <span class="trigger-label" id="api-user">Checking</span>
+      </button>
+      <button class="hud-trigger" id="theme-nav-trigger" onclick="toggleThemeModal()" aria-haspopup="dialog" aria-label="Theme selection">
+        <span class="trigger-dot theme-dot" id="theme-nav-dot"></span>
+      </button>
     </div>
   </header>
 
-  <!-- ══════════════════ 3. MODALS ══════════════════ -->
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main" id="main-content">
 
-  <!-- 3a. API Provider -->
-  <div id="api-modal" role="dialog" aria-modal="true" aria-label="API Provider selection">
-    <div id="api-modal-box">
-      <button class="modal-close" onclick="closeApiModal()" title="Close">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-      <div class="modal-header">
-        <h4>API Provider</h4>
+    <!-- ═══ GENERATE MODE ═══ -->
+    <div class="mode-view" id="mode-generate">
+
+      <!-- Step track -->
+      <div class="step-track" id="step-track" role="navigation" aria-label="Generation steps">
+        <div class="step-node active" data-step="configure" id="step-configure" onclick="goToStep('configure')">
+          <span class="step-dot"></span>
+          <span class="step-label">Configure</span>
+        </div>
+        <div class="step-line" id="line-1"></div>
+        <div class="step-node" data-step="preview" id="step-preview" onclick="goToStep('preview')">
+          <span class="step-dot"></span>
+          <span class="step-label">Preview</span>
+        </div>
+        <div class="step-line" id="line-2"></div>
+        <div class="step-node" data-step="generate" id="step-generate">
+          <span class="step-dot"></span>
+          <span class="step-label">Generate</span>
+        </div>
+        <div class="step-line" id="line-3"></div>
+        <div class="step-node" data-step="results" id="step-results">
+          <span class="step-dot"></span>
+          <span class="step-label">Results</span>
+        </div>
+      </div>
+
+      <!-- Center stage -->
+      <div class="stage" id="stage">
+
+        <!-- ── Panel: Configure ── -->
+        <div class="stage-panel active" id="panel-configure">
+          <div class="stage-head">
+            <h2>Configure your shoot</h2>
+            <p class="stage-sub">Choose vibe, camera, lighting, and outfit.</p>
+          </div>
+
+          <div class="config-grid">
+            <div class="config-group">
+              <label class="config-label">Vibe</label>
+              <div class="pill-row">
+                <label class="pill"><input type="radio" name="vibe" value="indoor" checked onchange="onVibeChange()"><span class="pill-body">Indoor</span></label>
+                <label class="pill"><input type="radio" name="vibe" value="outdoor" onchange="onVibeChange()"><span class="pill-body">Outdoor</span></label>
+              </div>
+            </div>
+
+            <div class="config-group">
+              <label class="config-label">Camera</label>
+              <div class="pill-row">
+                <label class="pill"><input type="radio" name="camera_style" value="handheld" checked onchange="onCameraChange()"><span class="pill-body">Handheld Selfie</span></label>
+                <label class="pill"><input type="radio" name="camera_style" value="mirror" onchange="onCameraChange()"><span class="pill-body">Mirror Selfie</span></label>
+              </div>
+            </div>
+
+            <div class="config-group config-group-wide">
+              <label class="config-label">Lighting</label>
+              <div class="pill-row">
+                <label class="pill"><input type="radio" name="lighting" value="warm" checked onchange="updateCost()"><span class="pill-body">Warm</span></label>
+                <label class="pill"><input type="radio" name="lighting" value="cool" onchange="updateCost()"><span class="pill-body">Cool</span></label>
+                <label class="pill"><input type="radio" name="lighting" value="dimlit" onchange="updateCost()"><span class="pill-body">Dimlit</span></label>
+                <label class="pill"><input type="radio" name="lighting" value="flash" onchange="updateCost()"><span class="pill-body">Flash</span></label>
+                <label class="pill"><input type="radio" name="lighting" value="screen" onchange="updateCost()"><span class="pill-body">Screen</span></label>
+                <label class="pill"><input type="radio" name="lighting" value="mixed" onchange="updateCost()"><span class="pill-body">Mixed</span></label>
+              </div>
+            </div>
+
+            <div class="config-group">
+              <label class="config-label" for="outfit-top">Top</label>
+              <select id="outfit-top" class="config-select" onchange="updateCost()">
+                <option value="tank" selected>Tank Top</option>
+                <option value="tube">Tube Top</option>
+                <option value="oversize_tee">Oversize Tee</option>
+                <option value="bralette">Bralette</option>
+                <option value="bodysuit">Bodysuit</option>
+                <option value="cardigan">Cardigan</option>
+                <option value="hoodie">Hoodie</option>
+                <option value="blazer">Blazer</option>
+              </select>
+            </div>
+
+            <div class="config-group">
+              <label class="config-label" for="outfit-bottom">Bottom</label>
+              <select id="outfit-bottom" class="config-select" onchange="updateCost()">
+                <option value="miniskirt" selected>Mini Skirt</option>
+                <option value="cargo_pants">Cargo Pants</option>
+                <option value="sweatpants">Sweatpants</option>
+                <option value="pajama_shorts">Pajama Shorts</option>
+                <option value="leggings">Leggings</option>
+                <option value="denim_shorts">Denim Shorts</option>
+                <option value="midi_skirt">Midi Skirt</option>
+                <option value="biker_shorts">Biker Shorts</option>
+              </select>
+            </div>
+
+            <div class="config-group">
+              <label class="config-label">Time</label>
+              <div class="pill-row">
+                <label class="pill"><input type="radio" name="time_of_day" value="day" checked onchange="updateCost()"><span class="pill-body">Day</span></label>
+                <label class="pill"><input type="radio" name="time_of_day" value="night" onchange="updateCost()"><span class="pill-body">Night</span></label>
+              </div>
+            </div>
+
+            <div class="config-group config-group-count">
+              <label class="config-label">Count <span class="config-val" id="photo-count-label">1</span></label>
+              <input type="range" id="photo-count" value="1" min="1" max="30" class="config-slider" oninput="updateCost(); document.getElementById('photo-count-label').textContent=this.value">
+              <div class="config-cost" id="cost-tracker"></div>
+            </div>
+          </div>
+
+          <div class="stage-action">
+            <button class="btn-primary" id="btn-photo" onclick="startPromptGeneration()"><span class="btn-text">Generate Prompt</span></button>
+          </div>
+          <div class="gen-status-strip" id="gen-status-strip" style="display:none"></div>
+        </div>
+
+        <!-- ── Panel: Preview ── -->
+        <div class="stage-panel" id="panel-preview">
+          <div class="stage-head">
+            <h2>Review prompts</h2>
+            <p class="stage-sub">Check and edit before generation.</p>
+          </div>
+          <div class="prompt-list" id="prompt-list">
+            <div class="empty-state"><p>No prompts yet.</p><p class="empty-hint">Configure your shoot first.</p></div>
+          </div>
+          <div class="stage-action stage-action-multi">
+            <button class="btn-ghost" id="edit-prompts-btn" onclick="toggleEditPrompts()" style="display:none">Edit</button>
+            <div class="stage-action-spacer"></div>
+            <button class="btn-ghost" id="cancel-gen-btn" onclick="cancelGeneration()" style="display:none">Cancel</button>
+            <button class="btn-primary" id="confirm-gen-btn" onclick="confirmGeneration()" style="display:none">Confirm Generation</button>
+          </div>
+        </div>
+
+        <!-- ── Panel: Generate ── -->
+        <div class="stage-panel" id="panel-generate">
+          <div class="stage-head">
+            <h2>Generating</h2>
+            <p class="stage-sub" id="gen-status-text">Starting pipeline...</p>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-ring-container">
+              <svg class="progress-ring" viewBox="0 0 120 120">
+                <circle class="progress-ring-bg" cx="60" cy="60" r="52"/>
+                <circle class="progress-ring-fg" cx="60" cy="60" r="52" id="progress-ring-fg"/>
+              </svg>
+              <div class="progress-ring-label" id="progress-ring-label">0%</div>
+            </div>
+            <div class="progress-images" id="gen-progress-images"></div>
+          </div>
+          <div class="stage-action">
+            <button class="btn-ghost" id="cancel-gen-run-btn" onclick="cancelGeneration()">Cancel</button>
+          </div>
+        </div>
+
+        <!-- ── Panel: Results ── -->
+        <div class="stage-panel" id="panel-results">
+          <div class="stage-head">
+            <h2>Generation complete</h2>
+            <p class="stage-sub">Your output has been saved and added to Outputs.</p>
+          </div>
+          <div class="stage-done-card" id="results-done-card">
+            <span class="stage-done-icon">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <div class="stage-done-text">
+              <strong>Done</strong>
+              <span id="results-meta" class="results-meta"></span>
+            </div>
+            <button class="btn-primary btn-sm" onclick="switchMode('outputs')">View Outputs</button>
+          </div>
+          <div class="stage-action">
+            <button class="btn-ghost" onclick="resetWorkflow()">New Generation</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CAPTIONS MODE ═══ -->
+    <div class="mode-view" id="mode-captions" hidden>
+      <div class="mode-header">
+        <h2>Caption Generator</h2>
+        <p class="stage-sub">Generate captions for your social platforms.</p>
+      </div>
+      <div class="caption-controls">
+        <div class="config-group config-group-wide">
+          <label class="config-label">Platform</label>
+          <div class="pill-row">
+            <label class="pill"><input type="radio" name="cap_platform" value="tiktok" checked><span class="pill-body">TikTok</span></label>
+            <label class="pill"><input type="radio" name="cap_platform" value="reels"><span class="pill-body">Reels</span></label>
+            <label class="pill"><input type="radio" name="cap_platform" value="shorts"><span class="pill-body">Shorts</span></label>
+            <label class="pill"><input type="radio" name="cap_platform" value="x"><span class="pill-body">X</span></label>
+            <label class="pill"><input type="radio" name="cap_platform" value="stories"><span class="pill-body">Stories</span></label>
+          </div>
+        </div>
+        <div class="config-group config-group-wide">
+          <label class="config-label">Hook Type</label>
+          <div class="pill-row">
+            <label class="pill"><input type="radio" name="cap_hook" value="vulnerable" checked><span class="pill-body">Vulnerable</span></label>
+            <label class="pill"><input type="radio" name="cap_hook" value="confident"><span class="pill-body">Confident</span></label>
+            <label class="pill"><input type="radio" name="cap_hook" value="playful"><span class="pill-body">Playful</span></label>
+            <label class="pill"><input type="radio" name="cap_hook" value="aesthetic"><span class="pill-body">Aesthetic</span></label>
+            <label class="pill"><input type="radio" name="cap_hook" value="relatable"><span class="pill-body">Relatable</span></label>
+            <label class="pill"><input type="radio" name="cap_hook" value="mixed"><span class="pill-body">Mixed</span></label>
+          </div>
+        </div>
+        <div class="config-group config-group-count">
+          <label class="config-label">Count <span class="config-val" id="cap-count-label">5</span></label>
+          <input type="range" id="cap-count" min="1" max="20" value="5" class="config-slider" oninput="document.getElementById('cap-count-label').textContent=this.value">
+        </div>
+        <div class="stage-action">
+          <button class="btn-primary" id="btn-caption" onclick="generateCaptions()"><span class="btn-text">Generate Captions</span></button>
+        </div>
+      </div>
+      <div class="caption-list" id="caption-list">
+        <div class="empty-state"><p>No captions yet.</p><p class="empty-hint">Pick a platform and hook type, then generate.</p></div>
+      </div>
+      <div class="caption-actions" id="caption-actions" style="display:none">
+        <button class="btn-ghost btn-sm" onclick="copyAllCaptions()">Copy All</button>
+        <button class="btn-ghost btn-sm" onclick="clearCaptions()">Clear</button>
+      </div>
+    </div>
+
+    <!-- ═══ OUTPUTS MODE ═══ -->
+    <div class="mode-view" id="mode-outputs" hidden>
+      <div class="outputs-header">
+        <div>
+          <h2>Outputs</h2>
+          <span class="results-meta" id="global-stats">Loading...</span>
+        </div>
+        <div class="results-toolbar">
+          <div class="view-toggle" role="tablist" aria-label="View mode">
+            <button role="tab" data-view="table" class="active" aria-selected="true" onclick="setViewMode('table')">Table</button>
+            <button role="tab" data-view="grid" aria-selected="false" onclick="setViewMode('grid')">Grid</button>
+          </div>
+          <button class="btn-ghost btn-sm" onclick="refreshOutputs()">Refresh</button>
+        </div>
+      </div>
+      <div id="outputs-area" class="outputs-area outputs-modal-area">
+        <div class="empty-state"><p>No outputs yet.</p></div>
+      </div>
+    </div>
+
+    <!-- ═══ SETTINGS MODE ═══ -->
+    <div class="mode-view" id="mode-settings" hidden>
+      <div class="settings-layout">
+        <!-- Identity pane -->
+        <div class="settings-pane">
+          <div class="pane-header">
+            <h3>Identity</h3>
+            <span class="pane-hint">Model reference for generation</span>
+          </div>
+          <div class="identity-card">
+            <div class="identity-top">
+              <img id="settings-avatar-preview" class="identity-avatar" alt="">
+              <div class="identity-info">
+                <div class="identity-name" id="settings-identity-name">Loading...</div>
+              </div>
+            </div>
+            <div class="identity-fields">
+              <div class="field">
+                <label class="field-label" for="settings-avatar-url">Avatar URL</label>
+                <div class="input-row">
+                  <input type="url" id="settings-avatar-url" class="field-input" placeholder="https://..." autocomplete="off" spellcheck="false">
+                  <button class="btn-sm-outline" id="settings-url-load" onclick="loadAvatarUrl()">Load</button>
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label">Upload Image</label>
+                <button type="button" class="upload-zone" id="settings-upload-zone" aria-label="Upload identity image">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <span>Drop image or click to browse</span>
+                </button>
+                <input type="file" id="settings-file-input" accept="image/*" hidden>
+              </div>
+              <img id="settings-new-preview" class="identity-preview-img" alt="New identity preview" hidden>
+              <div id="settings-status" class="field-status" role="status" aria-live="polite"></div>
+              <button type="button" class="btn-primary btn-sm" onclick="saveIdentity()">Save Identity</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prompt Banks pane -->
+        <div class="settings-pane">
+          <div class="pane-header">
+            <h3>Prompt Banks</h3>
+            <div class="pane-header-actions">
+              <button class="btn-sm-outline" onclick="exportBanks()">Export</button>
+              <label class="btn-sm-outline" style="cursor:pointer" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">Import<input type="file" accept=".json,application/json" style="display:none" onchange="importBanks(this.files[0]); this.value=''"></label>
+            </div>
+          </div>
+          <div id="settings-bank-list" class="bank-list" role="radiogroup" aria-label="Prompt banks" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── MODALS ── -->
+
+  <!-- API Modal -->
+  <div id="api-modal" class="modal" role="dialog" aria-modal="true" aria-label="API Provider selection">
+    <div class="modal-box modal-md">
+      <div class="modal-head">
+        <h3>API Provider</h3>
         <p>Select your WaveSpeed AI provider</p>
+        <button class="modal-x" onclick="closeApiModal()" aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <div class="provider-list" id="api-provider-list">
-        <!-- Provider rows will be injected here -->
-      </div>
-      <div class="add-provider-section">
-        <div class="field-label">Add New API</div>
-        <div class="provider-add-row">
-          <input type="text" class="pname" id="api-new-provider-name" placeholder="API name..." autocomplete="off">
-          <input type="text" class="pkey" id="api-new-provider-key" placeholder="API key..." autocomplete="off">
-          <button class="add-provider-btn" onclick="addApiProvider()">Add</button>
+      <div class="modal-body" id="api-provider-list"></div>
+      <div class="modal-section">
+        <div class="field-label-sm">Add New API</div>
+        <div class="api-add-row">
+          <input type="text" class="field-input field-input-sm" id="api-new-provider-name" placeholder="Name" autocomplete="off">
+          <input type="text" class="field-input field-input-sm" id="api-new-provider-key" placeholder="Key" autocomplete="off">
+          <button class="btn-primary btn-sm" onclick="addApiProvider()">Add</button>
         </div>
         <div class="field-hint">Enter the API name and its key</div>
-        <div id="api-modal-result" class="api-modal-result"></div>
+        <div id="api-modal-result" class="api-result"></div>
       </div>
-      <div style="display:flex;justify-content:flex-end;padding:12px 24px;border-top:1px solid var(--border);">
-        <button class="btn btn-sm btn-outline" onclick="closeApiModal()">Done</button>
+      <div class="modal-foot">
+        <button class="btn-ghost btn-sm" onclick="closeApiModal()">Done</button>
       </div>
     </div>
   </div>
 
-  <!-- 3b. Theme -->
-  <div id="theme-modal" role="dialog" aria-modal="true" aria-label="Theme selection">
-    <div id="theme-modal-box">
-      <button class="modal-close" onclick="closeThemeModal()" title="Close">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-      <div class="modal-header">
-        <h4>Theme</h4>
+  <!-- Theme Modal -->
+  <div id="theme-modal" class="modal" role="dialog" aria-modal="true" aria-label="Theme selection">
+    <div class="modal-box modal-sm">
+      <div class="modal-head">
+        <h3>Theme</h3>
         <p>Select color theme</p>
+        <button class="modal-x" onclick="closeThemeModal()" aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <div class="theme-list" id="theme-list">
-        <!-- Theme rows injected here -->
-      </div>
-      <div style="display:flex;justify-content:flex-end;padding:12px 24px;border-top:1px solid var(--border);">
-        <button class="btn btn-sm btn-outline" onclick="closeThemeModal()">Done</button>
+      <div class="modal-body" id="theme-list"></div>
+      <div class="modal-foot">
+        <button class="btn-ghost btn-sm" onclick="closeThemeModal()">Done</button>
       </div>
     </div>
   </div>
 
-  <!-- 3c. Prompt Bank Editor -->
-  <div id="bank-editor-modal" role="dialog" aria-modal="true" aria-labelledby="bank-editor-title" aria-describedby="bank-editor-subtitle">
-    <div id="bank-editor-box">
-      <button class="modal-close" onclick="closeBankEditor()" aria-label="Close bank editor" type="button">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-      <div class="modal-header">
-        <h4 id="bank-editor-title">Edit Bank</h4>
+  <!-- Bank Editor Modal -->
+  <div id="bank-editor-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="bank-editor-title" aria-describedby="bank-editor-subtitle">
+    <div class="modal-box modal-lg">
+      <div class="modal-head">
+        <h3 id="bank-editor-title">Edit Bank</h3>
         <p id="bank-editor-subtitle"></p>
+        <button class="modal-x" onclick="closeBankEditor()" aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="be-body">
-        <div class="be-name-row">
-          <label for="be-name">Bank name</label>
-          <input type="text" id="be-name" autocomplete="off" spellcheck="false" aria-describedby="be-name-hint">
-          <span id="be-name-hint" class="visually-hidden">Enter a unique name for this prompt bank</span>
-        </div>
+        <div class="be-name-row"><label for="be-name" class="field-label-sm">Bank name</label><input type="text" id="be-name" class="field-input" autocomplete="off" spellcheck="false"></div>
         <div class="be-layout">
           <div class="be-sidebar">
-            <input type="search" id="be-pool-search" placeholder="Search pools..." aria-label="Filter pools" autocomplete="off" spellcheck="false">
+            <input type="search" id="be-pool-search" class="field-input field-input-sm" placeholder="Search pools..." aria-label="Filter pools" autocomplete="off" spellcheck="false">
             <div id="be-pool-list" role="listbox" aria-label="Prompt pools" tabindex="0"></div>
             <div class="be-add-pools">
-              <button type="button" class="btn btn-sm btn-outline be-add-pool" onclick="addCustomPool('list')" aria-label="Add list pool">+ List Pool</button>
-              <button type="button" class="btn btn-sm btn-outline be-add-pool" onclick="addCustomPool('dict')" aria-label="Add styles pool">+ Styles Pool</button>
-              <button type="button" class="btn btn-sm btn-outline be-add-pool" onclick="addCustomPool('str')" aria-label="Add text pool">+ Text Pool</button>
+              <button type="button" class="btn-sm-outline" onclick="addCustomPool('list')">+ List</button>
+              <button type="button" class="btn-sm-outline" onclick="addCustomPool('dict')">+ Styles</button>
+              <button type="button" class="btn-sm-outline" onclick="addCustomPool('str')">+ Text</button>
             </div>
           </div>
           <div class="be-main">
-            <div class="be-pool-head">
-              <span class="be-pool-title" id="be-pool-name"></span>
-              <span class="pool-badge" id="be-pool-type"></span>
-            </div>
+            <div class="be-pool-head"><span class="be-pool-title" id="be-pool-name"></span><span class="pool-badge" id="be-pool-type"></span></div>
             <div class="be-pool-purpose" id="be-pool-purpose" aria-live="polite"></div>
-            <textarea id="be-textarea" spellcheck="false" aria-label="Pool items" aria-describedby="be-hint"></textarea>
+            <textarea id="be-textarea" class="field-input field-textarea" spellcheck="false" aria-label="Pool items"></textarea>
             <div class="be-hint" id="be-hint" aria-live="polite"></div>
             <div class="be-actions">
-              <button type="button" class="btn btn-sm btn-outline" id="be-reset" onclick="resetCurrentPool()">Reset Pool</button>
-              <button type="button" class="btn btn-sm" id="be-save" onclick="saveBankFromModal()">Save Bank</button>
+              <button type="button" class="btn-ghost btn-sm" id="be-reset" onclick="resetCurrentPool()">Reset Pool</button>
+              <button type="button" class="btn-primary btn-sm" id="be-save" onclick="saveBankFromModal()">Save Bank</button>
             </div>
           </div>
         </div>
@@ -206,325 +439,73 @@
     </div>
   </div>
 
-  <!-- 3d. Delete Bank -->
-  <div id="delete-bank-modal" role="dialog" aria-modal="true" aria-labelledby="delete-bank-title" aria-describedby="delete-bank-subtitle">
-    <div id="delete-bank-modal-box">
-      <button class="modal-close" onclick="closeDeleteBankModal()" aria-label="Close delete bank dialog" type="button">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-      <div class="modal-header">
-        <h4 id="delete-bank-title">Delete Prompt Bank</h4>
-        <p id="delete-bank-subtitle">This action cannot be undone</p>
+  <!-- Delete Bank Modal -->
+  <div id="delete-bank-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-bank-title">
+    <div class="modal-box modal-sm">
+      <div class="modal-head modal-head-danger">
+        <h3 id="delete-bank-title">Delete Prompt Bank</h3>
+        <p>This action cannot be undone</p>
+        <button class="modal-x" onclick="closeDeleteBankModal()" aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
-      <div class="delete-bank-body">
+      <div class="modal-body">
         <p>Delete <strong class="delete-bank-name"></strong>? Its custom pools will be lost.</p>
-        <p class="delete-bank-warning">This action cannot be undone.</p>
+        <p class="field-error">This action cannot be undone.</p>
       </div>
-      <div class="new-bank-footer">
-        <button type="button" class="btn btn-sm btn-outline" onclick="closeDeleteBankModal()">Cancel</button>
-        <button type="button" class="btn btn-sm btn-danger" onclick="executeDeleteBank()">Delete</button>
+      <div class="modal-foot">
+        <button class="btn-ghost btn-sm" onclick="closeDeleteBankModal()">Cancel</button>
+        <button class="btn-danger btn-sm" onclick="executeDeleteBank()">Delete</button>
       </div>
     </div>
   </div>
 
-  <!-- 3e. Fullscreen Viewer -->
+  <!-- Edit Caption Modal -->
+  <div id="edit-modal" class="modal" role="dialog" aria-modal="true" aria-label="Edit caption">
+    <div class="modal-box modal-sm">
+      <div class="modal-head">
+        <h3>Edit caption</h3>
+        <button class="modal-x" onclick="closeEdit()" aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <textarea id="edit-text" class="field-input field-textarea" placeholder="Caption text..."></textarea>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-ghost btn-sm" onclick="closeEdit()">Cancel</button>
+        <button class="btn-primary btn-sm" onclick="saveEdit()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prompt View Modal -->
+  <div id="prompt-modal" class="modal" role="dialog" aria-modal="true" aria-label="Prompt used">
+    <div class="modal-box modal-md">
+      <div class="modal-head">
+        <h3>Prompt Used</h3>
+        <button class="modal-x" onclick="closePrompt()" aria-label="Close"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="modal-body prompt-view-body">
+        <div class="prompt-section"><div class="prompt-section-label">Main Prompt</div><pre id="prompt-main"></pre></div>
+        <div class="prompt-section"><div class="prompt-section-label">Negative Prompt</div><pre id="prompt-negative"></pre></div>
+        <div class="prompt-section"><div class="prompt-section-label">Identity Lock</div><pre id="prompt-identity"></pre></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-ghost btn-sm" onclick="copyPrompt()">Copy</button>
+        <button class="btn-ghost btn-sm" onclick="closePrompt()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen viewer -->
   <div id="fs-modal"></div>
 
-  <!-- 3f. Edit Caption -->
-  <div id="edit-modal" role="dialog" aria-modal="true" aria-label="Edit caption">
-    <div id="edit-box">
-      <h4>Edit caption</h4>
-      <textarea id="edit-text" placeholder="Caption text..."></textarea>
-      <div id="edit-controls">
-        <button class="btn btn-sm" id="edit-cancel" onclick="closeEdit()">Cancel</button>
-        <button class="btn btn-sm" id="edit-save" onclick="saveEdit()">Save</button>
-      </div>
-    </div>
-  </div>
+  <!-- Hover preview -->
+  <div id="hover-preview"></div>
 
-  <!-- 3g. Prompt Used -->
-  <div id="prompt-modal" role="dialog" aria-modal="true" aria-label="Prompt used">
-    <div id="prompt-box">
-      <div id="prompt-header">
-        <h4>Prompt Used</h4>
-        <button class="btn btn-sm" id="prompt-copy" onclick="copyPrompt()">Copy</button>
-        <button class="btn btn-sm" id="prompt-close" onclick="closePrompt()">Close</button>
-      </div>
-      <div id="prompt-body">
-        <div class="prompt-section">
-          <div class="prompt-label">Main Prompt</div>
-          <pre id="prompt-main"></pre>
-        </div>
-        <div class="prompt-section">
-          <div class="prompt-label">Negative Prompt</div>
-          <pre id="prompt-negative"></pre>
-        </div>
-        <div class="prompt-section">
-          <div class="prompt-label">Identity Lock</div>
-          <pre id="prompt-identity"></pre>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 3h. JS Error Banner -->
-  <div id="js-error" style="display:none;background:#f44336;color:#fff;padding:8px 12px;margin:8px;border-radius:6px;font-size:11px;"></div>
-
-  <!-- 3i. Toast Notifications -->
+  <!-- Toast container -->
   <div id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
-  <!-- ══════════════════ 4. MAIN CONTENT ══════════════════ -->
-  <main class="main" id="main-content">
+  <!-- JS error display -->
+  <div id="js-error"></div>
 
-    <!-- 4a. Image Generation -->
-    <section id="section-generation" class="content-section active">
-      <div class="gen-layout">
-
-        <!-- Left: Generation Controls -->
-        <div class="card">
-          <h3>Image Generation</h3>
-
-          <div class="field">
-            <label>Vibe</label>
-            <div class="vibe-pills">
-              <label class="pill"><input type="radio" name="vibe" value="indoor" checked onchange="onVibeChange()"> Indoor</label>
-              <label class="pill"><input type="radio" name="vibe" value="outdoor" onchange="onVibeChange()"> Outdoor</label>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Camera Style</label>
-            <div class="vibe-pills">
-              <label class="pill"><input type="radio" name="camera_style" value="handheld" checked onchange="onCameraChange()"> Handheld Selfie</label>
-              <label class="pill"><input type="radio" name="camera_style" value="mirror" onchange="onCameraChange()"> Mirror Selfie</label>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Lighting</label>
-            <div class="vibe-pills">
-              <label class="pill"><input type="radio" name="lighting" value="warm" checked onchange="updateCost()"> Warm</label>
-              <label class="pill"><input type="radio" name="lighting" value="cool" onchange="updateCost()"> Cool</label>
-              <label class="pill"><input type="radio" name="lighting" value="dimlit" onchange="updateCost()"> Dimlit</label>
-              <label class="pill"><input type="radio" name="lighting" value="flash" onchange="updateCost()"> Flash</label>
-              <label class="pill"><input type="radio" name="lighting" value="screen" onchange="updateCost()"> Screen</label>
-              <label class="pill"><input type="radio" name="lighting" value="mixed" onchange="updateCost()"> Mixed</label>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Top</label>
-            <select class="outfit-select" id="outfit-top" onchange="updateCost()">
-              <option value="tank" selected>Tank Top</option>
-              <option value="tube">Tube Top</option>
-              <option value="oversize_tee">Oversize Tee</option>
-              <option value="bralette">Bralette</option>
-              <option value="bodysuit">Bodysuit</option>
-              <option value="cardigan">Cardigan</option>
-              <option value="hoodie">Hoodie</option>
-              <option value="blazer">Blazer</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>Bottom</label>
-            <select class="outfit-select" id="outfit-bottom" onchange="updateCost()">
-              <option value="miniskirt" selected>Mini Skirt</option>
-              <option value="cargo_pants">Cargo Pants</option>
-              <option value="sweatpants">Sweatpants</option>
-              <option value="pajama_shorts">Pajama Shorts</option>
-              <option value="leggings">Leggings</option>
-              <option value="denim_shorts">Denim Shorts</option>
-              <option value="midi_skirt">Midi Skirt</option>
-              <option value="biker_shorts">Biker Shorts</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label>Time</label>
-            <div class="vibe-pills">
-              <label class="pill"><input type="radio" name="time_of_day" value="day" checked onchange="updateCost()"> Day</label>
-              <label class="pill"><input type="radio" name="time_of_day" value="night" onchange="updateCost()"> Night</label>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Count: <span id="photo-count-label">1</span></label>
-            <input type="range" id="photo-count" value="1" min="1" max="30" oninput="updateCost(); document.getElementById('photo-count-label').textContent=this.value" class="photo-slider">
-          </div>
-
-          <button class="btn" onclick="startPromptGeneration()" id="btn-photo" style="width:100%"><span class="btn-text">Generate</span></button>
-          <div id="gen-status-strip" class="gen-status-strip" style="display:none;"></div>
-          <div class="cost-tracker" id="cost-tracker"></div>
-        </div>
-
-        <!-- Right: Prompt Preview -->
-        <div class="gen-preview">
-          <div class="gen-preview-head">
-            <h3>Prompt Preview</h3>
-          </div>
-          <div id="prompt-list" class="gen-preview-body">
-            <div class="prompt-empty">
-              <span class="prompt-empty-icon"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V4z"/><line x1="2" y1="10" x2="6" y2="10"/><line x1="2" y1="7" x2="5" y2="7"/></svg></span>
-              <p>No prompts yet</p>
-              <p class="prompt-empty-sub">Select options and click Generate to build prompts for review and editing before confirming generation.</p>
-            </div>
-          </div>
-          <div class="gen-preview-actions" id="prompt-actions">
-            <button id="edit-prompts-btn" class="btn btn-sm btn-outline" onclick="toggleEditPrompts()" style="display:none;">Edit</button>
-            <button id="confirm-gen-btn" class="btn btn-sm" onclick="confirmGeneration()" style="display:none;">Confirm Generation</button>
-            <button id="cancel-gen-btn" class="btn btn-sm btn-outline" onclick="cancelGeneration()" style="display:none;">Cancel</button>
-          </div>
-        </div>
-
-      </div><!-- /gen-layout -->
-    </section>
-
-    <!-- 4b. Caption Generation -->
-    <section id="section-captions" class="content-section" hidden>
-      <div class="card caption-gen-card">
-        <h3>Caption Generator</h3>
-
-        <div class="field">
-          <label>Platform</label>
-          <div class="vibe-pills">
-            <label class="pill"><input type="radio" name="cap_platform" value="tiktok" checked> TikTok</label>
-            <label class="pill"><input type="radio" name="cap_platform" value="reels"> Reels</label>
-            <label class="pill"><input type="radio" name="cap_platform" value="shorts"> Shorts</label>
-            <label class="pill"><input type="radio" name="cap_platform" value="x"> X</label>
-            <label class="pill"><input type="radio" name="cap_platform" value="stories"> Stories</label>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Hook Type</label>
-          <div class="vibe-pills">
-            <label class="pill"><input type="radio" name="cap_hook" value="vulnerable" checked> Vulnerable</label>
-            <label class="pill"><input type="radio" name="cap_hook" value="confident"> Confident</label>
-            <label class="pill"><input type="radio" name="cap_hook" value="playful"> Playful</label>
-            <label class="pill"><input type="radio" name="cap_hook" value="aesthetic"> Aesthetic</label>
-            <label class="pill"><input type="radio" name="cap_hook" value="relatable"> Relatable</label>
-            <label class="pill"><input type="radio" name="cap_hook" value="mixed"> Mixed</label>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>Count: <span id="cap-count-label">5</span></label>
-          <input type="range" id="cap-count" min="1" max="20" value="5" class="photo-slider" oninput="document.getElementById('cap-count-label').textContent=this.value">
-        </div>
-
-        <button class="btn" onclick="generateCaptions()" id="btn-caption" style="width:100%"><span class="btn-text">Generate Captions</span></button>
-        <div id="caption-list" class="caption-list">
-          <div class="caption-empty">No captions yet. Pick a platform and hook type, then click Generate Captions.</div>
-        </div>
-        <div class="cap-actions">
-          <button class="btn btn-sm btn-outline" onclick="copyAllCaptions()" id="btn-copy-all" style="display:none;">Copy All</button>
-          <button class="btn btn-sm btn-outline" onclick="clearCaptions()" id="btn-clear-caps" style="display:none;">Clear</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- 4c. Outputs -->
-    <section id="section-outputs" class="content-section" hidden>
-      <div class="card outputs-card">
-        <div class="out-header">
-          <h2>Outputs</h2>
-          <span class="out-meta" id="global-stats">Loading...</span>
-          <span class="view-toggle" role="tablist" aria-label="Output view mode">
-            <button role="tab" data-view="table" class="active" aria-selected="true" onclick="setViewMode('table')">Table</button>
-            <button role="tab" data-view="grid" aria-selected="false" onclick="setViewMode('grid')">Grid</button>
-          </span>
-          <button class="show-all-switch" id="btn-show-all" role="switch" aria-checked="false" title="Show all outputs without batches" onclick="setShowAll()"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></button>
-          <span class="out-spacer"></span>
-          <button class="btn btn-sm btn-outline" onclick="refreshOutputs()" id="btn-refresh"><span class="btn-text">&#8635; Refresh</span></button>
-        </div>
-        <div id="outputs-area"><div class="outputs-loading">Loading outputs&hellip;</div></div>
-      </div>
-    </section>
-
-    <!-- 4d. Settings -->
-    <section id="section-settings" class="content-section" hidden>
-      <div class="settings-grid">
-
-        <!-- Identity (left, fixed width) -->
-        <div class="settings-pane identity-pane">
-          <section class="settings-section identity-section">
-            <div class="section-header">
-              <h4>Identity</h4>
-              <span class="settings-hint">Model reference for generation</span>
-            </div>
-            <div class="settings-card identity-card">
-              <div class="identity-avatar-stack">
-                <img id="settings-avatar-preview" class="identity-avatar" alt="" aria-hidden="true">
-                <div id="settings-identity-name" class="identity-name">Loading&hellip;</div>
-              </div>
-              <hr class="identity-divider">
-              <div class="identity-fields">
-                <div class="field">
-                  <label for="settings-avatar-url">Avatar URL</label>
-                  <div class="input-with-btn">
-                    <input type="url" id="settings-avatar-url" placeholder="https://&hellip;" autocomplete="off" spellcheck="false">
-                    <button type="button" class="btn btn-sm btn-outline" id="settings-url-load" onclick="loadAvatarUrl()">Load</button>
-                  </div>
-                </div>
-                <div class="field">
-                  <label>Upload Image</label>
-                  <button type="button" class="upload-zone" id="settings-upload-zone" aria-label="Upload identity image">
-                    <span class="upload-zone-icon">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    </span>
-                    <span>Drop image or click to browse</span>
-                  </button>
-                  <input type="file" id="settings-file-input" accept="image/*" hidden>
-                </div>
-                <img id="settings-new-preview" class="identity-new-preview" alt="New identity preview" hidden>
-                <div id="settings-status" class="settings-status" role="status" aria-live="polite"></div>
-                <button type="button" class="btn btn-sm" onclick="saveIdentity()">Save Identity</button>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <!-- Prompt Banks (right, flexible) -->
-        <div class="settings-pane bank-pane">
-          <section class="settings-section banks-section">
-            <div class="section-header">
-              <h4>Prompt Banks</h4>
-              <span class="settings-hint">Tile cards &mdash; click a bank to edit its pools</span>
-            </div>
-            <div class="settings-card banks-card">
-              <div class="banks-list-header">
-                <h5 id="banks-heading">Saved Banks</h5>
-                <span class="banks-toolbar">
-                  <button type="button" class="btn btn-sm" onclick="exportBanks()" title="Download all banks as JSON">Export</button>
-                  <label class="btn btn-sm" style="cursor:pointer" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.querySelector('input').click()}">
-                    Import
-                    <input type="file" accept=".json,application/json" style="display:none" onchange="importBanks(this.files[0]); this.value=''">
-                  </label>
-                </span>
-              </div>
-              <div id="settings-bank-list" class="bank-list" role="radiogroup" aria-labelledby="banks-heading" aria-live="polite"></div>
-            </div>
-          </section>
-        </div>
-
-      </div>
-    </section>
-  </main>
-
-  </div><!-- /app -->
-
-  <!-- ══════════════════ 5. HIDDEN COMPAT STUBS ══════════════════ -->
-  <div style="display:none">
-    <div id="global-stats">Loading...</div>
-    <span id="sidebar-generated">0</span>
-    <span id="sidebar-batches">0</span>
-  </div>
-
-  <!-- ══════════════════ 6. SCRIPTS (dependency order: core → features → init) ══════════════════ -->
   <script src="/static/js/core.js"></script>
   <script src="/static/js/theme.js"></script>
   <script src="/static/js/layout.js"></script>
