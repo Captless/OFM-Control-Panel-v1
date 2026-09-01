@@ -865,10 +865,6 @@ body::after {
   transition: background .15s;
 }
 .b-header:hover { background: var(--bg2); }
-.b:not(.collapsed):hover { border-color: var(--hl); }
-.b:not(.collapsed):hover .b-header { background: var(--hl-bg); }
-.b.collapsed:hover { border-color: var(--hl); background: var(--hl-bg); }
-.b.collapsed:hover .b-header { background: var(--hl-bg); }
 .b-header .chevron {
   font-size: 10px;
   font-family: var(--font-mono);
@@ -974,7 +970,6 @@ body::after {
   border-left: 2px solid transparent;
 }
 .tw tr:hover {
-  background: var(--row-hover);
   border-left-color: var(--accent);
 }
 

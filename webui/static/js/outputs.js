@@ -449,10 +449,12 @@ function _buildFsList(vid) {
             if (itVid === vid) _fsIdx = _fsBatch.length - 1;
         }
     }
-    var part = _fsBatch[_fsIdx].vid.split('_')[0];
-    _fsBatch = _fsBatch.filter(function(it) { return it.vid.indexOf(part + '_') === 0; });
-    for (var j = 0; j < _fsBatch.length; j++) {
-        if (_fsBatch[j].vid === vid) { _fsIdx = j; break; }
+    if (!_showAll) {
+        var part = _fsBatch[_fsIdx].vid.split('_')[0];
+        _fsBatch = _fsBatch.filter(function(it) { return it.vid.indexOf(part + '_') === 0; });
+        for (var j = 0; j < _fsBatch.length; j++) {
+            if (_fsBatch[j].vid === vid) { _fsIdx = j; break; }
+        }
     }
 }
 
