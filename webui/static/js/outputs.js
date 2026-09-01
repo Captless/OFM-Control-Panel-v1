@@ -1,593 +1,556 @@
 // outputs.js — outputs rendering, actions, fullscreen viewer.
-// ── Outputs table ──
+
 var _outputsData = [];
-
-
 var _preview = null;
 var _viewMode = 'table';
 try { _viewMode = localStorage.getItem('ofm_view_mode') || 'table'; } catch(e) {}
 var _showAll = false;
 try { _showAll = localStorage.getItem('ofm_show_all') === '1'; } catch(e) {}
 
-function setShowAll() {
-    _showAll = !_showAll;
-    try { localStorage.setItem('ofm_show_all', _showAll ? '1' : '0'); } catch(e) {}
-    syncViewToggle();
-    var area = document.getElementById('outputs-area');
-    if (area) renderOutputs();
-}
-
-function setViewMode(mode) {
-    _viewMode = (mode === 'grid') ? 'grid' : 'table';
-    try { localStorage.setItem('ofm_view_mode', _viewMode); } catch(e) {}
-    syncViewToggle();
-    var area = document.getElementById('outputs-area');
-    if (area) renderOutputs();
-}
-
-function syncViewToggle() {
-    document.querySelectorAll('.view-toggle button[data-view]').forEach(function(b) {
-        var on = b.dataset.view === _viewMode;
-        b.classList.toggle('active', on);
-        b.setAttribute('aria-selected', on ? 'true' : 'false');
-    });
-    var sa = document.getElementById('btn-show-all');
-    if (sa) {
-        sa.classList.toggle('active', _showAll);
-        sa.setAttribute('aria-checked', _showAll ? 'true' : 'false');
-    }
-}
-
 var _cpySvg = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 var _dlSvg = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
 var _delSvg = '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
 
+function setShowAll() {
+  _showAll = !_showAll;
+  try { localStorage.setItem('ofm_show_all', _showAll ? '1' : '0'); } catch(e) {}
+  renderOutputs();
+}
+
+function setViewMode(mode) {
+  _viewMode = (mode === 'grid') ? 'grid' : 'table';
+  try { localStorage.setItem('ofm_view_mode', _viewMode); } catch(e) {}
+  syncViewToggle();
+  renderOutputs();
+}
+
+function syncViewToggle() {
+  document.querySelectorAll('.view-toggle button[data-view]').forEach(function(b) {
+    var on = b.dataset.view === _viewMode;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+}
+
 function _batchCount(b) {
-    var t = b.items.length + ' item' + (b.items.length !== 1 ? 's' : '');
-    var vids = b.items.filter(function(it) { return it.is_video; }).length;
-    if (vids) t += ' \u00b7 ' + vids + ' video' + (vids !== 1 ? 's' : '');
-    return t;
+  var t = b.items.length + ' item' + (b.items.length !== 1 ? 's' : '');
+  var vids = b.items.filter(function(it) { return it.is_video; }).length;
+  if (vids) t += ' · ' + vids + ' video' + (vids !== 1 ? 's' : '');
+  return t;
 }
 
 function _captionSpan(item, sid) {
-    var txt = item.txt_content;
-    var srcEsc = item.src.replace(/'/g, "\\'");
-    var txtShort = txt ? txt.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
-    if (txtShort.length > 80) txtShort = txtShort.substring(0, 80) + '...';
-    var title = txt ? txt : 'Click to add caption';
-    if (txt) {
-        return '<span class="caption-text" onclick="editCaption(\'' + sid + '\',\'' + srcEsc + '\')" title="' + esc(title) + '\n\nClick to edit caption">' + esc(txtShort) + '</span>';
-    }
-    return '<span class="caption-text caption-placeholder" onclick="editCaption(\'' + sid + '\',\'' + srcEsc + '\')" title="' + esc(title) + '">Add caption</span>';
+  var txt = item.txt_content;
+  var srcEsc = item.src.replace(/'/g, "\\'");
+  var txtShort = txt ? txt.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim() : '';
+  if (txtShort.length > 80) txtShort = txtShort.substring(0, 80) + '...';
+  var title = txt ? txt : 'Click to add caption';
+  if (txt) {
+    return '<span class="table-caption" onclick="editCaption(\'' + sid + '\',\'' + srcEsc + '\')" title="' + esc(title) + '\n\nClick to edit caption">' + esc(txtShort) + '</span>';
+  }
+  return '<span class="table-caption-placeholder" onclick="editCaption(\'' + sid + '\',\'' + srcEsc + '\')" title="' + esc(title) + '">Add caption</span>';
 }
 
 function _itemMeta(item, sid) {
-    var html = '<div class="item-meta">';
-    if (item.prompt) html += '<span class="prompt-link" onclick="showPrompt(\'' + sid + '\')">Prompt Used</span>';
-    var ext = item.filename ? item.filename.split('.').pop().toUpperCase() : (item.is_video ? 'MP4' : 'PNG');
-    html += '<span class="item-meta-right"><span class="fmt">' + ext + '</span><span class="created">' + esc(item.created_at || '') + '</span></span>';
-    html += '</div>';
-    return html;
+  var srcEsc = item.src.replace(/'/g, "\\'");
+  var html = '<div class="table-meta">';
+  if (item.prompt) html += '<span class="table-prompt-link" onclick="showPrompt(\'' + srcEsc + '\')">Prompt</span>';
+  var ext = item.filename ? item.filename.split('.').pop().toUpperCase() : (item.is_video ? 'MP4' : 'PNG');
+  html += '<span class="table-ext">' + ext + '</span>';
+  html += '<span class="table-time">' + esc(item.created_at || '') + '</span>';
+  html += '</div>';
+  return html;
 }
 
 function renderOutputs() {
-    try {
-    var batches = _outputsData;
-    var area = document.getElementById('outputs-area');
-    if (!area) return;
-    if (_preview) { _preview.style.display = 'none'; var ov = _preview.querySelector('video'); if (ov) { ov.pause(); ov.currentTime = 0; } }
-    if (!batches.length) { area.innerHTML = '<div class="outputs-empty"><span class="empty-illustration">$ ls outputs/</span>No outputs yet.<br>Generate your first images above.</div>'; return; }
+  try {
+  var batches = _outputsData;
+  var area = document.getElementById('outputs-area');
+  if (!area) return;
+  if (_preview) { _preview.style.display = 'none'; var ov = _preview.querySelector('video'); if (ov) { ov.pause(); ov.currentTime = 0; } }
+  if (!batches.length) { area.innerHTML = '<div class="outputs-empty">No outputs yet.<br>Generate your first images above.</div>'; return; }
 
-    var total = batches.reduce(function(s, b) { return s + b.items.length; }, 0);
-    var gs = document.getElementById('global-stats');
-    if (gs) gs.textContent = total + ' items \u00b7 ' + batches.length + ' batches';
+  var total = batches.reduce(function(s, b) { return s + b.items.length; }, 0);
+  var meta = document.getElementById('results-meta');
+  if (meta) meta.textContent = total + (total !== 1 ? ' items' : ' item');
+  var gs = document.getElementById('global-stats');
+  if (gs) gs.textContent = total + (total !== 1 ? ' items' : ' item');
 
-    var sb = document.getElementById('sidebar-balance');
-    if (sb) sb.textContent = '$' + _balance.toFixed(2);
-    document.getElementById('sidebar-generated').textContent = total;
-    document.getElementById('sidebar-batches').textContent = batches.length;
-
-    var collapsed = {};
-    document.querySelectorAll('.b.collapsed').forEach(function(el) {
-        collapsed[el.id.replace('batch-', '')] = true;
-    });
-    if (_viewMode === 'grid') { area.innerHTML = _showAll ? buildFlatGridHtml(batches) : buildGridHtml(batches); }
-    else { area.innerHTML = _showAll ? buildFlatHtml(batches) : buildTableHtml(batches); }
-    Object.keys(collapsed).forEach(function(id) {
-        var el = document.getElementById('batch-' + id);
-        if (el) el.classList.add('collapsed');
-    });
-    bindHoverPreview();
-} catch(e) {
-    var area2 = document.getElementById('outputs-area');
-    if (area2) area2.innerHTML = '<div style="color:#f44336;font-size:11px;padding:12px;background:var(--bg3);border-radius:6px;"><b>Render error:</b> ' + esc(e.message) + '</div>';
-    var el = document.getElementById('js-error');
-    if (el) { el.style.display = 'block'; el.textContent = 'renderOutputs error: ' + e.message; }
+  var collapsed = {};
+  document.querySelectorAll('.batch.collapsed').forEach(function(el) {
+    collapsed[el.id.replace('batch-', '')] = true;
+  });
+  if (_viewMode === 'grid') { area.innerHTML = _showAll ? buildFlatGridHtml(batches) : buildGridHtml(batches); }
+  else { area.innerHTML = _showAll ? buildFlatHtml(batches) : buildTableHtml(batches); }
+  Object.keys(collapsed).forEach(function(id) {
+    var el = document.getElementById('batch-' + id);
+    if (el) el.classList.add('collapsed');
+  });
+  bindHoverPreview();
+  var area2 = document.getElementById('outputs-area');
+  if (area2) { area2.dataset.total = total; area2.dataset.batches = batches.length; }
+  } catch(e) { console.error('renderOutputs error:', e); }
 }
+
+function _rowHtml(it, startIdx, isVideo) {
+  var srcEsc = it.src.replace(/'/g, "\\'");
+  var media = it.is_video
+    ? '<video muted preload="metadata" src="/' + srcEsc + '"></video>'
+    : '<img src="/' + srcEsc + '" alt="">';
+  var hov = 'onmouseenter="showHover(this)" onmouseleave="hideHover()"';
+  return '<div class="out-row">'
+    + '<span class="out-index">' + (startIdx + 1) + '</span>'
+    + '<span class="out-thumb' + (isVideo ? ' is-video' : '') + '" onclick="openFS(' + startIdx + ', true)" ' + hov + '>' + media + '</span>'
+    + '<div class="out-info">'
+    + _captionSpan(it, srcEsc)
+    + _itemMeta(it, srcEsc)
+    + '</div>'
+    + '<div class="out-actions">'
+    + '<button class="cp" onclick="copyCaptionText(\'' + srcEsc + '\')" title="Copy caption">' + _cpySvg + '</button>'
+    + '<button class="dl" onclick="downloadMedia(\'' + srcEsc + '\')" title="Download">' + _dlSvg + '</button>'
+    + '<button class="del" onclick="deleteMedia(\'' + srcEsc + '\', event)" title="Delete">' + _delSvg + '</button>'
+    + '</div>'
+    + '</div>';
 }
 
 function buildTableHtml(batches) {
-    var html = '';
-    batches.forEach(function(b, bIdx) {
-        var bid = b.id;
-        html += '<div class="b ' + (bIdx === 0 ? '' : 'collapsed') + '" id="batch-' + bid + '">';
-        html += '<div class="b-header" onclick="toggleBatch(\'' + bid + '\')">';
-        html += '<span class="chevron">\u25b8</span>';
-        html += '<span class="b-title">' + esc(b.name) + '</span>';
-        html += '<span class="b-count">' + _batchCount(b) + '</span>';
-        html += '</div>';
-        html += '<div class="b-body"><table class="tw"><tbody>';
-        b.items.forEach(function(item, iIdx) {
-            var sid = bid + '_' + item.stem;
-            var txt = item.txt_content;
-            var ext = item.filename ? item.filename.split('.').pop().toUpperCase() : '';
-            var num = iIdx + 1;
-            html += '<tr>';
-            html += '<td class="n">' + num + '</td>';
-            html += '<td class="m">';
-            if (item.is_video) { html += '<span class="thumb" id="' + sid + '_m">'; } else { html += '<span class="thumb" id="' + sid + '_m" onclick="fullscreen(\'' + sid + '_m\',0)">'; }
-            if (item.is_video) {
-                html += '<video muted loop playsinline preload="metadata"><source src="' + item.src + '" type="video/mp4"></video>';
-            } else {
-                html += '<img src="' + item.src + '" loading="lazy">';
-            }
-            html += '</span>';
-            if (item.prompt) html += '<pre class="prompt-box" id="pb-' + sid + '" data-negative="' + esc(item.negative_prompt || '') + '">' + esc(item.prompt) + '</pre>';
-            if (txt) html += '<div class="txt" id="' + sid + '_t">' + esc(txt) + '</div>';
-            html += '</td>';
-            html += '<td class="info">';
-            html += _captionSpan(item, sid);
-            html += _itemMeta(item, sid);
-            html += '</td>';
-            html += '<td class="bt">';
-            html += '<button class="cp" onclick="copyText(\'' + sid + '\')" title="Copy caption">' + _cpySvg + '</button>';
-            html += '<a class="dl" href="' + item.src + '" download="' + item.filename + '" title="Download">' + _dlSvg + '</a>';
-            html += '<button class="del" onclick="deleteMedia(\'' + item.src.replace(/'/g, "\\'") + '\')" title="Delete">' + _delSvg + '</button>';
-            html += '</td>';
-            html += '</tr>';
-        });
-        html += '</tbody></table></div></div>';
-    });
+  var html = '';
+  var gi = 0;
+  if (_showAll) {
+    var items = [];
+    batches.forEach(function(b) { items = items.concat(b.items); });
+    for (var i = 0; i < items.length; i++) html += _rowHtml(items[i], i, items[i].is_video);
     return html;
-}
-
-function buildGridHtml(batches) {
-    var html = '';
-    batches.forEach(function(b, bIdx) {
-        var bid = b.id;
-        html += '<div class="b ' + (bIdx === 0 ? '' : 'collapsed') + '" id="batch-' + bid + '">';
-        html += '<div class="b-header" onclick="toggleBatch(\'' + bid + '\')">';
-        html += '<span class="chevron">\u25b8</span>';
-        html += '<span class="b-title">' + esc(b.name) + '</span>';
-        html += '<span class="b-count">' + _batchCount(b) + '</span>';
-        html += '</div>';
-        html += '<div class="b-body"><div class="g-grid">';
-        b.items.forEach(function(item, iIdx) {
-            var sid = bid + '_' + item.stem;
-            var srcEsc = item.src.replace(/'/g, "\\'");
-            html += '<div class="g-card">';
-            html += '<div class="g-thumb" id="' + sid + '_m"' + (item.is_video ? '' : ' onclick="fullscreen(\'' + sid + '_m\',0)"') + '>';
-            if (item.is_video) {
-                html += '<video muted loop playsinline preload="metadata"><source src="' + item.src + '" type="video/mp4"></video>';
-            } else {
-                html += '<img src="' + item.src + '" loading="lazy">';
-            }
-            html += '</div>';
-            if (item.prompt) html += '<pre class="prompt-box" id="pb-' + sid + '" data-negative="' + esc(item.negative_prompt || '') + '">' + esc(item.prompt) + '</pre>';
-            html += '<div class="g-body">';
-            html += _captionSpan(item, sid);
-            html += _itemMeta(item, sid);
-            html += '<div class="g-actions">';
-            if (item.txt_content) html += '<button class="cp" onclick="copyText(\'' + sid + '\')" title="Copy caption">' + _cpySvg + '</button>';
-            html += '<a class="dl" href="' + item.src + '" download="' + item.filename + '" title="Download">' + _dlSvg + '</a>';
-            html += '<button class="del" onclick="deleteMedia(\'' + srcEsc + '\')" title="Delete">' + _delSvg + '</button>';
-            html += '</div>';
-            html += '</div></div>';
-        });
-        html += '</div></div></div>';
-    });
-    return html;
-}
-
-function bindHoverPreview() {
-    _preview = document.getElementById('hover-preview');
-    if (!_preview) { _preview = document.createElement('div'); _preview.id = 'hover-preview'; document.body.appendChild(_preview); }
-    _preview.onmouseleave = function() { _preview.style.display = 'none'; };
-    document.querySelectorAll('.tw .thumb').forEach(function(cell) {
-        var media = cell.querySelector('video, img');
-        if (!media) return;
-        var isVid = media.tagName === 'VIDEO';
-        cell.addEventListener('mouseenter', function(e) {
-            if (fsActive) return;
-            _preview.innerHTML = '';
-            var clone;
-            if (isVid) { clone = document.createElement('video'); clone.src = media.querySelector('source').src; clone.muted = true; clone.loop = true; clone.autoplay = true; clone.playsinline = true; }
-            else { clone = document.createElement('img'); clone.src = media.src; }
-            _preview.appendChild(clone);
-            var rect = cell.getBoundingClientRect();
-            var left = rect.right + 10, top = rect.top;
-            if (left + 260 > window.innerWidth) left = rect.left - 260 - 10;
-            if (top + 360 > window.innerHeight) top = window.innerHeight - 360 - 10;
-            if (top < 10) top = 10;
-            _preview.style.left = left + 'px'; _preview.style.top = top + 'px'; _preview.style.display = 'flex';
-        });
-        cell.addEventListener('mouseleave', function(e) {
-            if (_preview.contains(e.relatedTarget)) return;
-            _preview.style.display = 'none';
-        });
-        media.addEventListener('mouseenter', function() { if (isVid && !fsActive) media.play(); });
-        media.addEventListener('mouseleave', function() { if (isVid && !fsActive) media.pause(); media.currentTime = 0; });
-    });
-}
-
-
-function toggleBatch(bid) {
-    var b = document.getElementById('batch-' + bid);
-    if (!b) return;
-    b.classList.toggle('collapsed');
-    localStorage.setItem('ofm_collapse_' + bid, b.classList.contains('collapsed') ? '1' : '0');
+  }
+  batches.forEach(function(b) {
+    var cid = b.id;
+    html += '<div class="batch" id="batch-' + cid + '">'
+      + '<div class="batch-head" onclick="toggleBatch(\'' + cid + '\')">'
+      + '<span class="batch-chevron">▶</span>'
+      + '<span class="batch-title">' + esc(b.name) + '</span>'
+      + '<span class="batch-count">' + _batchCount(b) + '</span>'
+      + '</div>'
+      + '<div class="batch-body">';
+    b.items.forEach(function(it) { html += _rowHtml(it, gi++, it.is_video); });
+    html += '</div></div>';
+  });
+  return html;
 }
 
 function buildFlatHtml(batches) {
-    var html = '';
-    var num = 0;
-    batches.forEach(function(b, bIdx) {
-        var bid = b.id;
-        b.items.forEach(function(item, iIdx) {
-            var sid = bid + '_' + item.stem;
-            num++;
-            html += '<tr class="flat-row">';
-            html += '<td class="n">' + num + '</td>';
-            html += '<td class="m">';
-            if (item.is_video) { html += '<span class="thumb" id="' + sid + '_m">'; } else { html += '<span class="thumb" id="' + sid + '_m" onclick="fullscreen(\'' + sid + '_m\',0)">'; }
-            if (item.is_video) {
-                html += '<video muted loop playsinline preload="metadata"><source src="' + item.src + '" type="video/mp4"></video>';
-            } else {
-                html += '<img src="' + item.src + '" loading="lazy">';
-            }
-            html += '</span>';
-            if (item.prompt) html += '<pre class="prompt-box" id="pb-' + sid + '" data-negative="' + esc(item.negative_prompt || '') + '">' + esc(item.prompt) + '</pre>';
-            if (item.txt_content) html += '<div class="txt" id="' + sid + '_t">' + esc(item.txt_content) + '</div>';
-            html += '</td>';
-            html += '<td class="info">';
-            html += _captionSpan(item, sid);
-            html += _itemMeta(item, sid);
-            html += '</td>';
-            html += '<td class="bt">';
-            html += '<button class="cp" onclick="copyText(\'' + sid + '\')" title="Copy caption">' + _cpySvg + '</button>';
-            html += '<a class="dl" href="' + item.src + '" download="' + item.filename + '" title="Download">' + _dlSvg + '</a>';
-            html += '<button class="del" onclick="deleteMedia(\'' + item.src.replace(/'/g, "\\'") + '\')" title="Delete">' + _delSvg + '</button>';
-            html += '</td>';
-            html += '</tr>';
-        });
-    });
-    if (html) return '<div class="b flat"><div class="b-body"><table class="tw"><tbody>' + html + '</tbody></table></div></div>';
-    return '';
+  var items = [];
+  batches.forEach(function(b) { items = items.concat(b.items); });
+  var html = '<div class="batch flat"><div class="batch-body">';
+  for (var i = 0; i < items.length; i++) html += _rowHtml(items[i], i, items[i].is_video);
+  html += '</div></div>';
+  return html;
+}
+
+function buildGridHtml(batches) {
+  var html = '';
+  var gi = 0;
+  batches.forEach(function(b) {
+    html += '<div class="batch" id="batch-' + b.id + '">'
+      + '<div class="batch-head" onclick="toggleBatch(\'' + b.id + '\')">'
+      + '<span class="batch-chevron">▶</span>'
+      + '<span class="batch-title">' + esc(b.name) + '</span>'
+      + '<span class="batch-count">' + _batchCount(b) + '</span>'
+      + '</div>'
+      + '<div class="batch-body">' + _gridShell(b.items, gi) + '</div>'
+      + '</div>';
+    gi += b.items.length;
+  });
+  return html;
 }
 
 function buildFlatGridHtml(batches) {
-    var html = '';
-    batches.forEach(function(b) {
-        var bid = b.id;
-        b.items.forEach(function(item) {
-            var sid = bid + '_' + item.stem;
-            var srcEsc = item.src.replace(/'/g, "\\'");
-            html += '<div class="g-card">';
-            html += '<div class="g-thumb" id="' + sid + '_m"' + (item.is_video ? '' : ' onclick="fullscreen(\'' + sid + '_m\',0)"') + '>';
-            if (item.is_video) {
-                html += '<video muted loop playsinline preload="metadata"><source src="' + item.src + '" type="video/mp4"></video>';
-            } else {
-                html += '<img src="' + item.src + '" loading="lazy">';
-            }
-            html += '</div>';
-            if (item.prompt) html += '<pre class="prompt-box" id="pb-' + sid + '" data-negative="' + esc(item.negative_prompt || '') + '">' + esc(item.prompt) + '</pre>';
-            html += '<div class="g-body">';
-            html += _captionSpan(item, sid);
-            html += _itemMeta(item, sid);
-            html += '<div class="g-actions">';
-            if (item.txt_content) html += '<button class="cp" onclick="copyText(\'' + sid + '\')" title="Copy caption">' + _cpySvg + '</button>';
-            html += '<a class="dl" href="' + item.src + '" download="' + item.filename + '" title="Download">' + _dlSvg + '</a>';
-            html += '<button class="del" onclick="deleteMedia(\'' + srcEsc + '\')" title="Delete">' + _delSvg + '</button>';
-            html += '</div>';
-            html += '</div></div>';
-        });
-    });
-    if (html) return '<div class="b flat"><div class="b-body"><div class="g-grid">' + html + '</div></div></div>';
-    return '';
+  var items = [];
+  batches.forEach(function(b) { items = items.concat(b.items); });
+  return '<div class="batch flat"><div class="batch-body">' + _gridShell(items, 0) + '</div></div>';
 }
 
-async function refreshOutputs() {
-    var r = await api('/api/dashboard/refresh');
-    if (r.outputs) {
-        _outputsData = r.outputs;
-        renderOutputs();
-    } else {
-        showError(r.output || 'Failed to load outputs');
+function _gridShell(items, startIdx) {
+  if (!items || !items.length) return '<div class="outputs-empty">No items</div>';
+  startIdx = startIdx || 0;
+  var html = '<div class="grid-view">';
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
+    var srcEsc = it.src.replace(/'/g, "\\'");
+    var media = it.is_video ? '<video muted preload="metadata" src="/' + srcEsc + '"></video>' : '<img src="/' + srcEsc + '" alt="">';
+    html += '<div class="grid-card">'
+      + '<div class="grid-thumb" onclick="openFS(' + (startIdx + i) + ', true)">' + media + '</div>'
+      + '<div class="grid-body">'
+      + _captionSpan(it, srcEsc)
+      + _itemMeta(it, srcEsc)
+      + '</div>'
+      + '<div class="grid-actions">'
+      + '<button onclick="copyCaptionText(\'' + srcEsc + '\')" title="Copy caption">' + _cpySvg + '</button>'
+      + '<button onclick="downloadMedia(\'' + srcEsc + '\')" title="Download">' + _dlSvg + '</button>'
+      + '<button class="del" onclick="deleteMedia(\'' + srcEsc + '\', event)" title="Delete">' + _delSvg + '</button>'
+      + '</div>'
+      + '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function toggleBatch(id) {
+  var el = document.getElementById('batch-' + id);
+  if (el) el.classList.toggle('collapsed');
+}
+
+// Store all items for fullscreen navigation
+var _allItems = [];
+function _cacheItems(batches) {
+  _allItems = [];
+  batches.forEach(function(b) { _allItems = _allItems.concat(b.items); });
+}
+function refreshOutputs() {
+  return refreshOutputsFromServer();
+}
+
+async function refreshOutputsFromServer() {
+  var r = await api('/api/outputs');
+  if (r && Array.isArray(r)) {
+    _outputsData = r;
+    _cacheItems(r);
+    renderOutputs();
+  }
+}
+
+// Fullscreen
+var _fsIndex = 0;
+var _fsScale = 1;
+var _fsTx = 0;
+var _fsTy = 0;
+function openFS(idx, cache) {
+  if (cache) {
+    _allItems = [];
+    _outputsData.forEach(function(b) { _allItems = _allItems.concat(b.items); });
+  }
+  if (!_allItems.length) return;
+  _fsIndex = idx;
+  _fsScale = 1; _fsTx = 0; _fsTy = 0;
+  _renderFS();
+}
+
+function _renderFS() {
+  var m = document.getElementById('fs-modal');
+  if (!m) return;
+  if (_allItems.length === 0) return;
+  var it = _allItems[_fsIndex];
+  var srcEsc = it.src.replace(/'/g, "\\'");
+  var media = it.is_video
+    ? '<video src="/' + srcEsc + '" controls autoplay loop></video>'
+    : '<img src="/' + srcEsc + '" alt="" draggable="false">';
+  var arrows = _allItems.length > 1
+    ? '<button class="fs-arrow fs-prev" onclick="fsNav(-1)" aria-label="Previous">‹</button><button class="fs-arrow fs-next" onclick="fsNav(1)" aria-label="Next">›</button>'
+    : '';
+  m.innerHTML = '<div class="fs-wrap">' + media + '</div>' + arrows;
+  m.classList.add('show');
+  _fsScale = 1; _fsTx = 0; _fsTy = 0;
+  _bindFSControls();
+}
+
+function _bindFSControls() {
+  var wrap = document.querySelector('#fs-modal .fs-wrap');
+  var img = wrap ? wrap.querySelector('img') : null;
+  if (!wrap) return;
+  var dragState = null;
+  var moved = false;
+  var baseW = img ? img.offsetWidth || window.innerWidth : window.innerWidth;
+  var baseH = img ? img.offsetHeight || window.innerHeight : window.innerHeight;
+
+  function _clamp() {
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var maxX = Math.max(0, (baseW * _fsScale - vw) / 2);
+    var maxY = Math.max(0, (baseH * _fsScale - vh) / 2);
+    _fsTx = Math.max(-maxX, Math.min(maxX, _fsTx));
+    _fsTy = Math.max(-maxY, Math.min(maxY, _fsTy));
+  }
+
+  wrap.addEventListener('mousedown', function(e) {
+    if (e.target.tagName === 'VIDEO' || e.button !== 0) return;
+    if (_fsScale > 1) {
+      dragState = { x: e.clientX, y: e.clientY, tx: _fsTx, ty: _fsTy };
+      moved = false;
+      wrap.classList.add('grabbing');
+      if (img) img.style.transition = 'none';
+      e.preventDefault();
     }
+  });
+  window.addEventListener('mousemove', function(e) {
+    if (!dragState) return;
+    var dx = e.clientX - dragState.x;
+    var dy = e.clientY - dragState.y;
+    if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+    _fsTx = dragState.tx + dx;
+    _fsTy = dragState.ty + dy;
+    _clamp();
+    _applyFSView(false);
+  });
+  window.addEventListener('mouseup', function() {
+    if (dragState) {
+      wrap.classList.remove('grabbing');
+      if (_fsScale > 1 && img) img.style.transition = 'transform 160ms cubic-bezier(0.32,0.72,0,1)';
+      dragState = null;
+    }
+  });
+
+  // click: instant zoom toggle on image, close on blank backdrop (no delay)
+  wrap.addEventListener('click', function(e) {
+    if (e.target.tagName === 'VIDEO') return;
+    if (dragState || moved) return;
+    if (e.target === img) {
+      if (_fsScale > 1) _setFSZoom(1);
+      else _setFSZoom(2.5);
+    } else {
+      closeFS();
+    }
+  });
+
+  if (img) {
+    img.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      var prev = _fsScale;
+      var factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+      var next = Math.max(1, Math.min(10, prev * factor));
+      if (next > 1) {
+        var rect = wrap.getBoundingClientRect();
+        var px = (e.clientX - rect.left) / rect.width;
+        var py = (e.clientY - rect.top) / rect.height;
+        var k = next / prev;
+        _fsTx = px * rect.width - k * (px * rect.width - _fsTx);
+        _fsTy = py * rect.height - k * (py * rect.height - _fsTy);
+        _fsScale = next;
+        _clamp();
+        _applyFSView(true);
+      } else {
+        _setFSZoom(1);
+      }
+      e.stopPropagation();
+    }, { passive: false });
+  }
+  [...document.querySelectorAll('.fs-arrow')].forEach(function(b) {
+    b.addEventListener('click', function(e) { e.stopPropagation(); });
+  });
+  // keyboard: Esc closes, arrows navigate
+  document.addEventListener('keydown', _fsKeyHandler);
 }
 
-function copyText(sid) {
-    var t = document.getElementById(sid + '_t');
-    if (!t) return;
-    navigator.clipboard.writeText(t.innerText).then(function() {
-        var m = document.getElementById(sid + '_msg');
-        m.innerText = 'Copied!';
-        setTimeout(function() { m.innerText = ''; }, 1500);
-    });
+function _setFSZoom(scale) {
+  _fsScale = (scale > 1) ? scale : 1;
+  var img = document.querySelector('#fs-modal .fs-wrap img');
+  if (_fsScale <= 1) { _fsTx = 0; _fsTy = 0; }
+  else if (img) {
+    var baseW = img.offsetWidth || window.innerWidth;
+    var baseH = img.offsetHeight || window.innerHeight;
+    var maxX = Math.max(0, (baseW * _fsScale - window.innerWidth) / 2);
+    var maxY = Math.max(0, (baseH * _fsScale - window.innerHeight) / 2);
+    _fsTx = Math.max(-maxX, Math.min(maxX, _fsTx));
+    _fsTy = Math.max(-maxY, Math.min(maxY, _fsTy));
+  }
+  _applyFSView(true);
+  var wrap = document.querySelector('#fs-modal .fs-wrap');
+  if (wrap) wrap.classList.toggle('zoomed', _fsScale > 1);
+}
+
+var _fsDragged = false;
+function _applyFSView(animate) {
+  var img = document.querySelector('#fs-modal .fs-wrap img');
+  if (!img) return;
+  img.style.transform = 'translate(' + _fsTx + 'px,' + _fsTy + 'px) scale(' + _fsScale + ')';
+}
+
+function _fsKeyHandler(e) {
+  var m = document.getElementById('fs-modal');
+  if (!m || !m.classList.contains('show')) return;
+  if (e.key === 'Escape') { closeFS(); }
+  else if (e.key === 'ArrowRight') { fsNav(1); }
+  else if (e.key === 'ArrowLeft') { fsNav(-1); }
+}
+
+function fsNav(dir) {
+  var n = _allItems.length;
+  if (!n) return;
+  _fsIndex = (_fsIndex + dir + n) % n;
+  _renderFS();
+}
+
+function closeFS() {
+  var m = document.getElementById('fs-modal');
+  if (m) { m.classList.remove('show'); m.innerHTML = ''; }
+  document.removeEventListener('keydown', _fsKeyHandler);
+}
+
+// Hover preview (table + grid mode)
+function bindHoverPreview() {
+  // delegated via inline handlers (showHover/moveHover/hideHover)
+}
+function _getHover() {
+  var hp = document.getElementById('hover-preview');
+  if (!hp) {
+    hp = document.createElement('div');
+    hp.id = 'hover-preview';
+    document.body.appendChild(hp);
+  }
+  return hp;
+}
+function showHover(el) {
+  var media = el.querySelector('img, video');
+  if (!media) return;
+  var hp = _getHover();
+  var src = media.getAttribute('src');
+  var isVideo = media.tagName === 'VIDEO';
+  var out = isVideo
+    ? '<video src="' + src + '" muted autoplay loop preload="auto"></video>'
+    : '<img src="' + src + '" alt="">';
+  hp.innerHTML = out;
+  hp.style.display = 'block';
+  // position directly beside the media thumbnail (right side, vertically centered)
+  var r = el.getBoundingClientRect();
+  var w = hp.offsetWidth || 220;
+  var h = hp.offsetHeight || 392;
+  var x = r.right + 12;
+  var y = r.top + r.height / 2 - h / 2;
+  if (x + w > window.innerWidth - 8) x = Math.max(8, r.left - w - 12);
+  x = Math.max(8, x);
+  y = Math.max(8, Math.min(y, window.innerHeight - h - 8));
+  hp.style.left = x + 'px';
+  hp.style.top = y + 'px';
+  hp.dataset.video = isVideo ? '1' : '0';
+}
+function hideHover() {
+  var hp = _getHover();
+  hp.style.display = 'none';
+  var v = hp.querySelector('video');
+  if (v) { v.pause(); v.currentTime = 0; }
+  hp.innerHTML = '';
+}
+
+// Actions
+function copyCaptionText(src) {
+  editCaption('', src);
+}
+
+function downloadMedia(src) {
+  var a = document.createElement('a');
+  a.href = '/' + src;
+  a.download = src.split('/').pop();
+  a.click();
+}
+
+async function deleteMedia(src, event) {
+  if (event) event.stopPropagation();
+  if (!confirm('Delete this media file?')) return;
+  var r = await api('/api/media/delete', {src: src});
+  if (r && r.ok) {
+    showSuccess('Deleted');
+    refreshOutputs();
+  } else {
+    showError((r && r.error) || 'Delete failed');
+  }
 }
 
 // Edit caption modal
-var _editSid = null, _editSrc = null;
-function editCaption(sid, src) {
-    _editSid = sid; _editSrc = src;
-    var t = document.getElementById(sid + '_t');
-    var textarea = document.getElementById('edit-text');
-    textarea.value = t ? t.innerText : '';
-    document.getElementById('edit-modal').classList.add('show');
-    textarea.focus();
-    textarea.select();
+var _editSrc = null;
+var _editSid = null;
+function _findItemBySrc(src) {
+  var found = null;
+  _outputsData.forEach(function(b) {
+    if (found) return;
+    b.items.forEach(function(x) { if (x.src === src) found = x; });
+  });
+  return found;
 }
-function closeEdit() {
-    document.getElementById('edit-modal').classList.remove('show');
-    _editSid = null; _editSrc = null;
+async function editCaption(sid, src) {
+  _editSrc = src;
+  _editSid = sid;
+  var txt = document.getElementById('edit-text');
+  if (txt) {
+    var it = _findItemBySrc(src);
+    txt.value = (it && it.txt_content) ? it.txt_content : '';
+  }
+  var m = document.getElementById('edit-modal');
+  if (m) m.classList.add('show');
+  if (txt) setTimeout(function() { txt.focus(); }, 50);
 }
-async function saveEdit() {
-    if (!_editSid || !_editSrc) return;
-    var text = document.getElementById('edit-text').value;
-    var btn = document.getElementById('edit-save');
-    btn.disabled = true;
-    try {
-        var r = await api('/api/caption/edit', { src: _editSrc, text: text });
-        if (r.ok) {
-            var sid = _editSid;
-            var tCell = document.getElementById(sid + '_t');
-            if (tCell) {
-                var flat = text.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
-                tCell.innerText = flat;
-                tCell.title = flat;
-            }
-            closeEdit();
-            refreshOutputs();
-            showSuccess('Caption saved');
-        } else {
-            showError(r.output || r.error || 'Failed to save');
-        }
-    } catch (e) {
-        showError('Error: ' + e.message);
-    }
-    btn.disabled = false;
-}
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && document.getElementById('edit-modal').classList.contains('show')) closeEdit();
-});
 
-// Prompt Used — modal popup
-function showPrompt(sid) {
-    var box = document.getElementById('pb-' + sid);
-    if (!box) return;
-    var full = box.textContent || '';
-    var main = full, negative = '', identity = '';
-    var i = full.indexOf('negative prompt:');
-    if (i >= 0) {
-        main = full.substring(0, i).replace(/\n+$/g, '').trim();
-        var rest = full.substring(i + 'negative prompt:'.length);
-        var j = rest.search(/keep model identity/i);
-        if (j >= 0) {
-            negative = rest.substring(0, j).trim();
-            identity = rest.substring(j).trim();
-        } else {
-            negative = rest.trim();
-        }
+function closeEdit() {
+  var m = document.getElementById('edit-modal');
+  if (m) m.classList.remove('show');
+}
+
+async function saveEdit() {
+  var txt = document.getElementById('edit-text');
+  if (!_editSrc) { closeEdit(); return; }
+  var text = txt ? txt.value : '';
+  var r = await api('/api/caption/edit', {src: _editSrc, text: text});
+  if (r && r.ok) {
+    showSuccess('Caption saved');
+    closeEdit();
+    refreshOutputs();
+  } else {
+    showError((r && r.error) || 'Save failed');
+  }
+}
+
+// Prompt modal
+var _promptSrc = null;
+function _parsePromptSections(it) {
+  var full = it.prompt || '';
+  var neg = it.negative_prompt || '';
+  var identity = '';
+  var main = full;
+  var marker = '\nnegative prompt: ';
+  var idx = full.indexOf(marker);
+  if (idx !== -1) {
+    main = full.slice(0, idx);
+    var rest = full.slice(idx + marker.length);
+    var nl = rest.indexOf('\n');
+    if (nl !== -1) {
+      var embeddedNeg = rest.slice(0, nl);
+      identity = rest.slice(nl + 1);
+      if (!neg) neg = embeddedNeg;
+    } else {
+      if (!neg) neg = rest;
     }
-    document.getElementById('prompt-main').textContent = main || '(empty)';
-    document.getElementById('prompt-negative').textContent = negative || '(empty)';
-    document.getElementById('prompt-identity').textContent = identity || 'keep model identity/lip color consistent/accurate/similar';
-    document.getElementById('prompt-modal').classList.add('show');
+    main = main.replace(/\s+$/, '');
+  } else if (!neg) {
+    // single-line fallback: some prompts inline "negative prompt: ..."
+    var m2 = /(?:^|\n)\s*negative prompt:\s*(.*)$/i.exec(full);
+    if (m2 && m2[1]) { neg = m2[1]; main = full.slice(0, m2.index).replace(/\s+$/, ''); }
+  }
+  return { main: main, neg: neg, identity: identity };
+}
+function showPrompt(src) {
+  var it = _findItemBySrc(src);
+  if (!it) { showError('Prompt not found'); return; }
+  var m = document.getElementById('prompt-modal');
+  if (!m) return;
+  var s = _parsePromptSections(it);
+  document.getElementById('prompt-main').textContent = s.main || '(none)';
+  document.getElementById('prompt-negative').textContent = s.neg || '(none)';
+  document.getElementById('prompt-identity').textContent = s.identity || '(none)';
+  m.classList.add('show');
 }
 function closePrompt() {
-    document.getElementById('prompt-modal').classList.remove('show');
+  var m = document.getElementById('prompt-modal');
+  if (m) m.classList.remove('show');
 }
-function copyPrompt() {
-    var main = document.getElementById('prompt-main').textContent;
-    var neg = document.getElementById('prompt-negative').textContent;
-    var id = document.getElementById('prompt-identity').textContent;
-    var full = main + '\n\nnegative prompt: ' + neg + '\n\n' + id;
-    navigator.clipboard.writeText(full).then(function() {
-        var btn = document.getElementById('prompt-copy');
-        var orig = btn.textContent;
-        btn.textContent = 'Copied!';
-        setTimeout(function() { btn.textContent = orig; }, 1500);
-    }).catch(function(e) {
-        alert('Copy failed: ' + e.message);
-    });
+async function copyPrompt() {
+  var t = document.getElementById('prompt-main');
+  if (t) navigator.clipboard.writeText(t.textContent).then(function() { showSuccess('Prompt copied'); });
 }
+
+// ESC handlers for modals
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && document.getElementById('prompt-modal').classList.contains('show')) closePrompt();
+  if (e.key === 'Escape') {
+    closeFS();
+    var m = document.getElementById('edit-modal');
+    if (m && m.classList.contains('show')) closeEdit();
+    var pm = document.getElementById('prompt-modal');
+    if (pm && pm.classList.contains('show')) closePrompt();
+  }
 });
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('edit-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeEdit();
-    });
-    document.getElementById('prompt-modal').addEventListener('click', function(e) {
-        if (e.target === this) closePrompt();
-    });
-});
-
-function deleteMedia(src) {
-    if (!confirm('Delete this media file? This cannot be undone.')) return;
-    api('/api/media/delete', {src: src}).then(function(data) {
-        if (data.ok) {
-            refreshOutputs();
-            showSuccess('Deleted');
-        } else {
-            showError('Delete failed: ' + (data.error || 'unknown error'));
-        }
-    }).catch(function(e) {
-        showError('Delete error: ' + e.message);
-    });
-}
-
-// Fullscreen zoom/pan with prev/next arrows
-
-var fsActive = false;
-var _fsScale = 1, _fsPanX = 0, _fsPanY = 0;
-var _fsDragging = false, _fsDragRef = null, _fsMoved = false;
-var _fsCleanup = [];
-var _fsBatch = [];
-var _fsIdx = 0;
-
-function _buildFsList(vid) {
-    var sid = vid.replace(/_m$/, '');
-    _fsBatch = [];
-    _fsIdx = 0;
-    for (var b = 0; b < _outputsData.length; b++) {
-        var batch = _outputsData[b];
-        for (var i = 0; i < batch.items.length; i++) {
-            var item = batch.items[i];
-            var itVid = batch.id + '_' + item.stem + '_m';
-            _fsBatch.push({ vid: itVid, isVideo: item.is_video });
-            if (itVid === vid) _fsIdx = _fsBatch.length - 1;
-        }
-    }
-    if (!_showAll) {
-        var part = _fsBatch[_fsIdx].vid.split('_')[0];
-        _fsBatch = _fsBatch.filter(function(it) { return it.vid.indexOf(part + '_') === 0; });
-        for (var j = 0; j < _fsBatch.length; j++) {
-            if (_fsBatch[j].vid === vid) { _fsIdx = j; break; }
-        }
-    }
-}
-
-function _renderFs() {
-    var modal = document.getElementById('fs-modal');
-    var item = _fsBatch[_fsIdx];
-    var srcEl = document.getElementById(item.vid);
-    if (!srcEl) return;
-    var isV = item.isVideo;
-    modal.innerHTML = '';
-    for (var ci = 0; ci < _fsCleanup.length; ci++) {
-        var h = _fsCleanup[ci];
-        window.removeEventListener('mousemove', h);
-        window.removeEventListener('mouseup', h);
-        window.removeEventListener('keydown', h);
-    }
-    _fsScale = 1; _fsPanX = 0; _fsPanY = 0;
-    _fsDragging = false; _fsDragRef = null; _fsMoved = false;
-    _fsCleanup = [];
-
-    var wrap = document.createElement('div');
-    wrap.className = 'fs-wrap';
-
-    if (isV) {
-        var c = document.createElement('video');
-        c.src = srcEl.querySelector('source').src;
-        c.muted = false; c.loop = true; c.autoplay = true; c.playsinline = true; c.controls = true;
-        wrap.appendChild(c);
-        wrap.onclick = function(e) { if (e.target === wrap) closeFS(); };
-    } else {
-        var img = document.createElement('img');
-        img.src = srcEl.querySelector('img').src;
-        img.draggable = false;
-        wrap.appendChild(img);
-        function apply() {
-            img.style.transform = 'translate(' + _fsPanX + 'px,' + _fsPanY + 'px) scale(' + _fsScale + ')';
-            wrap.classList.toggle('zoomed', _fsScale > 1);
-        }
-        function _clamp() {
-            var r = img.getBoundingClientRect();
-            var nw = r.width / _fsScale, nh = r.height / _fsScale;
-            var vw = window.innerWidth, vh = window.innerHeight;
-            var ox = Math.max(0, (nw * _fsScale - vw) / 2);
-            var oy = Math.max(0, (nh * _fsScale - vh) / 2);
-            _fsPanX = Math.max(-ox, Math.min(ox, _fsPanX));
-            _fsPanY = Math.max(-oy, Math.min(oy, _fsPanY));
-        }
-        wrap.onmousedown = function(e) {
-            e.preventDefault();
-            _fsDragging = true; _fsMoved = false;
-            _fsDragRef = { x: e.clientX - _fsPanX, y: e.clientY - _fsPanY, target: e.target };
-        };
-        var mm = function(e) {
-            if (!_fsDragging || _fsScale <= 1) return;
-            var dx = e.clientX - _fsDragRef.x - _fsPanX;
-            var dy = e.clientY - _fsDragRef.y - _fsPanY;
-            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-                if (!_fsMoved) wrap.classList.add('grabbing');
-                _fsMoved = true;
-            }
-            _fsPanX = e.clientX - _fsDragRef.x;
-            _fsPanY = e.clientY - _fsDragRef.y;
-            _clamp();
-            apply();
-        };
-        var mu = function(e) {
-            if (!_fsDragging) return;
-            _fsDragging = false;
-            wrap.classList.remove('grabbing');
-            if (_fsMoved) return;
-            if (_fsDragRef.target === img) {
-                if (_fsScale > 1) { _fsScale = 1; _fsPanX = 0; _fsPanY = 0; }
-                else { _fsScale = 2; _fsPanX = 0; _fsPanY = 0; }
-                apply();
-            } else { closeFS(); }
-        };
-        window.addEventListener('mousemove', mm);
-        window.addEventListener('mouseup', mu);
-        _fsCleanup.push(mm);
-        _fsCleanup.push(mu);
-        wrap.ondblclick = function() { _fsScale = 1; _fsPanX = 0; _fsPanY = 0; apply(); };
-    }
-
-    var kh = function(e) {
-        if (e.key === 'Escape') { closeFS(); }
-        else if (e.key === 'ArrowLeft') { navigateFs(-1); }
-        else if (e.key === 'ArrowRight') { navigateFs(1); }
-        else if (e.key === '+' || e.key === '=') {
-            var ns = Math.min(10, _fsScale + 0.25);
-            _fsPanX = (window.innerWidth / 2) - (window.innerWidth / 2 - _fsPanX) * (ns / _fsScale);
-            _fsPanY = (window.innerHeight / 2) - (window.innerHeight / 2 - _fsPanY) * (ns / _fsScale);
-            _fsScale = ns; if (_clamp) _clamp(); if (apply) apply();
-        } else if (e.key === '-' || e.key === '_') {
-            var ns2 = Math.max(0.5, _fsScale - 0.25);
-            _fsPanX = (window.innerWidth / 2) - (window.innerWidth / 2 - _fsPanX) * (ns2 / _fsScale);
-            _fsPanY = (window.innerHeight / 2) - (window.innerHeight / 2 - _fsPanY) * (ns2 / _fsScale);
-            _fsScale = ns2; if (_clamp) _clamp(); if (apply) apply();
-        } else if (e.key === '0') { _fsScale = 1; _fsPanX = 0; _fsPanY = 0; if (apply) apply(); }
-    };
-    window.addEventListener('keydown', kh);
-    _fsCleanup.push(kh);
-
-    if (_fsBatch.length > 1) {
-        if (_fsIdx > 0) { var pb = document.createElement('button'); pb.className = 'fs-arrow fs-prev'; pb.innerHTML = '\u25c0'; pb.onclick = function() { navigateFs(-1); }; modal.appendChild(pb); }
-        if (_fsIdx < _fsBatch.length - 1) { var nb = document.createElement('button'); nb.className = 'fs-arrow fs-next'; nb.innerHTML = '\u25b6'; nb.onclick = function() { navigateFs(1); }; modal.appendChild(nb); }
-    }
-
-    modal.appendChild(wrap);
-    modal.classList.add('show');
-    fsActive = true;
-}
-
-function fullscreen(vid, isVideo) {
-    if (fsActive) return;
-    _buildFsList(vid);
-    _renderFs();
-}
-function navigateFs(dir) {
-    var n = _fsIdx + dir;
-    if (n < 0 || n >= _fsBatch.length) return;
-    _fsIdx = n;
-    _renderFs();
-}
-function closeFS() {
-    var modal = document.getElementById('fs-modal');
-    modal.classList.remove('show');
-    modal.innerHTML = '';
-    fsActive = false;
-    for (var i = 0; i < _fsCleanup.length; i++) {
-        var h = _fsCleanup[i];
-        window.removeEventListener('mousemove', h);
-        window.removeEventListener('mouseup', h);
-        window.removeEventListener('keydown', h);
-    }
-    _fsCleanup = [];
-}
