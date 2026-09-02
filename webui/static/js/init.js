@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     syncViewToggle();
     loadSettings();
     loadBankEditor();
+    loadCaptionBanks();
     checkApiStatus();
     preloadAccounts();
     preloadValidation();

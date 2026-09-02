@@ -266,6 +266,16 @@
             <label class="pill"><input type="radio" name="cap_hook" value="mixed"><span class="pill-body">Mixed</span></label>
           </div>
         </div>
+        <div class="config-group config-group-wide">
+          <label class="config-label">Caption Bank</label>
+          <div class="pill-row" id="caption-bank-row">
+            <label class="pill active"><input type="radio" name="cap_bank" value="" checked><span class="pill-body">Default</span></label>
+          </div>
+          <div class="caption-bank-actions">
+            <button type="button" class="btn-ghost btn-sm" onclick="exportCaptionBank()">Export Active</button>
+            <label class="btn-ghost btn-sm caption-import-label">Import Bank<input type="file" id="caption-bank-file" accept=".py" style="display:none" onchange="importCaptionBank(this.files[0])"></label>
+          </div>
+        </div>
         <div class="config-group config-group-count">
           <label class="config-label">Count <span class="config-val" id="cap-count-label">5</span></label>
           <input type="range" id="cap-count" min="1" max="20" value="5" class="config-slider" oninput="document.getElementById('cap-count-label').textContent=this.value">

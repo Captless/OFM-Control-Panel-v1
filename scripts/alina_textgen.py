@@ -42,7 +42,6 @@ import re
 # The voice should feel dark, feminine, confident, teasing, flirtatious,
 # mysterious, and naturally conversational.
 # ---------------------------------------------------------------------------
-
 OPENERS = {
     "vulnerable": [
         "i only get this honest when the lights are off",
@@ -198,206 +197,206 @@ OPENERS = {
 
 MIDDLES = {
     "vulnerable": [
-        "i don't show that side of myself very often",
-        "but somehow the quiet always brings it back",
-        "and maybe being soft isn't something i need to apologize for",
-        "i just don't always know how to say what i mean",
-        "the people who understand don't usually need an explanation",
-        "sometimes being alone is easier than pretending",
-        "i think everyone has a side they keep hidden",
-        "and mine always seems to come out after midnight",
+        "i only feel this honest after midnight.",
+        "soft isn't a weakness. it's my best-kept secret.",
+        "nobody sees the quiet version of me.",
+        "the dark always brings out what i hide.",
+        "i feel things louder than i say them.",
+        "some nights i'm just tired of pretending i'm fine.",
+        "i hide my softness behind the black.",
+        "people assume i don't care. they're wrong.",
     ],
 
     "confident": [
-        "and i'm finally comfortable being exactly who i am",
-        "i stopped trying to make myself easier to understand",
-        "there's nothing wrong with knowing what you want",
-        "i'd rather stand out than disappear into the crowd",
-        "the right people won't need me to tone it down",
-        "i don't need permission to take up space",
-        "confidence looks especially good in black",
-        "i've spent too long becoming someone i'm proud of",
+        "i stopped shrinking to make others comfortable.",
+        "black looks better when you carry it like you own it.",
+        "i don't chase attention. it finds me.",
+        "knowing your worth changes everything.",
+        "i'm not loud. i'm just impossible to ignore.",
+        "i built this confidence myself.",
+        "the mirror and i have an agreement.",
+        "i'd rather be too much than never enough.",
     ],
 
     "playful": [
-        "and yes, i knew exactly what i was doing",
-        "don't make me pretend this wasn't intentional",
-        "i'll let you decide whether that was an accident",
-        "honestly, i just wanted to see who would notice",
-        "you probably should have kept scrolling",
-        "but apparently neither of us is very good at behaving",
-        "i'm innocent until proven otherwise",
-        "and i'm not answering questions without a lawyer",
+        "this was absolutely on purpose.",
+        "don't act like you weren't about to double-tap.",
+        "i dare you to say what you're thinking.",
+        "catching you staring is my favorite hobby.",
+        "i'm trouble with good lighting.",
+        "one look was all it took. admit it.",
+        "i know exactly what i'm doing. and i'm enjoying it.",
+        "you're blushing through the screen. i can tell.",
     ],
 
     "aesthetic": [
-        "the shadows made everything feel a little more cinematic",
-        "the low light somehow made the whole mood better",
-        "there's something about nighttime that makes everything softer",
-        "the grain makes it feel more real",
-        "black, silver, and a little bit of darkness is usually enough",
-        "the mirror caught the mood better than i expected",
-        "the night always seems to know how to frame me",
-        "some moods don't need much explaining",
+        "low light was made for girls like me.",
+        "this is more than a picture. it's a mood.",
+        "dark rooms frame me better than anyone could.",
+        "a little grain. a little shadow. a lot of me.",
+        "i don't chase aesthetics. i am one.",
+        "midnight just looks good on me.",
+        "black is the only color i need.",
+        "some looks are worth staying for.",
     ],
 
     "relatable": [
-        "and somehow i still thought i needed another outfit",
-        "because apparently taking pictures is now part of getting ready",
-        "which is probably why i never actually go to bed on time",
-        "and yes, i took another picture before putting my phone down",
-        "i'll call it productive if anyone asks",
-        "at least one thing in my life is coordinated",
-        "and honestly, that's good enough for tonight",
-        "this is what passes for having my life together",
+        "i got all dressed up to stay inside.",
+        "the mirror is my main event tonight.",
+        "my plan was chaos with good vibes.",
+        "i took forty pictures to post one.",
+        "sleep lost. the outfit won.",
+        "i'm thriving in my delusion tonight.",
+        "no plans, but i still got ready.",
+        "this is my idea of a productive night.",
     ],
 
     "teasing": [
-        "and i can tell you noticed",
-        "but i'm curious if you're brave enough to admit it",
-        "don't worry, your secret is safe with me",
-        "i'm giving you one chance to be honest",
-        "you can keep pretending you're here for the aesthetic",
-        "i won't embarrass you if you tell the truth",
-        "something tells me you're still looking",
-        "and i'm not exactly complaining about that",
+        "you keep pretending you're not looking. cute.",
+        "i saw you stop scrolling. i'll allow it.",
+        "go on. you can admit you stayed for me.",
+        "curiosity looks good on you.",
+        "i noticed you noticing me.",
+        "you were about to comment. i felt it.",
+        "one more glance and i'll make it count.",
+        "deny it all you want. i saw you.",
     ],
 
     "seductive": [
-        "the fun part is knowing you can't quite look away",
-        "there's something addictive about a little mystery",
-        "i think the right amount of temptation is healthy",
-        "sometimes attention feels better when you know you earned it",
-        "i like leaving a little something to the imagination",
-        "not everything needs to be shown to be noticed",
-        "the best kind of flirting is the kind you can deny",
-        "maybe i wanted you to notice",
+        "i know the effect i have on you.",
+        "the best part is what i'm not showing.",
+        "attention from you feels different.",
+        "i left just enough to keep you wondering.",
+        "you can't look away and i love that.",
+        "i know exactly what you're thinking.",
+        "the way you watch me says everything.",
+        "some girls tease. i make you stay.",
     ],
 
     "mysterious": [
-        "i'll let your imagination fill in the rest",
-        "you can decide what was happening before the picture",
-        "some answers are more fun when you never get them",
-        "i think wondering is half the fun",
-        "there's always another side you haven't seen",
-        "maybe i'll explain it eventually",
-        "or maybe i'll let you keep guessing",
-        "you don't need to know everything about me yet",
+        "you'll never get the whole story from me.",
+        "the fun part is what i'm not telling you.",
+        "i like that you're trying to figure me out.",
+        "there's always more. that's the point.",
+        "guess all you want. you won't get it right.",
+        "i keep my best parts hidden.",
+        "mystery is the most interesting thing i wear.",
+        "you can wonder. i'll stay unknowable.",
     ],
 
     "dangerous": [
-        "and somehow that usually ends exactly how you'd expect",
-        "i've never been particularly good at making sensible choices",
-        "the warning signs are probably already there",
-        "but you were curious enough to stay",
-        "i don't think you're looking for the safe option anyway",
-        "some mistakes are worth making once",
-        "you knew what kind of energy you were getting into",
-        "i'm starting to think you like trouble",
+        "trouble looks this good for a reason.",
+        "i'm the mistake you'll want to make again.",
+        "you've been warned. still tempted.",
+        "i look sweet until i don't.",
+        "curiosity made you stay. bad call.",
+        "i'm exactly the kind of danger you like.",
+        "some lines you shouldn't cross. i dare you.",
+        "you should run. but you won't.",
     ],
 
     "direct": [
-        "i'm actually curious what you'd say to me in person",
-        "don't give me the safe answer",
-        "you can be honest here",
-        "i promise i won't judge your answer",
-        "there's no wrong answer, just boring ones",
-        "i'm reading the comments, so choose carefully",
-        "you've already looked, so you might as well answer",
-        "now i'm waiting for your answer",
+        "be honest with me. i can take it.",
+        "what's the first thing you'd say to me?",
+        "would you actually approach me?",
+        "don't overthink. just answer.",
+        "i asked a question. i expect an answer.",
+        "your turn. impress me.",
+        "stop scrolling. you have something to say.",
+        "tell me the truth once. just once.",
     ],
 }
 
 
 CLOSERS = {
     "vulnerable": [
-        "maybe that's enough honesty for one night.",
-        "the dark makes it easier to be myself.",
-        "some nights i just need a little quiet.",
-        "maybe someone out there understands.",
-        "i'll figure the rest out tomorrow.",
-        "for tonight, this version of me is enough.",
+        "this version of me is the one nobody gets.",
+        "the quiet version of me stays hidden.",
+        "i feel more than i'll ever say.",
+        "softness is my secret weapon.",
+        "the night knows who i really am.",
+        "i'm more than the black i hide behind.",
     ],
 
     "confident": [
-        "and i'm not changing that for anyone.",
-        "take it or leave it. i'm still going to be me.",
-        "the edge stays.",
-        "i like myself exactly like this.",
-        "consider that your warning.",
-        "i'm only getting harder to forget.",
+        "you can look. you just can't forget me.",
+        "i'd rather be unforgettable than easy.",
+        "the confidence is permanent.",
+        "i'm exactly who i decided to be.",
+        "black looks best when i wear it like a crown.",
+        "you'll remember this one.",
     ],
 
     "playful": [
-        "anyway, you didn't see anything.",
-        "now pretend you weren't staring.",
-        "okay, i'll behave. probably.",
-        "don't make me post the other one.",
-        "that's enough trouble for one night.",
-        "you can thank me later.",
+        "caught you. don't pretend you didn't enjoy it.",
+        "behave, or i'll post more.",
+        "you're welcome for the smile.",
+        "that was me being on my best behavior.",
+        "one like and i'll keep 'em coming.",
+        "don't blame me if you smirked.",
     ],
 
     "aesthetic": [
-        "some moods are better left in the dark.",
-        "the night understood the assignment.",
-        "darkness looks good on me.",
-        "that's the mood for tonight.",
-        "some pictures just feel like midnight.",
-        "i think i'll keep this one.",
+        "this mood is living rent-free in your head now.",
+        "darkness and i get along great.",
+        "some vibes you just don't scroll past.",
+        "midnight has a favorite. it's me.",
+        "this look did what needed to be done.",
+        "the aesthetic stays.",
     ],
 
     "relatable": [
-        "anyway, i'm going back to bed.",
-        "tomorrow i'll pretend i'm responsible again.",
-        "that's enough productivity for tonight.",
-        "same girl, different night.",
-        "at least the picture turned out good.",
-        "now i'm actually going to sleep. maybe.",
+        "anyway, sleep can wait.",
+        "this is my idea of self care.",
+        "at least the outfit was a win.",
+        "chaos, but make it fashionable.",
+        "tomorrow's problem. tonight's good time.",
+        "my life is organized chaos. it works.",
     ],
 
     "teasing": [
-        "don't worry, i'll give you something else to stare at later.",
-        "you can admit you liked it.",
-        "i'll leave you with that thought.",
-        "maybe i'll give you another reason to stay.",
-        "you'll have to wait for the next one.",
-        "i think you know exactly what i mean.",
+        "you'll think about this one later. i know it.",
+        "admit you've already replayed it.",
+        "i'll leave you curious on purpose.",
+        "your attention is officially mine.",
+        "don't worry, i'll keep you hooked.",
+        "bet you're still here. good.",
     ],
 
     "seductive": [
-        "some things are better when they're left unfinished.",
-        "i think i'll let you wonder about the rest.",
-        "maybe i'll give you another look tomorrow.",
-        "for now, this is all you're getting.",
-        "a little temptation never hurt anyone.",
-        "you can keep that thought for later.",
+        "i'll leave you wanting the rest.",
+        "some things are better left unfinished.",
+        "you can keep that thought. i meant it.",
+        "for now, i'll let you wonder.",
+        "temptation is kind to me.",
+        "come back when you're ready.",
     ],
 
     "mysterious": [
-        "maybe you'll figure me out eventually.",
-        "or maybe you never will.",
-        "i'll let you keep guessing.",
-        "some secrets are more fun this way.",
-        "that's all i'm telling you tonight.",
-        "the rest stays between me and the dark.",
+        "wonder all you want. i'll stay a secret.",
+        "the best part is what you'll never know.",
+        "keep guessing. i'm not telling.",
+        "i always leave something unanswered.",
+        "that's all you're getting for now.",
+        "even the dark doesn't know it all.",
     ],
 
     "dangerous": [
-        "you were warned.",
-        "don't say i didn't tell you.",
-        "somewhere along the way, this became your problem.",
-        "i never promised to be good for you.",
-        "you can blame your curiosity later.",
-        "good luck behaving now.",
+        "you were warned. and you stayed.",
+        "i told you i was trouble.",
+        "your curiosity chose this.",
+        "don't say i didn't warn you.",
+        "this was your idea too.",
+        "good luck getting over it.",
     ],
 
     "direct": [
-        "so tell me.",
-        "i'm waiting.",
-        "your move.",
-        "don't leave me guessing.",
-        "say it.",
-        "i want the honest answer.",
+        "so, are you going to say hi or not?",
+        "answer me. i'm still waiting.",
+        "now it's your move.",
+        "be honest. i know you have an answer.",
+        "don't leave me hanging.",
+        "say it. i'm listening.",
     ],
 }
 
@@ -409,24 +408,189 @@ CLOSERS = {
 # low-friction interaction instead of generic engagement bait.
 # ---------------------------------------------------------------------------
 
-CTA_POOL = [
-    "be honest... would you look twice?",
-    "tell me what you noticed first",
-    "would you actually come say hi?",
-    "what would you say to me?",
-    "pick one: sweet or trouble?",
-    "don't be shy. i'm reading.",
-    "tell me your first thought",
-    "would you approach me in person?",
-    "what caught your attention?",
-    "give me your honest answer",
-    "should i post the other one?",
-    "tell me what kind of mood this gives you",
-    "would you stay or keep scrolling?",
-    "which detail did you notice first?",
-    "i want to know what you'd say",
-    "your turn. make me curious.",
-]
+CTA_POOL = {
+    "vulnerable": [
+        "would you still notice me if i wasn't dressed like this?",
+        "gentle, i'm being honest tonight.",
+        "what do you do with all the quiet parts of you?",
+        "tell me what makes you stay up late.",
+        "does it scare you that i feel things this much?",
+        "would you hold the attention if i let it slip?",
+        "be honest — what do you see when you really look?",
+        "i'm soft tonight. don't make me regret it.",
+        "it's 2am and my guard is down. take care of that.",
+        "i only say this stuff when the lights are low.",
+        "does anyone else feel everything this loudly?",
+        "i'm scared of how much i care.",
+        "tell me i'm not alone in this.",
+        "some nights i just want to feel understood.",
+        "be the one who actually stays, not just watches.",
+        "i hold the dark close so you don't have to.",
+    ],
+    "confident": [
+        "you already know you'd look twice.",
+        "admit it — i look expensive.",
+        "some girls beg for attention. i don't have to.",
+        "tell me i'm wrong and we'll both know you're lying.",
+        "i know my worth, i'm just checking if you do too.",
+        "eyes up here, you're losing your focus.",
+        "you're not ready for the full package.",
+        "take a picture, it lasts longer than your excuse.",
+        "i walk in like i own the room. because i do.",
+        "black is loyalty and i wear it like a crown.",
+        "i'm the girl your friends warned you about.",
+        "i'm expensive but i'm worth every cent.",
+        "be honest — you'd clear your schedule for me.",
+        "i don't chase. i get chosen. lucky you.",
+        "my confidence isn't loud. it's certain.",
+        "you can look, just don't forget who you're looking at.",
+        "i look good and i know it. that's not arrogance.",
+    ],
+    "playful": [
+        "i dare you to say hi first.",
+        "behave, or i'll post the other one.",
+        "caught you staring. don't stop.",
+        "you can run, but you'll look twice before you do.",
+        "one tiny comment. just one.",
+        "admit it — you're a little curious.",
+        "don't act like you weren't about to like this.",
+        "i'll let you decide if i'm trouble or fun.",
+        "wanna guess what i'm thinking? spoiler: chaotic.",
+        "i bite. but mostly when you deserve it.",
+        "me and my eyeliner are up to something.",
+        "come a little closer. i don't bite. usually.",
+        "who's braver — you or the comment box?",
+        "i'm flattered you're still here.",
+        "don't blame me if you smile.",
+        "first one to comment gets a prize. good luck.",
+    ],
+    "aesthetic": [
+        "tell me which detail caught your eye first.",
+        "does this vibe live in your head rent free?",
+        "rate this mood from one to 'stay a while'.",
+        "name one thing this photo isn't saying.",
+        "which shadow do you keep coming back to?",
+        "this is aesthetic. get used to it.",
+        "guess my favorite part of this look.",
+        "you looked longer than this photo deserves.",
+        "dark rooms love a girl like me.",
+        "the lighting did half the work. i did the rest.",
+        "does this feel like a movie to you too?",
+        "one word: what does this say?",
+        "i curate moods like someone's paying me.",
+        "the vibe is the whole personality.",
+        "tell me what aesthetic this gives you.",
+        "some things look better in black and mystery.",
+    ],
+    "relatable": [
+        "rate the outfit, not the chaos.",
+        "my sleep schedule wants your opinion.",
+        "accidentally dressed like i have my life together.",
+        "you're judging me, aren't you. good.",
+        "i got ready for the camera, not for plans.",
+        "one like = you felt seen.",
+        "tell me you've done the exact same thing.",
+        "who else is up way too late?",
+        "the mirror lied to me today too.",
+        "i made plans and nothing cancelled them.",
+        "being unhinged is exhausting, but cute.",
+        "give me a reason to get dressed properly tomorrow.",
+        "my confidence and my life are in different zip codes.",
+        "same energy, different day.",
+        "you get the outfit, i get the chaos.",
+        "being alive is expensive but i look affordable.",
+    ],
+    "teasing": [
+        "you're still looking, aren't you?",
+        "go on. say what you're thinking.",
+        "your secret's safe with me. for now.",
+        "i saw you scroll back. don't lie.",
+        "curious, are we? i'm flattered.",
+        "bet you won't comment. prove me wrong.",
+        "you keep staring like i owe you an answer.",
+        "don't be shy — i already know you noticed.",
+        "i have your attention. now what?",
+        "you act like you're not curious. cute.",
+        "one more glance and i'll believe you.",
+        "wanna tell me why you're still here?",
+        "i'm counting how long you look.",
+        "go ahead. you're playing along so well.",
+        "i'd tease you more but you're already blushing.",
+        "get caught up in this, i dare you.",
+    ],
+    "seductive": [
+        "tell me the part you can't look away from.",
+        "i know you're staying for me.",
+        "what's the first thing you'd say to me?",
+        "some girls are a distraction. i'm a destination.",
+        "i can feel your attention from here.",
+        "bet you're imagining things. good.",
+        "come closer. the screen won't bite.",
+        "tell me what this outfit does to you.",
+        "your eyes are giving you away.",
+        "i like the way you're watching me.",
+        "say less. let the tension talk.",
+        "i know what you liked about this. tell me i'm wrong.",
+        "slow down. enjoy the view.",
+        "you're trying to play it cool. it's not working.",
+        "i left all the best parts unseen.",
+        "whisper what you'd do if i were there.",
+    ],
+    "mysterious": [
+        "what's your guess about me?",
+        "i'll let you wonder — that's the fun part.",
+        "some answers i'll keep to myself.",
+        "do you want the truth or the interesting version?",
+        "i like that you're trying to figure me out.",
+        "there's a story here. i'm not telling it.",
+        "guess wrong. you'll never know for sure.",
+        "what do you think my deal is?",
+        "i'm exactly what you think. maybe. or not.",
+        "the more you watch, the less you'll know.",
+        "i laugh at secrets. and i keep mine.",
+        "you'll never get the full picture. that's the point.",
+        "guess my type. you won't get it right.",
+        "the interesting part is what i'm not showing.",
+        "wonder all you want. i'm not explaining.",
+        "some mysteries are worth staying for.",
+    ],
+    "dangerous": [
+        "dare you to approach.",
+        "your curiosity is showing.",
+        "you've been warned. still here?",
+        "some girls look good in trouble.",
+        "i look like trouble.",
+        "bet you love a bad decision.",
+        "come any closer and it's your choice.",
+        "you've been told about girls like me.",
+        "i dare you to find out.",
+        "i'm the night you'll always blame.",
+        "this isn't a warning. it's an invitation.",
+        "danger looks good on me.",
+        "you seem curious. i've been called a bad idea.",
+        "i agree. watch yourself.",
+        "or don't. i like risk.",
+        "some things you should leave alone. this isn't one.",
+        "i'm not the safe option. that's the fun part.",
+    ],
+    "direct": [
+        "would you actually come say hi?",
+        "be honest — what caught your attention?",
+        "answer me: sweet or trouble?",
+        "don't overthink it. what would you say?",
+        "your turn — impress me.",
+        "say the first thing that comes to mind.",
+        "be real, would you approach me?",
+        "no filter. what are you thinking?",
+        "stop scrolling. you have something to say.",
+        "i'm listening. make it worth my time.",
+        "be honest with me, i can take it.",
+        "what's stopping you from commenting?",
+        "don't overthink. just say it.",
+        "i asked a question. i expect an answer.",
+        "tell me the truth, not the polite version.",
+    ],
+}
 
 
 # ---------------------------------------------------------------------------
@@ -566,33 +730,64 @@ CONTEXT_PHRASES = {
 }
 
 
-def _detect_context(content_idea):
+def _resolve_pools(pools):
+    """Return a full 7-key pool dict. Missing keys fall back to built-ins."""
+    defaults = {
+        "OPENERS": OPENERS,
+        "MIDDLES": MIDDLES,
+        "CLOSERS": CLOSERS,
+        "CTA_POOL": CTA_POOL,
+        "HASHTAG_POOL": HASHTAG_POOL,
+        "CONTEXT_KEYWORDS": CONTEXT_KEYWORDS,
+        "CONTEXT_PHRASES": CONTEXT_PHRASES,
+    }
+    if not pools:
+        return defaults
+    merged = {}
+    for key, val in defaults.items():
+        merged[key] = pools.get(key, val)
+    return merged
+
+
+def _hook_keys(pools):
+    """Hook types available in the (resolved) OPENERS pool."""
+    openers = pools.get("OPENERS", OPENERS)
+    if isinstance(openers, dict):
+        return list(openers.keys())
+    return list(OPENERS.keys())
+
+
+def _detect_context(content_idea, pools=None):
     """Return simple visual/context tags detected from the content idea."""
     if not content_idea:
         return []
 
+    keywords_pool = (pools or {}).get("CONTEXT_KEYWORDS", CONTEXT_KEYWORDS)
     text = content_idea.lower()
     found = []
 
-    for tag, keywords in CONTEXT_KEYWORDS.items():
+    for tag, keywords in keywords_pool.items():
         if any(keyword in text for keyword in keywords):
             found.append(tag)
 
     return found
 
 
-def _context_phrase(content_idea, rng):
+def _context_phrase(content_idea, rng, pools=None):
     """Return one short phrase connected to the content idea."""
-    tags = _detect_context(content_idea)
+    tags = _detect_context(content_idea, pools)
 
     if not tags:
         return None
 
+    phrases_pool = (pools or {}).get("CONTEXT_PHRASES", CONTEXT_PHRASES)
     tag = rng.choice(tags)
-    return rng.choice(CONTEXT_PHRASES[tag])
+    if tag not in phrases_pool or not phrases_pool[tag]:
+        return None
+    return rng.choice(phrases_pool[tag])
 
 
-def _make_contextual_on_screen(opener, content_idea, hook_type, rng):
+def _make_contextual_on_screen(opener, content_idea, hook_type, rng, pools=None):
     """
     Keep most captions clean and natural.
 
@@ -601,12 +796,12 @@ def _make_contextual_on_screen(opener, content_idea, hook_type, rng):
     template while still making the idea influence the output.
     """
     if not content_idea:
-        return opener.strip().rstrip(".") + "."
+        return opener.strip().rstrip(".").strip()
 
-    context = _context_phrase(content_idea, rng)
+    context = _context_phrase(content_idea, rng, pools)
 
     if not context:
-        return opener.strip().rstrip(".") + "."
+        return opener.strip().rstrip(".").strip()
 
     contextual_templates = {
         "teasing": [
@@ -653,9 +848,9 @@ def _make_contextual_on_screen(opener, content_idea, hook_type, rng):
 
     # Contextual wording is used often enough to matter, but not every time.
     if rng.random() < 0.65:
-        return rng.choice(contextual_templates[hook_type])
+        return rng.choice(contextual_templates[hook_type]).rstrip(".").strip()
 
-    return opener.strip().rstrip(".") + "."
+    return opener.strip().rstrip(".").strip()
 
 
 # ---------------------------------------------------------------------------
@@ -671,6 +866,7 @@ def generate_caption(
     seed=None,
     _rng=None,
     content_idea=None,
+    pools=None,
 ):
     """
     Generate one caption dict.
@@ -681,6 +877,11 @@ def generate_caption(
     content_idea:
         Optional short description of the image/video.
         Used as creative context for the generated captions.
+
+    pools:
+        Optional dict overriding OPENERS/MIDDLES/CLOSERS/CTA_POOL/
+        HASHTAG_POOL/CONTEXT_KEYWORDS/CONTEXT_PHRASES. Missing keys fall
+        back to built-in pools. None -> built-in pools.
 
     seed:
         Private Random(seed) for reproducible output.
@@ -702,57 +903,51 @@ def generate_caption(
     if _rng is None and seed is not None:
         rng = random.Random(seed)
 
-    if hook_type not in OPENERS:
-        hook_type = rng.choice(_HOOK_KEYS)
+    resolved = _resolve_pools(pools)
+    openers = resolved["OPENERS"]
+    middles = resolved["MIDDLES"]
+    closers = resolved["CLOSERS"]
 
-    opener = rng.choice(OPENERS[hook_type])
+    if hook_type not in openers:
+        hook_type = rng.choice(_hook_keys(resolved))
 
-    num_middles = rng.randint(0, 2)
-    middles = rng.sample(MIDDLES[hook_type], num_middles)
+    # Single on-screen line, picked at random from the selected hook type's
+    # OPENERS ∪ MIDDLES ∪ CLOSERS (not just openers).
+    combo = list(openers.get(hook_type, [])) \
+        + list(middles.get(hook_type, [])) \
+        + list(closers.get(hook_type, []))
+    line = rng.choice(combo) if combo else rng.choice(openers[hook_type])
 
-    closer = rng.choice(CLOSERS[hook_type])
-
-    # On-screen caption:
-    # Short, punchy, attention-focused.
     on_screen = _make_contextual_on_screen(
-        opener,
+        line,
         content_idea,
         hook_type,
         rng,
+        resolved,
     )
 
-    # Post caption:
-    # More conversational and personality-driven.
-    parts = [opener] + middles + [closer]
-
-    # If there is a content idea, occasionally reference its visual context
-    # in the post without simply repeating the entire user input.
-    context = _context_phrase(content_idea, rng)
-
-    if context and rng.random() < 0.55:
-        context_lines = [
-            f"{context} just felt right tonight.",
-            f"something about {context} made me want to take another picture.",
-            f"i don't know why, but {context} had me feeling myself.",
-            f"maybe it was {context}, maybe it was the mood.",
-        ]
-        parts.insert(1, rng.choice(context_lines))
-
-    post = ". ".join(p.rstrip(".") for p in parts)
-
-    if not post.endswith((".", "!", "?")):
-        post += "."
-
     # CTA
-    cta = rng.choice(CTA_POOL)
+    cta_pool = resolved["CTA_POOL"]
+    if isinstance(cta_pool, dict):
+        candidates = cta_pool.get(hook_type) or []
+        if not candidates:
+            for v in cta_pool.values():
+                candidates += v
+        cta = rng.choice(candidates) if candidates else rng.choice(CTA_POOL.get(hook_type, list(CTA_POOL.values())[0]))
+    else:
+        cta = rng.choice(cta_pool if cta_pool else list(CTA_POOL.values())[0])
 
     # Hashtags
-    num_hashtags = rng.randint(3, 5)
-    hashtags = rng.sample(HASHTAG_POOL, num_hashtags)
+    hashtag_pool = resolved["HASHTAG_POOL"]
+    pool = hashtag_pool if hashtag_pool else HASHTAG_POOL
+    if len(pool) >= 3:
+        num_hashtags = rng.randint(3, min(5, len(pool)))
+    else:
+        num_hashtags = len(pool)
+    hashtags = rng.sample(pool, num_hashtags) if pool else []
 
     return {
         "on_screen": on_screen,
-        "post": post,
         "hook_type": hook_type,
         "cta": cta,
         "hashtags": hashtags,
@@ -764,6 +959,7 @@ def batch_generate(
     hook_types=None,
     seed=None,
     content_idea=None,
+    pools=None,
 ):
     """
     Generate `count` unique captions.
@@ -775,6 +971,10 @@ def batch_generate(
     content_idea:
         Optional visual/content description.
 
+    pools:
+        Optional dict overriding pool structures. Missing keys fall back to
+        built-in pools.
+
     seed:
         Private Random(seed) for reproducibility.
 
@@ -785,10 +985,13 @@ def batch_generate(
 
     rng = random.Random(seed) if seed is not None else random
 
+    resolved = _resolve_pools(pools)
+    valid_hooks = _hook_keys(resolved)
+
     if hook_types:
         hook_types = [
             hook for hook in hook_types
-            if hook in OPENERS
+            if hook in valid_hooks
         ]
 
     seen = set()
@@ -804,6 +1007,7 @@ def batch_generate(
             hook_type=hook,
             _rng=rng,
             content_idea=content_idea,
+            pools=resolved,
         )
 
         key = cap["on_screen"]
