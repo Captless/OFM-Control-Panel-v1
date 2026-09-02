@@ -247,19 +247,9 @@
     <div class="mode-view" id="mode-captions" hidden>
       <div class="mode-header">
         <h2>Caption Generator</h2>
-        <p class="stage-sub">Generate captions for your social platforms.</p>
+        <p class="stage-sub">Generate on-screen and post captions for your content.</p>
       </div>
       <div class="caption-controls">
-        <div class="config-group config-group-wide">
-          <label class="config-label">Platform</label>
-          <div class="pill-row">
-            <label class="pill"><input type="radio" name="cap_platform" value="tiktok" checked><span class="pill-body">TikTok</span></label>
-            <label class="pill"><input type="radio" name="cap_platform" value="reels"><span class="pill-body">Reels</span></label>
-            <label class="pill"><input type="radio" name="cap_platform" value="shorts"><span class="pill-body">Shorts</span></label>
-            <label class="pill"><input type="radio" name="cap_platform" value="x"><span class="pill-body">X</span></label>
-            <label class="pill"><input type="radio" name="cap_platform" value="stories"><span class="pill-body">Stories</span></label>
-          </div>
-        </div>
         <div class="config-group config-group-wide">
           <label class="config-label">Hook Type</label>
           <div class="pill-row">
@@ -268,6 +258,11 @@
             <label class="pill"><input type="radio" name="cap_hook" value="playful"><span class="pill-body">Playful</span></label>
             <label class="pill"><input type="radio" name="cap_hook" value="aesthetic"><span class="pill-body">Aesthetic</span></label>
             <label class="pill"><input type="radio" name="cap_hook" value="relatable"><span class="pill-body">Relatable</span></label>
+            <label class="pill"><input type="radio" name="cap_hook" value="teasing"><span class="pill-body">Teasing</span></label>
+            <label class="pill"><input type="radio" name="cap_hook" value="seductive"><span class="pill-body">Seductive</span></label>
+            <label class="pill"><input type="radio" name="cap_hook" value="mysterious"><span class="pill-body">Mysterious</span></label>
+            <label class="pill"><input type="radio" name="cap_hook" value="dangerous"><span class="pill-body">Dangerous</span></label>
+            <label class="pill"><input type="radio" name="cap_hook" value="direct"><span class="pill-body">Direct</span></label>
             <label class="pill"><input type="radio" name="cap_hook" value="mixed"><span class="pill-body">Mixed</span></label>
           </div>
         </div>
@@ -280,7 +275,7 @@
         </div>
       </div>
       <div class="caption-list" id="caption-list">
-        <div class="empty-state"><p>No captions yet.</p><p class="empty-hint">Pick a platform and hook type, then generate.</p></div>
+        <div class="empty-state"><p>No captions yet.</p><p class="empty-hint">Describe your content, pick a hook type, then generate.</p></div>
       </div>
       <div class="caption-actions" id="caption-actions" style="display:none">
         <button class="btn-ghost btn-sm" onclick="copyAllCaptions()">Copy All</button>

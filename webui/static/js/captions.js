@@ -1,11 +1,7 @@
-// captions.js — caption generator.
+// captions.js — content-aware caption generator.
 
 var _captions = [];
 
-function getSelectedCapPlatform() {
-  var r = document.querySelector('input[name="cap_platform"]:checked');
-  return r ? r.value : 'tiktok';
-}
 function getSelectedCapHook() {
   var r = document.querySelector('input[name="cap_hook"]:checked');
   return r ? r.value : 'vulnerable';
@@ -18,9 +14,8 @@ async function generateCaptions() {
   var count = countEl ? parseInt(countEl.value, 10) : 5;
   if (isNaN(count) || count < 1) count = 5;
   if (count > 20) count = 20;
-  var platform = getSelectedCapPlatform();
   var hook = getSelectedCapHook();
-  var body = { count: count, platform: platform };
+  var body = { count: count };
   if (hook !== 'mixed') body.hook_types = [hook];
   if (btn) btn.disabled = true;
   if (txt) txt.textContent = 'Generating...';
@@ -47,10 +42,9 @@ function renderCaptions(caps) {
     var tags = (c.hashtags || []).map(function(h) { return esc(h); }).join(' ');
     html += '<div class="caption-item">'
       + '<div class="caption-item-head">'
-      + '<span class="cap-badge">' + esc(c.platform || '') + '</span>'
       + '<span class="cap-badge">' + esc(c.hook_type || '') + '</span>'
       + '</div>'
-      + '<pre class="caption-text-raw">' + esc(c.text || '') + '</pre>'
+      + '<pre class="caption-text-raw">' + esc(c.on_screen || '') + '</pre>'
       + '<div class="caption-meta">' + (c.cta ? esc(c.cta) : '') + (tags ? ' ' + tags : '') + '</div>'
       + '<button class="btn-sm-outline" onclick="copyCaption(' + i + ')">Copy</button>'
       + '</div>';
@@ -60,8 +54,10 @@ function renderCaptions(caps) {
 
 function copyCaption(idx) {
   if (!_captions || !_captions[idx]) return;
-  navigator.clipboard.writeText(_captions[idx].text).then(function() {
-    showSuccess('Caption copied');
+  var c = _captions[idx];
+  var text = c.on_screen || '';
+  navigator.clipboard.writeText(text).then(function() {
+    showSuccess('On-screen caption copied');
   }).catch(function() {
     showError('Copy failed');
   });
@@ -69,9 +65,9 @@ function copyCaption(idx) {
 
 async function copyAllCaptions() {
   if (!_captions.length) return;
-  var text = _captions.map(function(c) { return c.text; }).join('\n\n');
+  var text = _captions.map(function(c) { return c.on_screen || ''; }).join('\n\n');
   navigator.clipboard.writeText(text).then(function() {
-    showSuccess('All captions copied');
+    showSuccess('All on-screen captions copied');
   }).catch(function() {
     showError('Copy failed');
   });
@@ -80,7 +76,7 @@ async function copyAllCaptions() {
 function clearCaptions() {
   _captions = [];
   var list = document.getElementById('caption-list');
-  if (list) list.innerHTML = '<div class="empty-state"><p>No captions yet.</p><p class="empty-hint">Pick a platform and hook type, then generate.</p></div>';
+  if (list) list.innerHTML = '<div class="empty-state"><p>No captions yet.</p><p class="empty-hint">Describe your content, pick a hook type, then generate.</p></div>';
   var ca = document.getElementById('caption-actions');
   if (ca) ca.style.display = 'none';
 }

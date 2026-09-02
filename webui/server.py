@@ -42,7 +42,7 @@ from wavespeed_client import WaveSpeedClient
 
 SCRIPTS_DIR = BASE / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
-from alina_textgen import batch_generate, PLATFORM_CONFIG
+from alina_textgen import batch_generate
 
 _balance_cache = {"time": 0, "value": None}
 
@@ -622,11 +622,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return
             count = max(1, min(20, count))
 
-            platform = (body.get("platform") or "tiktok").strip()
-            if platform not in PLATFORM_CONFIG:
-                self._json({"ok": False, "error": "unknown platform"}, 400)
-                return
-
             hook_types = body.get("hook_types")
             if hook_types is not None and not isinstance(hook_types, list):
                 self._json({"ok": False, "error": "hook_types must be a list"}, 400)
@@ -638,7 +633,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return
 
             try:
-                caps = batch_generate(count, platforms=[platform], hook_types=hook_types, seed=seed)
+                caps = batch_generate(count, hook_types=hook_types, seed=seed)
                 self._json({"ok": True, "captions": caps})
             except ValueError as e:
                 self._json({"ok": False, "error": str(e)}, 400)
