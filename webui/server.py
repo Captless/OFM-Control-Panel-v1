@@ -32,6 +32,7 @@ PORT = 8000
 sys.path.insert(0, str(BASE))
 from core.config import PHOTO_PRICE, SETTINGS_PATH, list_wavespeed_accounts, set_wavespeed_account, remove_wavespeed_account, rename_wavespeed_account, get_active_wavespeed_key, set_active_wavespeed_account, test_wavespeed_account, get_identity, set_identity
 from core.prompt_banks import list_banks, get_bank, create_bank, update_bank, delete_bank, clone_bank, get_active_bank_id, set_active_bank_id, export_banks, import_banks
+from core import caption_banks as cap_banks
 
 sys.path.insert(0, str(PIPELINE_DIR))
 from prompt_bank import list_presets, build_jobs_multi, get_builtin_pools
@@ -42,7 +43,7 @@ from wavespeed_client import WaveSpeedClient
 
 SCRIPTS_DIR = BASE / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
-from alina_textgen import batch_generate, PLATFORM_CONFIG
+from alina_textgen import batch_generate
 
 _balance_cache = {"time": 0, "value": None}
 
@@ -551,6 +552,32 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     pools[k] = v
             self._json({"ok": True, "pools": pools, "bank_id": bank_id, "bank_name": (bank or {}).get("name", "")})
 
+        elif path == "/api/caption-banks":
+            self._json({"ok": True, "banks": cap_banks.list_banks()})
+
+        elif path == "/api/caption-banks/active":
+            self._json({"ok": True, "active": cap_banks.get_active_bank_id()})
+
+        elif path == "/api/caption-banks/pools":
+            bank_id = parse_qs(parsed.query).get("id", [None])[0] or cap_banks.get_active_bank_id()
+            self._json({"ok": True, "pools": cap_banks.get_pools_for(bank_id), "bank_id": bank_id})
+
+        elif path == "/api/caption-banks/export":
+            bank_id = parse_qs(parsed.query).get("id", [None])[0]
+            result = cap_banks.export_bank(bank_id)
+            if not result.get("ok"):
+                self._json(result, 400)
+                return
+            payload = result["content"].encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/x-python")
+            self.send_header("Content-Disposition", f'attachment; filename="{result["filename"]}"')
+            self.send_header("Content-Length", str(len(payload)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+
         elif path == "/api/settings/wavespeed/accounts":
             raw = SETTINGS_PATH.read_text(encoding="utf-8") if SETTINGS_PATH.exists() else "{}"
             settings = json.loads(raw)
@@ -622,11 +649,6 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return
             count = max(1, min(20, count))
 
-            platform = (body.get("platform") or "tiktok").strip()
-            if platform not in PLATFORM_CONFIG:
-                self._json({"ok": False, "error": "unknown platform"}, 400)
-                return
-
             hook_types = body.get("hook_types")
             if hook_types is not None and not isinstance(hook_types, list):
                 self._json({"ok": False, "error": "hook_types must be a list"}, 400)
@@ -637,8 +659,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._json({"ok": False, "error": "seed must be an integer"}, 400)
                 return
 
+            bank_id = body.get("bank_id")
+            if isinstance(bank_id, str) and bank_id:
+                bank = cap_banks.get_bank(bank_id)
+                if not bank:
+                    self._json({"ok": False, "error": f"bank '{bank_id}' not found"}, 400)
+                    return
+                pools = cap_banks.get_pools_for(bank_id)
+            else:
+                pools = cap_banks.get_active_pools()
+
             try:
-                caps = batch_generate(count, platforms=[platform], hook_types=hook_types, seed=seed)
+                caps = batch_generate(count, hook_types=hook_types, seed=seed, pools=pools)
                 self._json({"ok": True, "captions": caps})
             except ValueError as e:
                 self._json({"ok": False, "error": str(e)}, 400)
@@ -847,6 +879,60 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._json(result)
             else:
                 self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
+
+        elif parsed.path == "/api/caption-banks/create":
+            result = cap_banks.create_bank(body)
+            if result.get("ok"):
+                _log_activity(f"Caption bank created: {result['bank']['name']}")
+                self._json(result)
+            else:
+                self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
+
+        elif parsed.path == "/api/caption-banks/update":
+            bank_id = (body.get("id") or "").strip()
+            if not bank_id:
+                self._json({"ok": False, "error": "missing id"}, 400)
+            else:
+                result = cap_banks.update_bank(bank_id, body)
+                if result.get("ok"):
+                    _log_activity(f"Caption bank updated: {result['bank']['name']}")
+                    self._json(result)
+                else:
+                    self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
+
+        elif parsed.path == "/api/caption-banks/active":
+            bank_id = (body.get("id") or "").strip()
+            result = cap_banks.set_active_bank_id(bank_id)
+            if result.get("ok"):
+                _log_activity(f"Active caption bank set to: {bank_id or 'builtin'}")
+                self._json(result)
+            else:
+                self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
+
+        elif parsed.path == "/api/caption-banks/delete":
+            bank_id = (body.get("id") or "").strip()
+            if not bank_id:
+                self._json({"ok": False, "error": "missing id"}, 400)
+            else:
+                result = cap_banks.delete_bank(bank_id)
+                if result.get("ok"):
+                    _log_activity(f"Caption bank deleted: {bank_id}")
+                    self._json(result)
+                else:
+                    self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
+
+        elif parsed.path == "/api/caption-banks/import":
+            name = (body.get("name") or "").strip()
+            content = body.get("content")
+            if not content or not isinstance(content, str):
+                self._json({"ok": False, "error": "missing file content"}, 400)
+            else:
+                result = cap_banks.import_bank(name, content)
+                if result.get("ok"):
+                    _log_activity(f"Caption bank imported: {result['bank']['name']}")
+                    self._json(result)
+                else:
+                    self._json({"ok": False, "error": result.get("error", "unknown")}, 400)
 
         elif parsed.path == "/api/settings/banks/clone":
             source_id = (body.get("source_id") or "").strip()
