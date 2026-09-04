@@ -209,7 +209,8 @@ async function fetchPromptPreview(silent) {
   document.getElementById('confirm-gen-btn').disabled = false;
   document.getElementById('cancel-gen-btn').style.display = 'inline-block';
   document.getElementById('edit-prompts-btn').style.display = 'inline-block';
-  _btnTxt('Update Preview');
+  document.getElementById('edit-prompts-btn').textContent = 'Edit';
+  _btnTxt('Generate Prompt');
   return r.jobs;
 }
 
