@@ -447,6 +447,8 @@ def _resolve_pool(name, default, bank=None):
             return val
         if isinstance(val, str) and val:
             return val
+        if isinstance(val, dict) and val:
+            return val
     return default
 
 
@@ -465,6 +467,8 @@ def build_jobs_multi(count=1, vibe=None, top_category=None, bottom_category=None
     tops_pools = _resolve_pool("OUTFIT_TOPS_POOLS", OUTFIT_TOPS_POOLS, bank)
     bottoms_pools = _resolve_pool("OUTFIT_BOTTOMS_POOLS", OUTFIT_BOTTOMS_POOLS, bank)
     lighting_pools = _resolve_pool("LIGHTING_POOLS", LIGHTING_POOLS, bank)
+    if "LIGHTING_POOLS" not in bank and isinstance(bank.get("LIGHTING"), dict) and bank["LIGHTING"]:
+        lighting_pools = bank["LIGHTING"]
     default_negative = _resolve_pool("DEFAULT_NEGATIVE", DEFAULT_NEGATIVE, bank)
     mirror_negative = _resolve_pool("MIRROR_NEGATIVE", MIRROR_NEGATIVE, bank)
 
