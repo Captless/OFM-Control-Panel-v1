@@ -143,16 +143,16 @@ OUTFIT_TOPS_POOLS = {
         "charcoal bodysuit mock neck, long sleeves, subtle occult embroidery across chest and sleeves, thong back, raw edges",
     ],
     "cardigan": [
-        "cream knit crop cardigan open front, loose fit, wide ribbed cuffs, dropped shoulders, raw hem with pulled threads",
-        "black oversized cardigan chunky cable knit with occult motif cables, open front, patch pockets with raw edges, mid-thigh length",
-        "charcoal fine merino cardigan deep v-neck, single horn button, fitted sleeves, cropped hem, subtle sigil embroidery at hem",
-        "black sheer cardigan floral burnout velvet pattern with moon phases, open front, raw edges throughout, draped silhouette",
-        "dark grey cardigan oversized, raw hem, wide sleeves, dropped shoulder, distressed throughout, mineral wash",
-        "black cardigan deconstructed, raw edges, draped front panels uneven length, single horn button, distressed collar",
-        "charcoal cardigan chunky knit, open front, single patch pocket with raw edge, mineral wash, relaxed, loose threads",
-        "black cardigan mesh panel sides with burnt edges, open front, wide sleeves, raw hem, oversized, distressed cuffs",
-        "dark green cardigan fine knit, deep v-neck, single button, cropped, subtle texture with occult thread catch",
-        "black cardigan burnout velvet pattern with sigils, open front, raw edges throughout, mid-thigh length, draped",
+        "cream knit crop cardigan worn open over black fitted cami tank, under-top neckline visible, open front with visible midriff separation between two distinct garments, loose fit, wide ribbed cuffs, dropped shoulders, raw hem with pulled threads",
+        "black oversized cardigan chunky cable knit with occult motif cables, worn open over black fitted tank, under-top neckline visible, open front with visible separation between two distinct garments, patch pockets with raw edges, mid-thigh length",
+        "charcoal fine merino cardigan deep v-neck worn open over black fitted cami, under-top neckline visible, single horn button undone, open layering with visible separation between two distinct garments, fitted sleeves, cropped hem, subtle sigil embroidery at hem",
+        "black sheer cardigan floral burnout velvet pattern with moon phases, worn open over black fitted bralette cami, under-top visible beneath sheer layer, open front with visible separation between two distinct garments, raw edges throughout, draped silhouette",
+        "dark grey cardigan oversized worn open over black fitted tank, under-top neckline visible, open front with visible separation between two distinct garments, raw hem, wide sleeves, dropped shoulder, distressed throughout, mineral wash",
+        "black cardigan deconstructed worn open over black fitted cami, under-top neckline visible, open draped front panels uneven length with visible separation between two distinct garments, single horn button undone, raw edges, distressed collar",
+        "charcoal cardigan chunky knit worn open over black fitted tank, under-top neckline visible, open front with visible separation between two distinct garments, single patch pocket with raw edge, mineral wash, relaxed, loose threads",
+        "black cardigan with mesh panel sides and burnt edges, worn open over black fitted cami, under-top neckline visible, open front with visible separation between two distinct garments, wide sleeves, raw hem, oversized, distressed cuffs",
+        "dark green cardigan fine knit deep v-neck worn open over black fitted cami, under-top neckline visible, single button undone, open layering with visible separation between two distinct garments, cropped, subtle texture with occult thread catch",
+        "black cardigan burnout velvet pattern with sigils, worn open over black fitted tank, under-top neckline visible, open front with visible separation between two distinct garments, raw edges throughout, mid-thigh length, draped",
     ],
     "hoodie": [
         "black tech windbreaker vest over fitted torso top, visible crossbody bag strap, urban practical layering, raw edges",
@@ -307,20 +307,21 @@ POSES = [
 ]
 
 # ---------------------------------------------------------------------------
-# HANDHELD_POSES — candid handheld-selfie angles/gestures only (mirror uses POSES)
+# HANDHELD_POSES — extended-arm selfie only: arm-length distance, lens eye
+# contact, head-to-waist. No hip-level / third-person / device-in-hand cues.
 # ---------------------------------------------------------------------------
 
 HANDHELD_POSES = [
-    "chin tucked toward collarbone, gaze lifted to meet lens at slight downward angle, head tilted 15 degrees right creating natural jawline shadow, shoulders relaxed and uneven",
-    "camera held at sternum height angled upward, eyes tracking just left of center as if noticing something beyond frame, weight shifted onto back leg with front knee softly bent",
-    "device at jawline distance, extreme close framing cutting top of forehead, head canted right exposing neck line, lower lip caught between teeth, free hand hovering near collarbone",
-    "gaze directed downward toward palm as if reading screen reflection, brow arched inquisitively, chin slightly lowered creating double-chin compression, posture upright but not stiff",
-    "body captured mid-step, weight fully on trailing leg with leading foot lifted, camera at hip angled up 45 degrees, torso rotated toward leading side creating dynamic diagonal line",
-    "thumb grazing lower frame edge creating organic vignette, chin dropped toward chest, eyes tilted upward beneath lashes at extreme angle, neck elongated, shoulders rolled forward",
-    "torso rotated 60 degrees away from lens, head swiveled 120 degrees back over left shoulder creating spinal twist, gaze sharp over collarbone, free arm hanging loose at side",
-    "device resting on clavicle pointing nearly vertical, chin pressed to chest forcing eyes upward through lowered lashes, forehead dominating upper frame, intimate vulnerable perspective",
-    "right hand mid-motion tucking loose strands behind ear, elbow lifted to shoulder height, head tilted toward working hand exposing jawline, left shoulder dropped in counterbalance",
-    "face angled 30 degrees toward floor, eyes tracking invisible screen held at waist, jaw relaxed with slight parting, neck extended forward in tech-neck curve, shoulders rounded inward",
+    "extended-arm selfie perspective at arm's length, direct eye contact with lens, chin tucked toward collarbone, head tilted 15 degrees right, shoulders relaxed and uneven from holding camera, head-to-waist framing",
+    "extended-arm selfie perspective at arm's length, camera held at sternum height tilted slightly up, direct eye contact with lens, weight shifted onto back leg with front knee softly bent, head-to-waist framing",
+    "extended-arm selfie perspective at arm's length, close framing cutting top of forehead, head canted right exposing neck line, direct eye contact with lens, free hand hovering near collarbone, shoulders uneven from holding camera",
+    "extended-arm selfie perspective at arm's length, chin slightly lowered, direct eye contact with lens beneath lashes, brow arched, upright posture, free arm hanging loose, head-to-waist framing",
+    "extended-arm selfie perspective at arm's length, standing mid-pause with weight on one leg, other knee softly bent, torso facing lens with slight angle, direct eye contact with lens, shoulders uneven from holding camera, head-to-waist framing",
+    "extended-arm selfie perspective at arm's length, chin dropped toward chest, direct eye contact tilted upward beneath lashes, neck elongated, shoulders rolled slightly forward from holding camera, head-to-waist framing",
+    "extended-arm selfie perspective at arm's length, torso angled slightly away from lens, head turned back toward camera over shoulder, direct eye contact with lens, free arm hanging loose, head-to-waist framing",
+    "extended-arm selfie perspective at arm's length from slightly above, chin lowered forcing eyes upward to lens, direct eye contact, forehead upper frame, intimate close perspective, shoulders uneven from holding camera",
+    "extended-arm selfie perspective at arm's length, free hand mid-motion tucking loose strands behind ear, elbow lifted to shoulder height, head tilted toward working hand, direct eye contact with lens, other shoulder dropped in counterbalance",
+    "extended-arm selfie perspective at arm's length from slightly above, face angled toward lens, chin relaxed with lips slightly parted, direct eye contact with lens, shoulders rounded slightly inward from holding camera, head-to-waist framing",
 ]
 
 # ---------------------------------------------------------------------------
@@ -374,7 +375,8 @@ QUALITY = [
 
 DEFAULT_NEGATIVE = (
     "phone visible, mirror selfie, lamp visible, smiling, overly posed, studio lighting, "
-    "symmetry, CGI skin, unrealistic texture, accessories, jewelry, necklaces, earrings, cleavage"
+    "symmetry, CGI skin, unrealistic texture, accessories, jewelry, necklaces, earrings, cleavage, "
+    "third-person view, external photographer, someone else taking photo, full body from distance, tripod shot"
 )
 
 MIRROR_NEGATIVE = (
@@ -403,7 +405,7 @@ def _build_prompt(camera_mode, scene, framing, hair, top, bottom, pose, lighting
     else:
         negative = DEFAULT_NEGATIVE
         parts = [
-            "Front-facing handheld selfie, vertical 9:16, no phone visible",
+            "Front-facing extended-arm handheld selfie, arm holding camera out of frame at arm's length, vertical 9:16, no phone visible",
         ]
 
     parts += [

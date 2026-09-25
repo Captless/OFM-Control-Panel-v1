@@ -22,7 +22,8 @@ function goToStep(step) {
   // Only allow jumping to earlier steps (or results)
   var idx = _STEP_ORDER.indexOf(step);
   var curIdx = _STEP_ORDER.indexOf(_currentStep);
-  if (idx === -1 || idx > curIdx) return;
+  var previewAvailable = typeof hasPendingPreview === 'function' && hasPendingPreview();
+  if (idx === -1 || (idx > curIdx && !(step === 'preview' && previewAvailable))) return;
   _currentStep = step;
   _renderSteps();
   _showPanel(step);
@@ -32,10 +33,12 @@ function _renderSteps() {
   var nodes = document.querySelectorAll('.step-node');
   var lines = document.querySelectorAll('.step-line');
   var curIdx = _STEP_ORDER.indexOf(_currentStep);
+  var previewAvailable = typeof hasPendingPreview === 'function' && hasPendingPreview();
   nodes.forEach(function(n) {
     var idx = _STEP_ORDER.indexOf(n.dataset.step);
     n.classList.toggle('active', idx === curIdx);
     n.classList.toggle('done', idx < curIdx);
+    n.classList.toggle('available', n.dataset.step === 'preview' && previewAvailable);
   });
   lines.forEach(function(l) {
     l.classList.toggle('done', true); // simplified: all lines before active done handled below
