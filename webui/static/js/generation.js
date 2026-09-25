@@ -91,7 +91,6 @@ function updateCost() {
   var total = (count * _perPhoto).toFixed(2);
   var el = document.getElementById('cost-tracker');
   if (el) el.textContent = '$' + total + ' total · ' + _balance.toFixed(2) + ' available';
-  schedulePreviewRefresh();
 }
 
 function _btnTxt(t) { var e = document.querySelector('#btn-photo .btn-text'); if (e) e.textContent = t; }
@@ -161,12 +160,10 @@ function setControlsLocked(locked) {
   for (var b = 0; b < btns.length; b++) btns[b].disabled = locked;
 }
 
-var _previewDebounce = null;
 var _previewFetching = false;
-var _previewStateKey = null;
 
-function _currentPreviewStateKey() {
-  return [getSelectedVibe(), getSelectedCamera(), getSelectedLighting(), getSelectedTime(), getSelectedTopCategory(), getSelectedBottomCategory(), document.getElementById('photo-count').value, getSelectedBankId()].join('|');
+function hasPendingPreview() {
+  return Array.isArray(_pendingJobs) && _pendingJobs.length > 0;
 }
 
 function getSelectedBankId() {
@@ -192,7 +189,6 @@ async function fetchPromptPreview(silent) {
     }
     return null;
   }
-  _previewStateKey = _currentPreviewStateKey();
   _pendingJobs = r.jobs;
   var list = document.getElementById('prompt-list');
   var html = '';
@@ -225,16 +221,6 @@ async function startPromptGeneration() {
     _renderSteps();
     _showPanel('preview');
   }
-}
-
-function schedulePreviewRefresh() {
-  if (!_pendingJobs) return;
-  if (_currentPreviewStateKey() === _previewStateKey) return;
-  if (typeof _currentStep === 'string' && _currentStep !== 'configure') return;
-  var items = document.querySelectorAll('.prompt-item');
-  if (items.length > 0 && items[0].classList.contains('editing')) return;
-  clearTimeout(_previewDebounce);
-  _previewDebounce = setTimeout(function() { fetchPromptPreview(true); }, 300);
 }
 
 function _resetPromptList() {

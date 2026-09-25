@@ -449,6 +449,9 @@ body {
 }
 .step-node.active { opacity: 1; cursor: default; }
 .step-node.done { opacity: 0.7; }
+.step-node.available { opacity: 0.9; cursor: pointer; }
+.step-node[data-step="preview"].available .step-dot { background: var(--amber-bg); border-color: var(--amber); color: var(--amber); }
+.step-node[data-step="preview"].available .step-label { color: var(--amber); }
 .step-node:not(.active):not(.done):hover { opacity: 0.7; cursor: pointer; }
 
 .step-dot {
